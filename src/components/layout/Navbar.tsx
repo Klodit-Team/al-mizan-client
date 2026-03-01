@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter, usePathname } from "next/navigation";
 import { locales, type Locale } from "@/i18n/config";
@@ -29,10 +30,8 @@ export default function Navbar({ isLoggedIn = false, userInitial = "R" }: Navbar
             <nav className="w-full bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between">
 
                 <Link href={`/${locale}`} className="flex items-center gap-2">
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 6l9-3 9 3M3 6v12l9 3 9-3V6M12 3v18" />
-                    </svg>
-                    <span className="font-bold text-gray-900 text-sm tracking-wide">Al-Mizan</span>
+                    <Image src="/logo.png" alt="Al-Mizan Logo" width={40} height={40} unoptimized />
+                    
                 </Link>
 
 
@@ -58,12 +57,9 @@ export default function Navbar({ isLoggedIn = false, userInitial = "R" }: Navbar
     // ─── LANDING PAGE NAVBAR (logged out) ───────────────────────────────
     return (
         <nav className="w-full px-8 py-3 flex items-center justify-between" style={{ backgroundColor: "#1e2535" }}>
-            {/* Logo */}
+            
             <Link href={`/${locale}`} className="flex items-center gap-2">
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 6l9-3 9 3M3 6v12l9 3 9-3V6M12 3v18" />
-                </svg>
-                <span className="font-bold text-white text-sm tracking-widest uppercase">Al-Mizan</span>
+                <Image src="/logo.png" alt="Al-Mizan Logo" width={100} height={100} unoptimized />               
             </Link>
 
 

@@ -1,14 +1,9 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Montserrat } from "next/font/google";
 import "@/app/globals.css";
 import { locales, getLocaleDirection, type Locale } from "@/i18n/config";
 
-const geistSans = Geist({
-    variable: "--font-geist-sans",
-    subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-    variable: "--font-geist-mono",
+const montserrat = Montserrat({
+    variable: "--font-montserrat",
     subsets: ["latin"],
 });
 
@@ -28,7 +23,7 @@ export default async function LocaleLayout({
 
     return (
         <html lang={locale} dir={direction}>
-            <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+            <body className={`${montserrat.variable} antialiased`}>
                 {children}
             </body>
         </html>
