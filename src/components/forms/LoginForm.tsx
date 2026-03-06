@@ -7,7 +7,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { loginSchema, type LoginFormData } from "@/lib/validations/loginSchema";
 
-export default function LoginForm() {
+import type { getAuthDictionary } from "@/i18n/get-dictionaries";
+
+type AuthDict = Awaited<ReturnType<typeof getAuthDictionary>>;
+
+interface LoginFormProps {
+  dict: AuthDict["login"];
+}
+
+export default function LoginForm({ dict }: LoginFormProps) {
     const params = useParams();
     const locale = (params?.locale as Locale) || "fr";
     const [showPassword, setShowPassword] = useState(false);
@@ -29,15 +37,15 @@ export default function LoginForm() {
         <div className="w-full max-w-md bg-white  p-8">
             <div className="mb-8 text-center">
 
-                <h1 className="text-2xl font-bold text-gray-900 text-left">Sign In</h1>
-                <p className="text-sm text-gray-500 mt-1 text-left">Welcome back! Please enter your credentials to access your dashboard.</p>
+                <h1 className="text-2xl font-bold text-gray-900 text-left">{dict.title}</h1>
+                <p className="text-sm text-gray-500 mt-1 text-left">{dict.subtitle}</p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email Address
+                        {dict.email}
                     </label>
                     <input
                         {...register("email")}
@@ -56,7 +64,7 @@ export default function LoginForm() {
 
                 <div>
                     <div className="flex justify-between items-center mb-1">
-                        <label className="block text-sm font-medium text-gray-700">Password</label>
+                        <label className="block text-sm font-medium text-gray-700">{dict.password}</label>
 
                     </div>
                     <div className="relative">
@@ -103,10 +111,10 @@ export default function LoginForm() {
                         className="w-4 h-4 rounded border-gray-300 accent-[#4CAF50] cursor-pointer"
                     />
                     <label htmlFor="rememberMe" className="text-sm text-gray-600 cursor-pointer select-none">
-                        Remember me
+                        {dict.rememberMe}
                     </label>
                     <a href={`/${locale}/auth/forgot-password`} className="text-xs font-semibold ml-auto" style={{ color: "#364150" }}>
-                        Forgot password?
+                        {dict.forgotPassword}
                     </a>
                 </div>
 
@@ -117,14 +125,14 @@ export default function LoginForm() {
                     className="w-full py-3 rounded-xl text-white font-semibold text-sm transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
                     style={{ backgroundColor: "#4CAF50" }}
                 >
-                    {isSubmitting ? "Signing in..." : "Sign In →"}
+                   {isSubmitting ? dict.submitting : dict.submit}
                 </button>
             </form>
 
             <p className="text-center text-sm text-gray-500 mt-6">
-                Don't have an account yet? {" "}
+                {dict.noAccount} {" "}
                 <a href={`/${locale}/auth/register`} className="font-semibold" style={{ color: "#364150" }}>
-                    Register as an Economic Operator
+                    {dict.createOne}
                 </a>
             </p>
         </div>

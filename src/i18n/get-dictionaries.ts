@@ -10,5 +10,12 @@ const authDictionaries = {
     ar: () => import("./locales/ar/auth.json").then((module) => module.default),
 };
 
-export const getDictionary = async (locale: Locale) => dictionaries[locale]();
-export const getAuthDictionary = async (locale: Locale) => authDictionaries[locale]();
+export const getDictionary = async (locale: Locale) => {
+  const safeLocale = locale === "ar" ? "ar" : "fr";
+  return dictionaries[safeLocale]();
+};
+
+export const getAuthDictionary = async (locale: Locale) => {
+  const safeLocale = locale === "ar" ? "ar" : "fr";
+  return authDictionaries[safeLocale]();
+};

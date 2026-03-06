@@ -1,21 +1,31 @@
 import Footer from "@/components/layout/Footer";
 import RegisterForm from "@/components/forms/RegisterForm";
 import RegisterNavbar from "@/components/layout/RegisterNavbar";
+import { getAuthDictionary,getDictionary } from "@/i18n/get-dictionaries";
+import type { Locale } from "@/i18n/config";
 
-export default function RegisterPage() {
-    return (
-        <div className="min-h-screen bg-[#F5F7FA] flex flex-col">
-            <RegisterNavbar />
-            <main className="flex-1 w-full max-w-lg mx-auto py-16 px-4">
-                <div className="px-8 pb-8">
-                    <h1 className="text-2xl font-bold text-gray-900">Operator Registration</h1>
-                    <p className="text-sm text-gray-500 mt-1">
-                        Welcome to the sovereign B2B procurement ecosystem. Register your organization to start participating in tenders.
-                    </p>
-                </div>
-                <RegisterForm />
-            </main>
-           
+interface RegisterPageProps {
+ params: Promise<{ locale: Locale }>;
+}
+
+export default async function RegisterPage({ params }: RegisterPageProps) {
+   const { locale } = await params;
+  const dict = await getAuthDictionary(locale);
+   const dictCommon = await getDictionary(locale);
+  return (
+    <div className="min-h-screen bg-[#F5F7FA] flex flex-col">
+      <RegisterNavbar dict={dictCommon.navbarRegister} locale={locale} />
+      <main className="flex-1 w-full max-w-lg mx-auto py-16 px-4">
+        <div className="px-8 pb-8">
+          <h1 className="text-2xl font-bold text-gray-900">
+            {dict.register.title}
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {dict.register.subtitle}
+          </p>
         </div>
-    );
+        <RegisterForm dict={dict.register} />
+      </main>
+    </div>
+  );
 }

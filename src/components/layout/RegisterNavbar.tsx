@@ -2,7 +2,17 @@
 import Image from "next/image";
 import Link from "next/link";
 
-export default function NavbarRegister() {
+import { type Locale } from "@/i18n/config";
+
+import type { getDictionary } from "@/i18n/get-dictionaries";
+
+type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
+
+interface NavbarRegisterProps {
+  dict: CommonDict["navbarRegister"];
+  locale: Locale;
+}
+export default function NavbarRegister({ dict, locale }: NavbarRegisterProps) {
     return (
         <header className="w-full bg-white border-b-2 border-[#4CAF50]">
             <div className="mx-auto px-8 h-14 flex items-center justify-between">
@@ -25,13 +35,13 @@ export default function NavbarRegister() {
                         href="/help"
                         className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
                     >
-                        Help Center
+                        {dict.helpCenter}
                     </Link>
                     <Link
                         href="/support"
                         className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
                     >
-                        Contact Support
+                        {dict.contactSupport}
                     </Link>
 
                     

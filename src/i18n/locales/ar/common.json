@@ -1,0 +1,40 @@
+{
+  "navbar": {
+    "helpCenter": "مركز المساعدة",
+    "contactSupport": "التواصل مع الدعم",
+    "signIn": "تسجيل الدخول",
+    "links": {
+      "home": "الرئيسية",
+      "tenders": "المناقصات",
+      "statistics": "الإحصائيات",
+      "legal": "القانونية",
+      "contact": "اتصل بنا"
+    }
+  },
+  "navbarRegister": {
+    "helpCenter": "مركز المساعدة",
+    "contactSupport": "التواصل مع الدعم"
+  },
+  "footer": {
+    "description": "منصة وطنية سيادية مخصصة لرقمنة وإدارة الصفقات العمومية.",
+    "memberOf": "عضو في ANEP",
+    "quickLinks": "روابط سريعة",
+    "quickLinkItems": {
+      "tendersSearch": "البحث عن المناقصات",
+      "awardedContracts": "العقود الممنوحة",
+      "sectorStatistics": "إحصائيات القطاع",
+      "operatorDirectory": "دليل المشغلين"
+    },
+    "legalSupport": "القانونية والدعم",
+    "legalItems": {
+      "privacyPolicy": "سياسة الخصوصية",
+      "termsOfService": "شروط الخدمة",
+      "technicalHelpdesk": "الدعم التقني",
+      "legislativeTexts": "النصوص التشريعية"
+    },
+    "newsletter": "النشرة الإخبارية",
+    "newsletterDesc": "ابق على اطلاع بأحدث تنبيهات المناقصات والتغييرات التنظيمية.",
+    "emailPlaceholder": "البريد الإلكتروني",
+    "copyright": "© 2024 الميزان. جميع الحقوق محفوظة. الجمهورية الجزائرية الديمقراطية الشعبية."
+  }
+}

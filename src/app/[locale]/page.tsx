@@ -1,16 +1,20 @@
-"use client";
+
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import Image from "next/image";
-import { useParams } from "next/navigation";
 import { type Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/get-dictionaries";
 
-export default function Home() {
-    const params = useParams();
-    const locale = (params?.locale as Locale) || "fr";
+interface HomeProps {
+  params: Promise<{ locale: Locale }>;
+}
+
+export default async function Home({ params }: HomeProps) {
+    const { locale } = await params;
+    const dict = await getDictionary(locale);
     return (
         <div className="flex min-h-screen flex-col bg-zinc-50 font-sans dark:bg-black">
-            <Navbar />
+            <Navbar dict={dict.navbar} locale={locale} />
             <main className="flex-1 flex flex-col items-center justify-center py-20 px-4 bg-white dark:bg-black sm:items-start max-w-6xl mx-auto w-full">
                 <div className="w-full flex flex-col items-center sm:items-start">
                     <Image
@@ -48,7 +52,7 @@ export default function Home() {
                     </div>
                 </div>
             </main>
-            <Footer />
+            <Footer dict={dict.footer} locale={locale} />
         </div>
     );
 }
