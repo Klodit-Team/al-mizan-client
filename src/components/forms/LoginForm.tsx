@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { useParams } from "next/navigation";
 import { type Locale } from "@/i18n/config";
 import { zodResolver } from "@hookform/resolvers/zod";
-
+import { useRouter } from "next/navigation";
 import { loginSchema, type LoginFormData } from "@/lib/validations/loginSchema";
 
 import type { getAuthDictionary } from "@/i18n/get-dictionaries";
@@ -18,8 +18,9 @@ interface LoginFormProps {
 export default function LoginForm({ dict }: LoginFormProps) {
     const params = useParams();
     const locale = (params?.locale as Locale) || "fr";
+    const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
-
+    const [attempCount, setAttempCount] = useState(0);
     const {
         register,
         handleSubmit,
@@ -30,6 +31,11 @@ export default function LoginForm({ dict }: LoginFormProps) {
 
     const onSubmit = async (data: LoginFormData) => {
         console.log(data);
+        setAttempCount(attempCount+1);
+        if (attempCount>=10){
+            console.log("Account locked");
+            router.push(`/${locale}/auth/login/account-lock`);
+        }
 
     };
 
@@ -113,7 +119,7 @@ export default function LoginForm({ dict }: LoginFormProps) {
                     <label htmlFor="rememberMe" className="text-sm text-gray-600 cursor-pointer select-none">
                         {dict.rememberMe}
                     </label>
-                    <a href={`/${locale}/auth/forgot-password`} className="text-xs font-semibold ml-auto" style={{ color: "#364150" }}>
+                    <a href={`/${locale}/auth/reset-password`} className="text-xs font-semibold ml-auto" style={{ color: "#364150" }}>
                         {dict.forgotPassword}
                     </a>
                 </div>

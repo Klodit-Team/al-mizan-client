@@ -36,5 +36,13 @@
     "newsletterDesc": "Restez informé des dernières alertes d'appels d'offres et des changements réglementaires.",
     "emailPlaceholder": "Adresse e-mail",
     "copyright": "© 2024 Al-Mizan. Tous droits réservés. République Algérienne Démocratique et Populaire."
-  }
+  },
+  "loginPanel": {
+  "sovereignProcurement": "Marchés Publics Souverains",
+  "title": "Gestion Souveraine & Intelligente des Marchés Publics",
+  "subtitle": "La plateforme officielle de marchés publics B2B pour l'Algérie, au service des Services Contractants et Opérateurs Économiques avec transparence et efficacité.",
+  "securedBy": "Sécurisé par les Normes Nationales",
+  "realTime": "Données en Temps Réel",
+  "ministere": "Ministère des Finances"
+}
 }

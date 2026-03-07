@@ -32,11 +32,8 @@ export default function RegistrationSuccess({
             <div className="w-full max-w-2xl">
 
                 {/* Top success banner */}
-                <div className="relative  bg-[#1e2535] px-6 pt-10 pb-16 mb-16 flex flex-col items-center text-center">
-                    {/* Decorative circles */}
-                    <div className="absolute top-0 left-0 w-32 h-32 rounded-full bg-white/5 -translate-x-1/2 -translate-y-1/2" />
-                    <div className="absolute bottom-0 right-0 w-24 h-24 rounded-full bg-white/5 translate-x-1/3 translate-y-1/3" />
-
+                <div className="relative  bg-[#364150] px-6 pt-10 pb-16 mb-16 flex flex-col items-center text-center">
+                    
                     {/* Success icon */}
                     <div className="relative z-10 w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: "#30E86E" }}>
                         <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
