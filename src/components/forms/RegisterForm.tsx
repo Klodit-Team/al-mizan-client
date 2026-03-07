@@ -52,6 +52,7 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
     const onSubmit = async (data: RegisterFormData) => {
         console.log("Final submission:", data);
         console.log("Files:", uploadedFiles);
+        router.push(`/${locale}/auth/register/success?id=ALM-2024-8881&hash=your_hash`);
     };
 
     const handleBack = () => {
@@ -67,7 +68,7 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
     const backLabels = [dict.actions.back, `← ${dict.stepTitles["1"]}`, `← ${dict.stepTitles["2"]}`];
 
     return (
-        <div className="w-full max-w-lg bg-white rounded-2xl shadow-lg overflow-hidden mx-auto">
+        <div className="w-full max-w-2xl bg-white rounded-2xl shadow-lg overflow-hidden mx-auto">
 
             {/* Header + Progress */}
             <div className="px-8 pt-6">
