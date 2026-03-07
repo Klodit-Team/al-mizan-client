@@ -1,14 +1,19 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import { type Locale } from "@/i18n/config";
 
-export default function Footer() {
-    const params = useParams();
-    const locale = (params?.locale as Locale) || "fr";
-    const [email, setEmail] = useState("");
+import type { getDictionary } from "@/i18n/get-dictionaries";
 
+type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
+
+interface FooterProps {
+  dict: CommonDict["footer"];
+  locale: Locale;
+}
+
+export default  function Footer({ dict, locale }: FooterProps) {
+    const [email, setEmail] = useState("");
     const handleSubscribe = () => {
         if (!email) return;
         console.log("Subscribed:", email);
@@ -29,17 +34,17 @@ export default function Footer() {
                         <span className="font-bold text-white text-sm tracking-widest uppercase">Al-Mizan</span>
                     </div>
                     <p className="text-sm text-gray-400 leading-relaxed">
-                        Plateforme nationale souveraine dédiée à la dématérialisation et à la gestion des marchés publics.
+                        {dict.description}
                     </p>
                     <button className="mt-5 text-xs border border-gray-500 text-gray-300 hover:text-white hover:border-gray-300 transition-colors px-4 py-2 rounded-lg">
-                        Member of ANEP
+                        {dict.memberOf}
                     </button>
                 </div>
 
                 {/* Quick Links */}
                 <div>
                     <h3 className="text-sm font-semibold text-white mb-4" style={{ color: "#4CAF50" }}>
-                        Quick Links
+                        {dict.quickLinks}
                     </h3>
                     <ul className="space-y-2.5">
                         {["Tenders Search", "Awarded Contracts", "Sector Statistics", "Operator Directory"].map((item) => (
@@ -55,7 +60,7 @@ export default function Footer() {
                 {/* Legal & Support */}
                 <div>
                     <h3 className="text-sm font-semibold mb-4" style={{ color: "#4CAF50" }}>
-                        Legal & Support
+                        {dict.legalSupport}
                     </h3>
                     <ul className="space-y-2.5">
                         {["Privacy Policy", "Terms of Service", "Technical Helpdesk", "Legislative Texts"].map((item) => (
@@ -71,10 +76,10 @@ export default function Footer() {
                 {/* Newsletter */}
                 <div>
                     <h3 className="text-sm font-semibold mb-2" style={{ color: "#4CAF50" }}>
-                        Newsletter
+                        {dict.newsletter}
                     </h3>
                     <p className="text-sm text-gray-400 mb-4 leading-relaxed">
-                        Stay updated with the latest tender alerts and regulatory changes.
+                        {dict.newsletterDesc}
                     </p>
                     <div className="flex items-center gap-0 rounded-xl overflow-hidden border border-gray-600 focus-within:border-[#4CAF50] transition-colors">
                         <input
@@ -102,7 +107,7 @@ export default function Footer() {
             <div className="border-t border-gray-700">
                 <div className="max-w-6xl mx-auto px-8 py-4 flex items-center justify-between">
                     <p className="text-xs text-gray-500">
-                        © 2024 Al-Mizan. Tous droits réservés. République Algérienne Démocratique et Populaire.
+                        {dict.copyright}
                     </p>
                     <div className="flex items-center gap-3">
                         {/* Globe icon */}
