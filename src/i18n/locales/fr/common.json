@@ -3,6 +3,7 @@
     "helpCenter": "Centre d'aide",
     "contactSupport": "Contacter le support",
     "signIn": "Se connecter",
+    "searchPlaceholder": "Rechercher dans les appels d'offres...",
     "links": {
       "home": "Accueil",
       "tenders": "Appels d'offres",
@@ -44,5 +45,22 @@
   "securedBy": "Sécurisé par les Normes Nationales",
   "realTime": "Données en Temps Réel",
   "ministere": "Ministère des Finances"
+
+},
+"loggedInNavbar": {
+    "userName": "Ahmed Mansour",
+    "userCompany": "MANSOUR CONSTRUCTION SPA"
+},
+"sidebar": {
+    "mainDashboard": "Tableau de bord",
+    "browseAOs": "Parcourir les AOs",
+    "mySubmissions": "Mes soumissions",
+    "recoursClaims": "Recours & réclamations",
+    "marchesRecords": "Registres des marchés",
+    "organizationSettings": "Paramètres de l'organisation",
+    "appelsDOffres": "Appels d'offres",
+    "rapports": "Rapports",
+    "tableauDeBord": "Tableau de bord"
+    
 }
 }

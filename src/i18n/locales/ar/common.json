@@ -3,12 +3,15 @@
     "helpCenter": "مركز المساعدة",
     "contactSupport": "التواصل مع الدعم",
     "signIn": "تسجيل الدخول",
+    "searchPlaceholder": "ابحث في المناقصات...",
     "links": {
       "home": "الرئيسية",
       "tenders": "المناقصات",
       "statistics": "الإحصائيات",
       "legal": "القانونية",
       "contact": "اتصل بنا"
+      
+
     }
   },
   "navbarRegister": {
@@ -44,5 +47,21 @@
   "securedBy": "مؤمّن بالمعايير الوطنية",
   "realTime": "بيانات فورية",
   "ministere": "وزارة المالية"
+
+},
+"loggedInNavbar": {
+    "userName": "أحمد منصور",
+    "userCompany": "شركة منصور للمقاولات ش.م.ذ"
+},
+"sidebar": {
+    "mainDashboard": "لوحة التحكم الرئيسية",
+    "browseAOs": "تصفح طلبات العروض",
+    "mySubmissions": "عروضي المقدمة",
+    "recoursClaims": "الطعون والمطالبات",
+    "marchesRecords": "سجلات الصفقات",
+    "organizationSettings": "إعدادات المنظمة",
+    "appelsDOffres": "عروض الأسعار",
+    "rapports": "التقارير",
+    "tableauDeBord": "لوحة القيادة"
 }
 }
