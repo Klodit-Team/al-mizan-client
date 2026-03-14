@@ -12,7 +12,7 @@ import type { getAuthDictionary } from "@/i18n/get-dictionaries";
 type AuthDict = Awaited<ReturnType<typeof getAuthDictionary>>;
 
 interface LoginFormProps {
-  dict: AuthDict["login"];
+    dict: AuthDict["login"];
 }
 
 export default function LoginForm({ dict }: LoginFormProps) {
@@ -31,8 +31,29 @@ export default function LoginForm({ dict }: LoginFormProps) {
 
     const onSubmit = async (data: LoginFormData) => {
         console.log(data);
-        setAttempCount(attempCount+1);
-        if (attempCount>=10){
+        /*
+        try {
+            const response = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Login failed");
+            }
+            
+            const result = await response.json();
+           
+            router.push(`/${locale}/dashboard`);
+        } catch (error) {
+            console.error("Login error:", error);
+            
+        }
+        */
+        setAttempCount(attempCount + 1);
+        if (attempCount >= 10) {
             console.log("Account locked");
             router.push(`/${locale}/auth/login/account-lock`);
         }
@@ -131,7 +152,7 @@ export default function LoginForm({ dict }: LoginFormProps) {
                     className="w-full py-3 rounded-xl text-white font-semibold text-sm transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
                     style={{ backgroundColor: "#4CAF50" }}
                 >
-                   {isSubmitting ? dict.submitting : dict.submit}
+                    {isSubmitting ? dict.submitting : dict.submit}
                 </button>
             </form>
 
