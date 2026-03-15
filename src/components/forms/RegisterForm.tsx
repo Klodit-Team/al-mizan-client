@@ -43,17 +43,52 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
         if (step === 1) {
             fields = ["legalName", "nif", "nis", "commercialRegister"];
         } else if (step === 2) {
-            fields = ["firstName", "lastName", "phone", "email", "password"];
+            fields = ["phone", "email", "password"];
         }
         const isValid = await trigger(fields);
         if (isValid) setStep(step + 1);
     };
-
+   
     const onSubmit = async (data: RegisterFormData) => {
-        console.log("Final submission:", data);
-        console.log("Files:", uploadedFiles);
-        router.push(`/${locale}/auth/register/success?id=ALM-2024-8881&hash=your_hash`);
-    };
+        
+            console.log("step", step);
+            console.log("Final submission:", data);
+            console.log("Files:", uploadedFiles);
+        
+        /*
+        try {
+            const formData = new FormData();
+            
+            
+            Object.entries(data).forEach(([key, value]) => {
+                formData.append(key, value as string);
+            });
+            
+            
+            if (uploadedFiles.rc) formData.append("rc", uploadedFiles.rc);
+            if (uploadedFiles.nif) formData.append("nif", uploadedFiles.nif);
+            if (uploadedFiles.cnas) formData.append("cnas", uploadedFiles.cnas);
+            
+            const response = await fetch("/api/auth/register", {
+                method: "POST",
+                body: formData, 
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Registration failed");
+            }
+            
+            const result = await response.json();
+            router.push(`/${locale}/auth/register/success?id=${result.id}&hash=${result.hash}`);
+        } catch (error) {
+            console.error("Registration error:", error);
+          
+        }
+        */
+        console.log("Registration successful");
+       router.push(`/${locale}/auth/register/success?id=ALM-2024-8881&hash=your_hash`);
+     };
 
     const handleBack = () => {
         if (step > 1) {
@@ -167,23 +202,10 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
             {/* ── STEP 2 ── */}
             {step === 2 && (
                 <div className="p-8 space-y-5">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">First Name</label>
-                            <input {...register("firstName")} type="text" placeholder="John"
-                                className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2 text-[#94A3B8] placeholder:text-[#94A3B8] ${errors.firstName ? "border-red-400 focus:ring-red-100" : "border-gray-200 focus:ring-green-100 focus:border-[#4CAF50]"}`} />
-                            {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName.message}</p>}
-                        </div>
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Last Name</label>
-                            <input {...register("lastName")} type="text" placeholder="Doe"
-                                className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2 text-[#94A3B8] placeholder:text-[#94A3B8] ${errors.lastName ? "border-red-400 focus:ring-red-100" : "border-gray-200 focus:ring-green-100 focus:border-[#4CAF50]"}`} />
-                            {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName.message}</p>}
-                        </div>
-                    </div>
+                   
 
                     <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Phone Number</label>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{dict.fields.phone}</label>
                         <div className="relative">
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -197,7 +219,7 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
                     </div>
 
                     <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Business Email (Login)</label>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{dict.fields.email}</label>
                         <div className="relative">
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -211,7 +233,7 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
                     </div>
 
                     <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Password</label>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{dict.fields.password}</label>
                         <div className="relative">
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -243,8 +265,8 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
                             </svg>
                         </div>
                         <div>
-                            <p className="text-xs font-semibold text-gray-700">Primary Administrator</p>
-                            <p className="text-xs text-gray-400 leading-snug mt-0.5">This account will have full administrative access to manage the organization's profile.</p>
+                            <p className="text-xs font-semibold text-gray-700">{dict.fields.adminTitle}</p>
+                            <p className="text-xs text-gray-400 leading-snug mt-0.5">{dict.fields.adminDescription}</p>
                         </div>
                     </div>
 
@@ -252,7 +274,7 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
                         <svg className="w-4 h-4 text-[#4CAF50]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                         </svg>
-                        IDENTITY VERIFICATION REQUIRED
+                        {dict.fields.identityVerification}
                     </div>
 
                     <StepActions step={step} isSubmitting={isSubmitting} onBack={handleBack} onNext={handleNext} backLabel={backLabels[step - 1]} continueLabel={dict.actions.continue} processingLabel={dict.actions.processing} />
@@ -261,7 +283,14 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
 
             {/* ── STEP 3 ── */}
             {step === 3 && (
-                <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-4">
+                <form onSubmit={handleSubmit(onSubmit, (errors) => console.log("VALIDATION ERRORS:", errors))}
+                     className="p-8 space-y-4">
+                    <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
+                        <svg className="w-4 h-4 text-[#4CAF50]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        {dict.fields.identityVerification}
+                    </div>
                     <div className={`border-2 border-dashed rounded-xl p-5 text-center transition-all ${uploadedFiles.rc ? "border-[#4CAF50] bg-green-50" : "border-gray-200 hover:border-gray-300"}`}>
                         <label className="cursor-pointer block">
                             <input type="file" className="hidden" accept=".pdf,.jpg,.png" onChange={(e) => setUploadedFiles(prev => ({ ...prev, rc: e.target.files?.[0] || null }))} />
@@ -274,7 +303,7 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
                                             </svg>
                                         </div>
                                         <div className="text-left">
-                                            <p className="text-xs font-semibold text-gray-700">Commercial Register (RC)</p>
+                                            <p className="text-xs font-semibold text-gray-700">{dict.fields.rc}</p>
                                             <p className="text-xs text-gray-400 truncate max-w-[180px]">{uploadedFiles.rc.name}</p>
                                         </div>
                                     </div>
@@ -292,8 +321,8 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                                         </svg>
                                     </div>
-                                    <p className="text-xs font-semibold text-gray-700">Commercial Register (RC)</p>
-                                    <p className="text-xs text-[#4CAF50] font-semibold mt-1">TAP TO SCAN</p>
+                                    <p className="text-xs font-semibold text-gray-700">{dict.fields.rc}</p>
+                                    <p className="text-xs text-[#4CAF50] font-semibold mt-1">{dict.fields.rcScan}</p>
                                 </>
                             )}
                         </label>
@@ -330,7 +359,7 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
                                 </svg>
                             </div>
                             <div>
-                                <p className="text-xs font-semibold text-gray-700">CNAS Clearance</p>
+                                <p className="text-xs font-semibold text-gray-700">{dict.fields.cnas}</p>
                                 <p className="text-xs text-gray-400">{uploadedFiles.cnas ? uploadedFiles.cnas.name : "File: CNAS_Clearance_2024.pdf"}</p>
                             </div>
                         </label>
@@ -350,8 +379,8 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
                             </svg>
                         </div>
                         <div>
-                            <p className="text-xs font-semibold text-gray-700">Data Privacy Guarantee</p>
-                            <p className="text-xs text-gray-400 leading-snug mt-0.5">Your documents are encrypted and only accessible by authorized verification personnel.</p>
+                            <p className="text-xs font-semibold text-gray-700">{dict.fields.dataPrivacyTitle}</p>
+                            <p className="text-xs text-gray-400 leading-snug mt-0.5">{dict.fields.dataPrivacyDescription}</p>
                         </div>
                     </div>
 
@@ -359,16 +388,15 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
                         <svg className="w-4 h-4 text-[#4CAF50]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                         </svg>
-                        256E SECURED
+                        {dict.fields.secured}
                     </div>
 
                     <button
                         type="submit"
-                        disabled={isSubmitting}
                         className="w-full py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
                         style={{ backgroundColor: "#30E86E", color: "#0F172A" }}
                     >
-                        {isSubmitting ? dict.actions.processing : "Submit Registration"}
+                        {dict.fields.submitRegistration}
                     </button>
 
                     <div className="text-center">

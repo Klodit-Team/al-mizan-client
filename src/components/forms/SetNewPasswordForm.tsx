@@ -7,7 +7,7 @@ import type { getAuthDictionary } from "@/i18n/get-dictionaries";
 type AuthDict = Awaited<ReturnType<typeof getAuthDictionary>>;
 
 interface SetNewPasswordFormProps {
-    
+
     dict: AuthDict["setNewPassword"];
 }
 
@@ -20,7 +20,7 @@ function getPasswordStrength(password: string): { label: string; width: string; 
     return { label: "Strong", width: "100%", color: "#4CAF50" };
 }
 
-export default function SetNewPasswordForm({  dict }: SetNewPasswordFormProps) {
+export default function SetNewPasswordForm({ dict }: SetNewPasswordFormProps) {
     const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(""));
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -29,8 +29,8 @@ export default function SetNewPasswordForm({  dict }: SetNewPasswordFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
     const router = useRouter();
-     const params = useParams();
-         const locale = (params?.locale as Locale) || "fr";
+    const params = useParams();
+    const locale = (params?.locale as Locale) || "fr";
     const strength = getPasswordStrength(password);
 
     const handleCodeChange = (index: number, value: string) => {
@@ -48,6 +48,28 @@ export default function SetNewPasswordForm({  dict }: SetNewPasswordFormProps) {
     const handleSubmit = async () => {
         if (password !== confirmPassword || code.join("").length < CODE_LENGTH) return;
         setIsSubmitting(true);
+        /*
+        try {
+            const response = await fetch("/api/auth/reset-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    code: code.join(""),
+                    password: password,
+                }),
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Password reset failed");
+            }
+            
+            router.push(`/${locale}/auth/login`);
+        } catch (error) {
+            console.error("Reset password error:", error);
+            
+        }
+        */
         await new Promise((r) => setTimeout(r, 1000));
         setIsSubmitting(false);
         router.push(`/${locale}/auth/login`);
@@ -176,7 +198,7 @@ export default function SetNewPasswordForm({  dict }: SetNewPasswordFormProps) {
                     </button>
                 </div>
 
-                
+
                 <p className="text-center text-xs text-gray-400 uppercase tracking-widest">{dict.ministere}</p>
             </div>
         </div>

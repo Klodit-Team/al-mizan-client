@@ -14,13 +14,17 @@ interface RegistrationSuccessProps {
 
 export default function RegistrationSuccess({
     locale,
-    registrationId = "ALM-2024-8881",
-    receiptHash = "b98b44298fc13349ef5f4c998f392427a441a6490 904ca465901b78526655",
+    registrationId,
+    receiptHash,
     dict,
 }: RegistrationSuccessProps) {
     const [copied, setCopied] = useState(false);
+
+    const displayId = registrationId || "ALM-2024-8881";
+    const displayHash = receiptHash || "b98b44298fc13349ef5f4c998f392427a441a6490 904ca465901b78526655";
+
     const handleCopy = () => {
-        navigator.clipboard.writeText(receiptHash);
+        navigator.clipboard.writeText(displayHash);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
@@ -33,7 +37,7 @@ export default function RegistrationSuccess({
 
                 {/* Top success banner */}
                 <div className="relative  bg-[#364150] px-6 pt-10 pb-16 mb-16 flex flex-col items-center text-center">
-                    
+
                     {/* Success icon */}
                     <div className="relative z-10 w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: "#30E86E" }}>
                         <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
@@ -43,7 +47,7 @@ export default function RegistrationSuccess({
 
                     <h1 className="relative z-10 text-xl font-bold text-white">{dict.title}</h1>
                     <p className="relative z-10 text-sm text-gray-400 mt-1">
-                        {dict.registrationId}: <span className="text-gray-300 font-medium">{registrationId}</span>
+                        {dict.registrationId}: <span className="text-gray-300 font-medium">{displayId}</span>
                     </p>
                 </div>
 
@@ -116,7 +120,7 @@ export default function RegistrationSuccess({
 
                         <div className="bg-gray-50 rounded-xl p-3 flex items-start justify-between gap-2">
                             <p className="text-xs text-gray-500 font-mono leading-relaxed break-all">
-                                {receiptHash}
+                                {displayHash}
                             </p>
                             <button
                                 onClick={handleCopy}
