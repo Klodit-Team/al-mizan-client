@@ -52,6 +52,14 @@
     "userCompany": "MANSOUR CONSTRUCTION SPA"
 },
 "sidebar": {
+  "admin": {
+       "organisation":"Organisations",
+       "utilisateurs":"Utilisateurs ",
+       "operateurs":"Operateurs",
+       "commission":"Commissions",
+       "audit":"Journal d'Audit"
+       
+    },
     "mainDashboard": "Tableau de bord",
     "browseAOs": "Parcourir les AOs",
     "mySubmissions": "Mes soumissions",
@@ -62,5 +70,66 @@
     "rapports": "Rapports",
     "tableauDeBord": "Tableau de bord"
     
-}
+},
+"dashboard": {
+    "admin": {
+      "title": "Tableau de Bord",
+      "subtitle": "Gérez vos procédures de commande publique en toute transparence.",
+      "createAO": "Créer un Nouvel AO",
+      "stats": {
+          "utilisateursActifs": "Utilisateurs actifs",
+          "utilisateursActifsBadge": "+5 ce mois",
+          "aoEnCours": "AOs en cours",
+          "aoEnCoursBadge": "En cours",
+          "recoursOuverts": "Recours ouverts",
+          "recoursOuvertsBadge": "Attention",
+          "incidentsIA": "Incidents IA détectés",
+          "incidentsIABadge": "Urgent"
+      },
+      "actionsRapides": {
+        "title": "Actions Rapides",
+        "historique": "Historique des connexions",
+        "mesAOs": "Mes AO",
+        "utilisateurs": "Liste des utilisateurs",
+        "commission":"Commission"
+      },
+      "activiteRecente": {
+        "title": "Activité Récente",
+        "voirTout": "VOIR TOUT",
+        "activities": {
+          "update": "Statut AO #2023-045 mis à jour",
+          "updateDesc": "L'appel d'offres est passé en phase \"Évaluation Technique\"",
+          "submission": "Nouvelle soumission reçue",
+          "submissionDesc": "Entreprise \"TechBuild SARL\" pour le lot 2 (Gros Œuvre)",
+          "recours": "Recours déposé",
+          "recoursDesc": "Recours précontractuel déposé par \"BTP-Plus\" sur AO #2023-039",
+          "pv": "Procès-verbal signé",
+          "pvDesc": "PV de la commission d'ouverture des plis #2023-048 validé",
+          "marche": "Statut Marché #M23-011",
+          "marcheDesc": "Ordre de service notifié à l'attributaire"
+        }
+      },
+      "alertesIA": {
+        "title": "ALERTES IA AL-MIZAN",
+        "divergence": "Divergence Détectée",
+        "divergenceDesc": "Anomalie détectée dans les prix unitaires de l'offre #LOT-3. Les prix sont 40% inférieurs à la moyenne établie.",
+        "analyserRapport": "Analyser le rapport"
+      },
+      "echeances": {
+        "title": "Échéances Prochaines (48h)",
+        "finDepot": "Fin de dépôt des plis",
+        "finDepotSub": "AO #2023-050 · Demain 10:00",
+        "reunion": "Réunion Commission Technique",
+        "reunionSub": "Salle 4b · Après-demain 14:00",
+        "expiration": "Expiration délai recours",
+        "expirationSub": "Marché #2023-041 · Demain 23:59",
+        "ouvrirCalendrier": "Ouvrir le calendrier complet"
+      },
+      "support": {
+        "title": "Support & Guide",
+        "guide": "Guide des procédures 2024",
+        "contact": "Contacter le support technique"
+      }
+    }
+  }
 }

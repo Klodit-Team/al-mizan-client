@@ -54,6 +54,14 @@
     "userCompany": "شركة منصور للمقاولات ش.م.ذ"
 },
 "sidebar": {
+    "admin": {
+       "organisation":"المنظمات",
+       "utilisateurs":"المستعملين",
+       "operateurs":"المتعاملون الاقتصاديون",
+       "commission":"اللجان",
+       "audit":"سجل المراجعة"
+
+    },
     "mainDashboard": "لوحة التحكم الرئيسية",
     "browseAOs": "تصفح طلبات العروض",
     "mySubmissions": "عروضي المقدمة",
@@ -63,5 +71,66 @@
     "appelsDOffres": "عروض الأسعار",
     "rapports": "التقارير",
     "tableauDeBord": "لوحة القيادة"
-}
+},
+  "dashboard": {
+    "admin": {
+      "title": "لوحة التحكم",
+      "subtitle": "أدر إجراءات الصفقات العمومية بكل شفافية.",
+      "createAO": "إنشاء طلب عروض جديد",
+      "stats": {
+          "utilisateursActifs": "المستخدمون النشطون",
+          "utilisateursActifsBadge": "+5 هذا الشهر",
+          "aoEnCours": "طلبات العروض الجارية",
+          "aoEnCoursBadge": "جارية",
+          "recoursOuverts": "الطعون المفتوحة",
+          "recoursOuvertsBadge": "تنبيه",
+          "incidentsIA": "حوادث الذكاء الاصطناعي",
+          "incidentsIABadge": "عاجل"
+      },
+      "actionsRapides": {
+        "title": "الإجراءات السريعة",
+        "historique": "تسجيلات الدخول",
+        "mesAOs": "طلباتي",
+        "utilisateurs": "المستعملين",
+        "commission":"اللجان"
+      },
+      "activiteRecente": {
+        "title": "النشاط الأخير",
+        "voirTout": "عرض الكل",
+        "activities": {
+          "update": "تحديث حالة طلب العروض #2023-045",
+          "updateDesc": "انتقل طلب العروض إلى مرحلة \"التقييم التقني\"",
+          "submission": "عرض جديد مستلم",
+          "submissionDesc": "شركة \"TechBuild SARL\" للحصة 2 (الأشغال الكبرى)",
+          "recours": "طعن مودع",
+          "recoursDesc": "طعن تعاقدي مسبق مودع من \"BTP-Plus\" على طلب #2023-039",
+          "pv": "محضر موقّع",
+          "pvDesc": "تم التحقق من محضر لجنة فتح الأظرفة #2023-048",
+          "marche": "حالة الصفقة #M23-011",
+          "marcheDesc": "تم تبليغ أمر الخدمة للمتعاقد المسند له"
+        }
+      },
+      "alertesIA": {
+        "title": "تنبيهات الذكاء الاصطناعي - الميزان",
+        "divergence": "انحراف مكتشف",
+        "divergenceDesc": "شُوهد شذوذ في الأسعار الوحدوية للعرض #LOT-3. الأسعار أقل بنسبة 40% من المتوسط المحدد.",
+        "analyserRapport": "تحليل التقرير"
+      },
+      "echeances": {
+        "title": "المواعيد القادمة (48 ساعة)",
+        "finDepot": "نهاية إيداع الأظرفة",
+        "finDepotSub": "طلب #2023-050 · غداً 10:00",
+        "reunion": "اجتماع اللجنة التقنية",
+        "reunionSub": "قاعة 4b · بعد غد 14:00",
+        "expiration": "انتهاء أجل الطعن",
+        "expirationSub": "الصفقة #2023-041 · غداً 23:59",
+        "ouvrirCalendrier": "فتح التقويم الكامل"
+      },
+      "support": {
+        "title": "الدعم والدليل",
+        "guide": "دليل الإجراءات 2024",
+        "contact": "التواصل مع الدعم التقني"
+      }
+    }
+  }
 }
