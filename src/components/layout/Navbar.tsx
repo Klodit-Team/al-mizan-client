@@ -62,7 +62,10 @@ export default function Navbar({ isLoggedIn = false, userInitial = "R", userName
             
                 <div className="flex items-center gap-4">
                 
-                    <button className="relative text-gray-400 hover:text-white transition-colors" onClick={()=>{
+                    <button 
+                        
+                        title="notifications"
+                        className="relative text-gray-400 hover:text-white transition-colors" onClick={()=>{
                         router.push('/dashboard/admin/notif')
                     }}>
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -72,11 +75,29 @@ export default function Navbar({ isLoggedIn = false, userInitial = "R", userName
                             !
                         </span>
                     </button>
+                    <button
 
+                        title={dict.logout}
+                        className="relative text-gray-400 hover:text-white transition-colors"
+                        onClick={async () => {
+                            try {
+                                await fetch("/api/auth/logout", { method: "POST" });
+                            } catch {}
+                            router.push(`/${locale}`);
+                        }}
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        
+                    </button>
                 
                     <div className="w-px h-6 bg-gray-600" />
 
-                    <div className="flex items-center gap-3 cursor-pointer group">
+                    <div className="flex items-center gap-3 cursor-pointer group" onClick={() => {
+                        router.push('/dashboard/admin/profile')
+                        }}
+                    >
                         <div className="text-right">
                             <p className="text-sm font-semibold text-white leading-tight">{userName}</p>
                             <p className="text-xs text-gray-400 leading-tight">{userCompany}</p>

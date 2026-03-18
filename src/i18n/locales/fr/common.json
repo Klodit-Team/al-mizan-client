@@ -4,6 +4,8 @@
     "contactSupport": "Contacter le support",
     "signIn": "Se connecter",
     "searchPlaceholder": "Rechercher dans les appels d'offres...",
+        "logout":"Déconnexion",
+
     "links": {
       "home": "Accueil",
       "tenders": "Appels d'offres",
