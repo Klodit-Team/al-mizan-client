@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import OrganisationCard from "./Organisationcard";
 import { type Organisation, type OrgType } from "./types";
 
@@ -27,15 +27,32 @@ interface OrganisationsPageProps {
 }
 
 export default function OrganisationsPage({ locale }: OrganisationsPageProps) {
-    const [organisations] = useState<Organisation[]>(dummyOrgs);
+    const [organisations, setOrganisations] = useState<Organisation[]>(dummyOrgs);
     const [search, setSearch] = useState("");
     const [typeFilter, setTypeFilter] = useState<OrgType | "all">("all");
     const [verifiedFilter, setVerifiedFilter] = useState<"all" | "verified" | "pending">("all");
+    const [isLoading, setIsLoading] = useState(true);
 
-    // ── API HANDLER (wire up when backend is ready) ──
-    // useEffect(() => {
-    //     fetch("/api/admin/organisations").then(r => r.json()).then(setOrganisations);
-    // }, []);
+    const fetchOrganisations = async () => {
+        try {
+            setIsLoading(true);
+            const res = await fetch("/api/admin/organisations");
+            if (res.ok) {
+                const data = await res.json();
+                setOrganisations(data);
+            } else {
+                console.error("Failed to fetch organisations");
+            }
+        } catch (error) {
+            console.error("Error fetching organisations:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchOrganisations();
+    }, []);
 
     const filtered = organisations.filter((org) => {
         const matchSearch = org.denomination.toLowerCase().includes(search.toLowerCase()) ||

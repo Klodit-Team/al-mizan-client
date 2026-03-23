@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { type Organisation, type User } from "./types";
 
@@ -49,12 +49,12 @@ interface OrganisationDetailPageProps {
 export default function OrganisationDetailPage({ locale, orgId }: OrganisationDetailPageProps) {
     const router = useRouter();
     const [org, setOrg] = useState<Organisation>(dummyOrg);
-    const [users] = useState<User[]>(dummyUsers);
+    const [users, setUsers] = useState<User[]>(dummyUsers);
+    const [isLoading, setIsLoading] = useState(true);
     const [verifying, setVerifying] = useState(false);
     const [rejecting, setRejecting] = useState(false);
     const [showConfirm, setShowConfirm] = useState<"verify" | "reject" | null>(null);
 
-    // ── API HANDLERS (wire up when backend is ready) ──────────────
     const handleVerify = async () => {
         setVerifying(true);
         try {
@@ -76,7 +76,33 @@ export default function OrganisationDetailPage({ locale, orgId }: OrganisationDe
         finally { setRejecting(false); }
     };
 
-    const initials = org.denomination.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+    const fetchOrganisationDetails = async () => {
+        try {
+            setIsLoading(true);
+            const res = await fetch(`/api/admin/organisations/${orgId}`);
+            if (res.ok) {
+                const data = await res.json();
+                setOrg(data.organisation || data);
+                if (data.users) {
+                    setUsers(data.users);
+                }
+            } else {
+                console.error("Failed to fetch organisation details");
+            }
+        } catch (error) {
+            console.error("Error fetching organisation details:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (orgId) {
+            fetchOrganisationDetails();
+        }
+    }, [orgId]);
+
+    const initials = org?.denomination?.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "";
 
     return (
         <div className="p-6 space-y-5 max-w-4xl mx-auto">
@@ -134,7 +160,7 @@ export default function OrganisationDetailPage({ locale, orgId }: OrganisationDe
                 )}
             </div>
 
-            {/* Confirm modal */}
+            
             {showConfirm && (
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
                     <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-xl">
@@ -164,9 +190,9 @@ export default function OrganisationDetailPage({ locale, orgId }: OrganisationDe
                 </div>
             )}
 
-            {/* Details grid */}
+            
             <div className="grid grid-cols-2 gap-4">
-                {/* Legal info */}
+               
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-3">
                     <h2 className="text-sm font-bold text-gray-700 mb-3">Informations légales</h2>
                     {[
