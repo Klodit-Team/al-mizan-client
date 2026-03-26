@@ -31,7 +31,7 @@ export default function UsersPage({ locale }: UsersPageProps) {
     const fetchUsers = async () => {
         try {
             setIsLoading(true);
-            const res = await fetch("/api/admin/users");
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`);
             if (res.ok) {
                 const data = await res.json();
                 setUsers(data);
@@ -53,7 +53,7 @@ export default function UsersPage({ locale }: UsersPageProps) {
         // Optimistic update
         setUsers(users.map(u => u.id === userId ? { ...u, role: newRole as any } : u));
         try {
-            const res = await fetch(`/api/admin/users/${userId}/role`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/${userId}/role`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ role: newRole })

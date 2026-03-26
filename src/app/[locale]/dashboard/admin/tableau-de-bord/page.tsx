@@ -27,7 +27,7 @@ export default async function AdminDashboardPage({ params }: DashboardPageProps)
         };
 
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/dashboard/admin/stats`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/admin/stats`, {
             cache: 'no-store'
         });
         if (response.ok) {

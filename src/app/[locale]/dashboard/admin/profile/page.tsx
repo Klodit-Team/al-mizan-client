@@ -61,7 +61,7 @@ export default function ModifierProfilPage() {
             if (fileInputRef.current?.files?.[0]) {
                 formData.append("avatar", fileInputRef.current.files[0]);
             }
-            // await fetch("/api/profile/update", { method: "PATCH", body: formData });
+            // await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/update`, { method: "PATCH", body: formData });
             await new Promise((r) => setTimeout(r, 800)); // remove when API is ready
             setSuccessMessage("Profil mis à jour avec succès.");
             setForm((prev) => ({ ...prev, currentPassword: "", newPassword: "", confirmPassword: "" }));

@@ -36,7 +36,7 @@ export default function OrganisationsPage({ locale }: OrganisationsPageProps) {
     const fetchOrganisations = async () => {
         try {
             setIsLoading(true);
-            const res = await fetch("/api/admin/organisations");
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/organisations`);
             if (res.ok) {
                 const data = await res.json();
                 setOrganisations(data);

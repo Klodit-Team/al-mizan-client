@@ -58,7 +58,7 @@ export default function OrganisationDetailPage({ locale, orgId }: OrganisationDe
     const handleVerify = async () => {
         setVerifying(true);
         try {
-            // await fetch(`/api/admin/organisations/${orgId}/verify`, { method: "PATCH" });
+            // await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/organisations/${orgId}/verify`, { method: "PATCH" });
             await new Promise((r) => setTimeout(r, 800));
             setOrg((prev) => ({ ...prev, is_verified: true }));
             setShowConfirm(null);
@@ -69,7 +69,7 @@ export default function OrganisationDetailPage({ locale, orgId }: OrganisationDe
     const handleReject = async () => {
         setRejecting(true);
         try {
-            // await fetch(`/api/admin/organisations/${orgId}/reject`, { method: "PATCH" });
+            // await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/organisations/${orgId}/reject`, { method: "PATCH" });
             await new Promise((r) => setTimeout(r, 800));
             router.push(`/${locale}/dashboard/admin/organisations`);
         } catch {}
@@ -79,7 +79,7 @@ export default function OrganisationDetailPage({ locale, orgId }: OrganisationDe
     const fetchOrganisationDetails = async () => {
         try {
             setIsLoading(true);
-            const res = await fetch(`/api/admin/organisations/${orgId}`);
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/organisations/${orgId}`);
             if (res.ok) {
                 const data = await res.json();
                 setOrg(data.organisation || data);

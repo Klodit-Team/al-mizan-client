@@ -69,7 +69,7 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
             if (uploadedFiles.nif) formData.append("nif", uploadedFiles.nif);
             if (uploadedFiles.cnas) formData.append("cnas", uploadedFiles.cnas);
             
-            const response = await fetch("/api/auth/register", {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
                 method: "POST",
                 body: formData, 
             });

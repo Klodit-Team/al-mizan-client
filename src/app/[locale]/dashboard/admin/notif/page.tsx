@@ -99,12 +99,12 @@ export default function NotificationsPage() {
 
     const handleMarkRead = (id: string) => {
         setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-        fetch(`/api/notifications/${id}/read`, { method: "PATCH" }).catch(() => {});
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications/${id}/read`, { method: "PATCH" }).catch(() => {});
     };
 
     const handleMarkAllRead = () => {
         setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-        fetch("/api/notifications/read-all", { method: "PATCH" }).catch(() => {});
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications/read-all`, { method: "PATCH" }).catch(() => {});
     };
 
     // ── FILTERS ───────────────────────────────────────────────────────
