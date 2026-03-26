@@ -2,14 +2,9 @@
 import Link from "next/link";
 import { type Organisation } from "./types";
 
-const typeLabels: Record<string, string> = {
-    EPA: "EPA",
-    EPIC: "EPIC",
-    MINISTERE: "Ministère",
-    ENTREPRISE_PRIVEE: "Entreprise Privée",
-    ENTREPRISE_PUBLIQUE: "Entreprise Publique",
-    GROUPEMENT: "Groupement",
-};
+import type { getDictionary } from "@/i18n/get-dictionaries";
+
+type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
 
 const typeColors: Record<string, string> = {
     EPA: "bg-blue-50 text-blue-600",
@@ -23,9 +18,19 @@ const typeColors: Record<string, string> = {
 interface OrganisationCardProps {
     org: Organisation;
     locale: string;
+    dict: CommonDict['dashboard']['admin']['organisationsPage'];
 }
 
-export default function OrganisationCard({ org, locale }: OrganisationCardProps) {
+export default function OrganisationCard({ org, locale, dict }: OrganisationCardProps) {
+    const typeLabels: Record<string, string> = {
+        EPA: dict.types.EPA,
+        EPIC: dict.types.EPIC,
+        MINISTERE: dict.types.MINISTERE,
+        ENTREPRISE_PRIVEE: dict.types.ENTREPRISE_PRIVEE,
+        ENTREPRISE_PUBLIQUE: dict.types.ENTREPRISE_PUBLIQUE,
+        GROUPEMENT: dict.types.GROUPEMENT,
+    };
+
     const initials = org.denomination.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 
     return (
@@ -44,7 +49,7 @@ export default function OrganisationCard({ org, locale }: OrganisationCardProps)
                     </div>
                     {/* Verified badge */}
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${org.is_verified ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600"}`}>
-                        {org.is_verified ? "Vérifié" : "En attente"}
+                        {org.is_verified ? dict.card.verified : dict.card.pending}
                     </span>
                 </div>
 

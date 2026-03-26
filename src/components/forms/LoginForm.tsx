@@ -47,9 +47,9 @@ export default function LoginForm({ dict }: LoginFormProps) {
             const result = await response.json();
             
             if (response.role=="admin")
-            router.push(`/${locale}/dashboard/admin`);
+            router.push(`/${locale}/dashboard/admin/tableau-de-bord`);
             else if (response.role=="contractant")
-            router.push(`/${locale}/dashboard/contractant`);
+            router.push(`/${locale}/dashboard/contractant/tableau-de-bord`);
 
         } catch (error) {
             console.error("Login error:", error);

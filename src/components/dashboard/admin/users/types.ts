@@ -6,4 +6,6 @@ export interface User {
     organisation_id: string;
     created_at: string;
     is_active: boolean;
+    is_blacklisted?: boolean;
+    blacklist_motif?: string;
 }

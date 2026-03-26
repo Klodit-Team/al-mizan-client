@@ -131,6 +131,172 @@
         "title": "Support & Guide",
         "guide": "Guide des procédures 2024",
         "contact": "Contacter le support technique"
+      },
+      "usersPage": {
+        "title": "Utilisateurs",
+        "subtitle": "Gérez les utilisateurs et leurs habilitations.",
+        "active": "Actifs",
+        "inactive": "Inactifs",
+        "searchPlaceholder": "Rechercher par nom, email...",
+        "allRoles": "Tous les rôles",
+        "roles": {
+          "ADMIN": "Administrateur",
+          "SERVICE_CONTRACTANT": "Service Contractant",
+          "OPERATEUR_ECONOMIQUE": "Opérateur Économique",
+          "MEMBRE_COMMISSION": "Membre Commission",
+          "CONTROLEUR": "Contrôleur"
+        },
+        "listTitle": "Liste des utilisateurs",
+        "noUsers": "Aucun utilisateur trouvé",
+        "columns": {
+          "name": "Nom",
+          "email": "Email",
+          "role": "Rôle & Attribution",
+          "status": "Statut",
+          "createdAt": "Créé le",
+          "actions": "Actions"
+        },
+        "statusLabels": {
+          "active": "Actif",
+          "inactive": "Inactif",
+          "blacklisted": "Blacklisté"
+        },
+        "actionsLabels": {
+          "blacklist": "Blacklister",
+          "unblacklist": "Retirer"
+        },
+        "modal": {
+          "title": "Blacklister l'opérateur",
+          "warning1": "Vous êtes sur le point de blacklister",
+          "warning2": "Veuillez indiquer le motif de cette action. Cet opérateur sera exclu des marchés publics.",
+          "motifLabel": "Motif de blacklistage",
+          "motifPlaceholder": "Expliquez la raison de l'exclusion...",
+          "cancel": "Annuler",
+          "confirm": "Confirmer le blacklistage"
+        }
+      },
+      "organisationsPage": {
+        "title": "Organisations",
+        "subtitle": "Gérez et vérifiez les organisations enregistrées.",
+        "verified": "Vérifiées",
+        "pendingText": "En attente",
+        "searchPlaceholder": "Rechercher par nom, wilaya, NIF...",
+        "types": {
+          "all": "Tous",
+          "MINISTERE": "Ministère",
+          "EPA": "EPA",
+          "EPIC": "EPIC",
+          "ENTREPRISE_PRIVEE": "Entreprise Privée",
+          "ENTREPRISE_PUBLIQUE": "Entreprise Publique",
+          "GROUPEMENT": "Groupement"
+        },
+        "filters": {
+          "all": "Tous",
+          "verified": "✓ Vérifiées",
+          "pending": "⏳ En attente"
+        },
+        "noOrganisations": "Aucune organisation trouvée",
+        "displayingCount": "Affichage de {{filtered}} sur {{total}} organisations",
+        "card": {
+          "verified": "Vérifié",
+          "pending": "En attente"
+        }
+      },
+      "commissionsPage": {
+        "title": "Commissions des Marchés",
+        "subtitle": "Gérez et créez les commissions nationales, sectorielles, de wilaya et communales.",
+        "searchPlaceholder": "Rechercher par désignation...",
+        "createButton": "Créer une commission",
+        "noCommissions": "Aucune commission trouvée",
+        "columns": {
+          "designation": "Désignation",
+          "type": "Type",
+          "niveau": "Niveau",
+          "statut": "Statut",
+          "date": "Date de constitution",
+          "appelOffre": "Appel d'offre"
+        },
+        "modal": {
+          "title": "Créer une commission",
+          "designationLabel": "Désignation",
+          "designationPlaceholder": "Ex: Commission Nationale d'Évaluation...",
+          "typeLabel": "Type de commission",
+          "niveauLabel": "Niveau",
+          "appelOffreLabel": "ID de l'Appel d'Offre (Optionnel)",
+          "appelOffrePlaceholder": "Entrez l'identifiant...",
+          "cancel": "Annuler",
+          "create": "Créer la commission"
+        },
+        "enums": {
+          "type": {
+            "EVALUATION": "Évaluation",
+            "MARCHE": "Marché"
+          },
+          "niveau": {
+            "NATIONALE": "Nationale",
+            "SECTORIELLE": "Sectorielle",
+            "WILAYA": "Wilaya",
+            "COMMUNALE": "Communale"
+          },
+          "statut": {
+            "CONSTITUEE": "Constituée",
+            "ACTIVE": "Active",
+            "DISSOUTE": "Dissoute"
+          }
+        }
+      },
+      "operateursPage": {
+        "title": "Opérateurs Économiques",
+        "subtitle": "Gérez les opérateurs inscrits et blacklistés.",
+        "activeCount": "Opérateurs Actifs",
+        "blacklistedCount": "Opérateurs Blacklistés",
+        "searchPlaceholder": "Rechercher par nom, email...",
+        "listTitle": "Liste des opérateurs",
+        "noOperators": "Aucun opérateur trouvé",
+        "columns": {
+          "name": "Nom de l'opérateur",
+          "email": "Adresse Email",
+          "status": "Statut",
+          "createdAt": "Inscrit le",
+          "actions": "Actions"
+        },
+        "statusLabels": {
+          "active": "Actif",
+          "inactive": "Inactif",
+          "blacklisted": "Blacklisté"
+        },
+        "actionsLabels": {
+          "blacklist": "Blacklister",
+          "unblacklist": "Retirer"
+        },
+        "modal": {
+          "title": "Blacklister l'opérateur",
+          "warning1": "Vous êtes sur le point de blacklister",
+          "warning2": "Veuillez indiquer le motif de cette action. Cet opérateur sera exclu des marchés publics.",
+          "motifLabel": "Motif de blacklistage",
+          "motifPlaceholder": "Expliquez la raison de l'exclusion...",
+          "cancel": "Annuler",
+          "confirm": "Confirmer le blacklistage"
+        }
+      },
+      "notificationsPage": {
+        "title": "Notifications",
+        "subtitle": "Gérez vos alertes et mises à jour de marchés",
+        "markAllAsRead": "Marquer tout comme lu",
+        "filterByCategory": "Filtrer par catégorie",
+        "unreadOnly": "Non lus seulement",
+        "noNotifications": "Aucune notification",
+        "categories": {
+            "all": "Toutes",
+            "publication_ao": "Publication AO",
+            "depot_confirme": "Dépôt confirmé",
+            "ouverture_plis": "Ouverture plis",
+            "evaluation_resultat": "Evaluation résultat",
+            "attribution_provisoire": "Attribution provisoire",
+            "attribution_definitive": "Attribution définitive",
+            "recours_update": "Recours update",
+            "systeme": "Système"
+        }
       }
     }
   }

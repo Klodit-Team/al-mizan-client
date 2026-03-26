@@ -1,9 +1,12 @@
 "use client";
 
-import { type Notification } from "@/app/[locale]/dashboard/admin/notif/page";
-const categoryStyles: Record<string, { label: string; color: string; bg: string; dot: string; icon: React.ReactNode }> = {
+import { type Notification, type NotificationCategory } from "@/components/dashboard/admin/notif/Notificationspage";
+import type { getDictionary } from "@/i18n/get-dictionaries";
+
+type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
+
+const categoryStyles: Record<string, { color: string; bg: string; dot: string; icon: React.ReactNode }> = {
     publication_ao: {
-        label: "PUBLICATION AO",
         color: "text-blue-600",
         bg: "bg-blue-50",
         dot: "bg-blue-500",
@@ -16,7 +19,6 @@ const categoryStyles: Record<string, { label: string; color: string; bg: string;
         ),
     },
     depot_confirme: {
-        label: "DÉPÔT CONFIRMÉ",
         color: "text-green-600",
         bg: "bg-green-50",
         dot: "bg-green-500",
@@ -29,7 +31,6 @@ const categoryStyles: Record<string, { label: string; color: string; bg: string;
         ),
     },
     ouverture_plis: {
-        label: "OUVERTURE PLIS",
         color: "text-purple-600",
         bg: "bg-purple-50",
         dot: "bg-purple-500",
@@ -42,7 +43,6 @@ const categoryStyles: Record<string, { label: string; color: string; bg: string;
         ),
     },
     evaluation_resultat: {
-        label: "ÉVALUATION RÉSULTAT",
         color: "text-yellow-600",
         bg: "bg-yellow-50",
         dot: "bg-yellow-500",
@@ -55,7 +55,6 @@ const categoryStyles: Record<string, { label: string; color: string; bg: string;
         ),
     },
     attribution_provisoire: {
-        label: "ATTRIBUTION PROVISOIRE",
         color: "text-orange-600",
         bg: "bg-orange-50",
         dot: "bg-orange-500",
@@ -68,7 +67,6 @@ const categoryStyles: Record<string, { label: string; color: string; bg: string;
         ),
     },
     attribution_definitive: {
-        label: "ATTRIBUTION DÉFINITIVE",
         color: "text-green-700",
         bg: "bg-green-50",
         dot: "bg-green-700",
@@ -81,7 +79,6 @@ const categoryStyles: Record<string, { label: string; color: string; bg: string;
         ),
     },
     recours_update: {
-        label: "RECOURS UPDATE",
         color: "text-red-600",
         bg: "bg-red-50",
         dot: "bg-red-500",
@@ -94,7 +91,6 @@ const categoryStyles: Record<string, { label: string; color: string; bg: string;
         ),
     },
     systeme: {
-        label: "SYSTÈME",
         color: "text-gray-600",
         bg: "bg-gray-100",
         dot: "bg-gray-400",
@@ -111,10 +107,12 @@ const categoryStyles: Record<string, { label: string; color: string; bg: string;
 interface NotificationCardProps {
     notification: Notification;
     onMarkRead: (id: string) => void;
+    dict: CommonDict["dashboard"]["admin"]["notificationsPage"];
 }
 
-export default function NotificationCard({ notification, onMarkRead }: NotificationCardProps) {
+export default function NotificationCard({ notification, onMarkRead, dict }: NotificationCardProps) {
     const style = categoryStyles[notification.category];
+    const categoryLabel = dict.categories[notification.category] || "Notification";
 
     return (
         <div
@@ -131,8 +129,8 @@ export default function NotificationCard({ notification, onMarkRead }: Notificat
                 </div>
                 <p className="text-xs text-gray-400 mt-0.5 leading-snug">{notification.description}</p>
                 <div className="mt-2 flex items-center gap-1.5">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${style.bg} ${style.color}`}>
-                        {style.label}
+                    <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${style.bg} ${style.color}`}>
+                        {categoryLabel}
                     </span>
                     {!notification.read && (
                         <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
