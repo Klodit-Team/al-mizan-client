@@ -15,13 +15,13 @@ export default function middleware(request: NextRequest) {
         );
     }
 
-    // const token = request.cookies.get("token")?.value;
-    // const isProtected = pathname.includes("/dashboard");
+    const token = request.cookies.get("token")?.value;
+    const isProtected = pathname.includes("/dashboard");
 
-    // if (isProtected && !token) {
-    //     const locale = pathname.split("/")[1] || defaultLocale;
-    //     return NextResponse.redirect(new URL(`/${locale}/auth/login`, request.url));
-    // }
+    if (isProtected && !token) {
+        const locale = pathname.split("/")[1] || defaultLocale;
+        return NextResponse.redirect(new URL(`/${locale}/auth/login`, request.url));
+    }
 
     return NextResponse.next();
 }

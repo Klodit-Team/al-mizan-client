@@ -1,16 +1,23 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { type Locale } from "@/i18n/config";
-import { verifySchema } from "@/lib/validations/verifySchema";
+import type { getAuthDictionary } from "@/i18n/get-dictionaries";
 
 const CODE_LENGTH = 6;
 
-export default function VerifyForm() {
+type AuthDict = Awaited<ReturnType<typeof getAuthDictionary>>;
+
+interface VerifyFormProps {
+    dict: AuthDict["verify"];
+}
+
+export default function VerifyForm({ dict }: VerifyFormProps) {
     const params = useParams();
+    const router = useRouter();
     const locale = (params?.locale as Locale) || "fr";
     const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(""));
-    const [timeLeft, setTimeLeft] = useState(119); // 1:59
+    const [timeLeft, setTimeLeft] = useState(119); 
     const [isVerifying, setIsVerifying] = useState(false);
     const [error, setError] = useState("");
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -29,7 +36,7 @@ export default function VerifyForm() {
     };
 
     const handleChange = (index: number, value: string) => {
-        if (!/^\d*$/.test(value)) return; // digits only
+        if (!/^\d*$/.test(value)) return;
         const newCode = [...code];
         newCode[index] = value.slice(-1); // only last char
         setCode(newCode);
@@ -57,21 +64,64 @@ export default function VerifyForm() {
     const handleVerify = async () => {
         const fullCode = code.join("");
         if (fullCode.length < CODE_LENGTH) {
-            setError("Please enter all 6 digits.");
+            setError(dict.errors.incomplete);
             return;
         }
         setIsVerifying(true);
-        // TODO: connect to API
-        await new Promise((r) => setTimeout(r, 1500));
-        setIsVerifying(false);
-        console.log("Verifying code:", fullCode);
+        setError("");
+        
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/mfa/verify`, {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ code: fullCode }),
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || "Verification failed");
+            }
+            
+            const result = await response.json();
+            
+            if (result.role === "admin") {
+                router.push(`/${locale}/dashboard/admin/tableau-de-bord`);
+            } else if (result.role === "contractant") {
+                router.push(`/${locale}/dashboard/contractant/tableau-de-bord`);
+            } else {
+                router.push(`/${locale}/dashboard`);
+            }
+            
+        } catch (error: any) {
+            console.error("Verification error:", error);
+            setError(error.message || "Verification failed");
+        } finally {
+            setIsVerifying(false);
+        }
     };
 
-    const handleResend = () => {
-        setTimeLeft(119);
-        setCode(Array(CODE_LENGTH).fill(""));
-        setError("");
-        inputRefs.current[0]?.focus();
+    const handleResend = async () => {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/resend-mfa`, {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || "Failed to resend code");
+            }
+            
+            setTimeLeft(119);
+            setCode(Array(CODE_LENGTH).fill(""));
+            setError("");
+            inputRefs.current[0]?.focus();
+        } catch (error: any) {
+            console.error("Resend error:", error);
+            setError(error.message || "Failed to resend code");
+        }
     };
 
     return (
@@ -87,9 +137,9 @@ export default function VerifyForm() {
                 </div>
 
                 {/* Title */}
-                <h2 className="text-xl font-bold text-gray-900">Secure Verification</h2>
+                <h2 className="text-xl font-bold text-gray-900">{dict.title}</h2>
                 <p className="text-sm text-gray-500 mt-2 leading-relaxed">
-                    Please enter the 6-digit TOTP code from your authentication app to access your dashboard.
+                    {dict.subtitle}
                 </p>
 
                 {/* OTP Inputs */}
@@ -122,7 +172,7 @@ export default function VerifyForm() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span>
-                        Code expires in{" "}
+                        {dict.expiry}{" "}
                         <span className={`font-semibold ${timeLeft <= 30 ? "text-red-500" : "text-gray-700"}`}>
                             {formatTime(timeLeft)}
                         </span>
@@ -139,19 +189,19 @@ export default function VerifyForm() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
-                    {isVerifying ? "Verifying..." : "Verify & Access"}
+                    {isVerifying ? dict.verifying : dict.verify}
                 </button>
 
                 {/* Resend */}
                 <div className="mt-4">
-                    <p className="text-xs text-gray-400">Didn't receive a code?</p>
+                    <p className="text-xs text-gray-400">{dict.noCode}</p>
                     <button
                         onClick={handleResend}
                         disabled={timeLeft > 0}
                         className="text-sm font-semibold mt-0.5 transition-colors disabled:text-gray-300"
                         style={{ color: timeLeft <= 0 ? "#4CAF50" : undefined }}
                     >
-                        Resend Code
+                        {dict.resend}
                     </button>
                 </div>
             </div>

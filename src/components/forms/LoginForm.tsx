@@ -31,33 +31,31 @@ export default function LoginForm({ dict }: LoginFormProps) {
 
     const onSubmit = async (data: LoginFormData) => {
         console.log(data);
-        /*
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
                 method: "POST",
+                credentials: "include",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data),
             });
             
             if (!response.ok) {
-                const errorData = await response.json();
+                const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.message || "Login failed");
             }
             
-            const result = await response.json();
+            await response.json();
             
-            if (response.role=="admin")
-            router.push(`/${locale}/dashboard/admin/tableau-de-bord`);
-            else if (response.role=="contractant")
-            router.push(`/${locale}/dashboard/contractant/tableau-de-bord`);
+            router.push(`/${locale}/auth/verify`);
+            return;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Login error:", error);
-            
         }
-        */
-        setAttempCount(attempCount + 1);
-        if (attempCount >= 10) {
+
+        const newAttemptCount = attempCount + 1;
+        setAttempCount(newAttemptCount);
+        if (newAttemptCount >= 5) {
             console.log("Account locked");
             router.push(`/${locale}/auth/login/account-lock`);
         }

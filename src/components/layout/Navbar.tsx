@@ -86,7 +86,10 @@ export default function Navbar({ isLoggedIn = false, userInitial = "R", userName
                         className="relative text-gray-400 hover:text-white transition-colors"
                         onClick={async () => {
                             try {
-                                await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, { method: "POST" });
+                                await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, { 
+                                    method: "POST", 
+                                    credentials: "include" 
+                                });
                             } catch {}
                             router.push(`/${locale}`);
                         }}
