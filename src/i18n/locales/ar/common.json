@@ -3,12 +3,16 @@
     "helpCenter": "مركز المساعدة",
     "contactSupport": "التواصل مع الدعم",
     "signIn": "تسجيل الدخول",
+    "searchPlaceholder": "ابحث في المناقصات...",
+    "logout":"تسجيل الخروج",
     "links": {
       "home": "الرئيسية",
       "tenders": "المناقصات",
       "statistics": "الإحصائيات",
       "legal": "القانونية",
       "contact": "اتصل بنا"
+      
+
     }
   },
   "navbarRegister": {
@@ -44,5 +48,256 @@
   "securedBy": "مؤمّن بالمعايير الوطنية",
   "realTime": "بيانات فورية",
   "ministere": "وزارة المالية"
-}
+
+},
+"loggedInNavbar": {
+    "userName": "أحمد منصور",
+    "userCompany": "شركة منصور للمقاولات ش.م.ذ"
+},
+"sidebar": {
+    "admin": {
+       "organisation":"المنظمات",
+       "utilisateurs":"المستعملين",
+       "operateurs":"المتعاملون الاقتصاديون",
+       "commission":"اللجان",
+       "audit":"سجل المراجعة"
+
+    },
+    "mainDashboard": "لوحة التحكم الرئيسية",
+    "browseAOs": "تصفح طلبات العروض",
+    "mySubmissions": "عروضي المقدمة",
+    "recoursClaims": "الطعون والمطالبات",
+    "marchesRecords": "سجلات الصفقات",
+    "organizationSettings": "إعدادات المنظمة",
+    "appelsDOffres": "عروض الأسعار",
+    "rapports": "التقارير",
+    "tableauDeBord": "لوحة القيادة"
+},
+  "dashboard": {
+    "admin": {
+      "title": "لوحة التحكم",
+      "subtitle": "أدر إجراءات الصفقات العمومية بكل شفافية.",
+      "createAO": "إنشاء طلب عروض جديد",
+      "stats": {
+          "utilisateursActifs": "المستخدمون النشطون",
+          "utilisateursActifsBadge": "+5 هذا الشهر",
+          "aoEnCours": "طلبات العروض الجارية",
+          "aoEnCoursBadge": "جارية",
+          "recoursOuverts": "الطعون المفتوحة",
+          "recoursOuvertsBadge": "تنبيه",
+          "incidentsIA": "حوادث الذكاء الاصطناعي",
+          "incidentsIABadge": "عاجل"
+      },
+      "actionsRapides": {
+        "title": "الإجراءات السريعة",
+        "historique": "تسجيلات الدخول",
+        "mesAOs": "طلباتي",
+        "utilisateurs": "المستعملين",
+        "commission":"اللجان"
+      },
+      "activiteRecente": {
+        "title": "النشاط الأخير",
+        "voirTout": "عرض الكل",
+        "activities": {
+          "update": "تحديث حالة طلب العروض #2023-045",
+          "updateDesc": "انتقل طلب العروض إلى مرحلة \"التقييم التقني\"",
+          "submission": "عرض جديد مستلم",
+          "submissionDesc": "شركة \"TechBuild SARL\" للحصة 2 (الأشغال الكبرى)",
+          "recours": "طعن مودع",
+          "recoursDesc": "طعن تعاقدي مسبق مودع من \"BTP-Plus\" على طلب #2023-039",
+          "pv": "محضر موقّع",
+          "pvDesc": "تم التحقق من محضر لجنة فتح الأظرفة #2023-048",
+          "marche": "حالة الصفقة #M23-011",
+          "marcheDesc": "تم تبليغ أمر الخدمة للمتعاقد المسند له"
+        }
+      },
+      "alertesIA": {
+        "title": "تنبيهات الذكاء الاصطناعي - الميزان",
+        "divergence": "انحراف مكتشف",
+        "divergenceDesc": "شُوهد شذوذ في الأسعار الوحدوية للعرض #LOT-3. الأسعار أقل بنسبة 40% من المتوسط المحدد.",
+        "analyserRapport": "تحليل التقرير"
+      },
+      "echeances": {
+        "title": "المواعيد القادمة (48 ساعة)",
+        "finDepot": "نهاية إيداع الأظرفة",
+        "finDepotSub": "طلب #2023-050 · غداً 10:00",
+        "reunion": "اجتماع اللجنة التقنية",
+        "reunionSub": "قاعة 4b · بعد غد 14:00",
+        "expiration": "انتهاء أجل الطعن",
+        "expirationSub": "الصفقة #2023-041 · غداً 23:59",
+        "ouvrirCalendrier": "فتح التقويم الكامل"
+      },
+      "support": {
+        "title": "الدعم والدليل",
+        "guide": "دليل الإجراءات 2024",
+        "contact": "التواصل مع الدعم التقني"
+      },
+      "usersPage": {
+        "title": "المستعملين",
+        "subtitle": "إدارة المستخدمين وصلاحياتهم.",
+        "active": "نشطون",
+        "inactive": "غير نشطين",
+        "searchPlaceholder": "البحث بالاسم أو البريد الإلكتروني...",
+        "allRoles": "جميع الأدوار",
+        "roles": {
+          "ADMIN": "مسؤول",
+          "SERVICE_CONTRACTANT": "المصلحة المتعاقدة",
+          "OPERATEUR_ECONOMIQUE": "متعامل اقتصادي",
+          "MEMBRE_COMMISSION": "عضو لجنة",
+          "CONTROLEUR": "مراقب"
+        },
+        "listTitle": "قائمة المستخدمين",
+        "noUsers": "لم يتم العثور على أي مستخدم",
+        "columns": {
+          "name": "الاسم",
+          "email": "البريد الإلكتروني",
+          "role": "الدور والصلاحية",
+          "status": "الحالة",
+          "createdAt": "تاريخ الإنشاء",
+          "actions": "إجراءات"
+        },
+        "statusLabels": {
+          "active": "نشط",
+          "inactive": "غير نشط",
+          "blacklisted": "في القائمة السوداء"
+        },
+        "actionsLabels": {
+          "blacklist": "إدراج في القائمة السوداء",
+          "unblacklist": "إزالة"
+        },
+        "modal": {
+          "title": "إدراج المتعامل في القائمة السوداء",
+          "warning1": "أنت على وشك إدراج",
+          "warning2": "يرجى تحديد سبب هذا الإجراء. سيتم استبعاد هذا المتعامل من الصفقات العمومية.",
+          "motifLabel": "سبب الإدراج في القائمة السوداء",
+          "motifPlaceholder": "اشرح سبب الاستبعاد...",
+          "cancel": "إلغاء",
+          "confirm": "تأكيد الإدراج في القائمة السوداء"
+        }
+      },
+      "organisationsPage": {
+        "title": "المنظمات",
+        "subtitle": "إدارة والتحقق من المنظمات المسجلة.",
+        "verified": "تم التحقق",
+        "pendingText": "قيد الانتظار",
+        "searchPlaceholder": "البحث بالاسم، الولاية، أو رقم التعريف الجبائي...",
+        "types": {
+          "all": "الكل",
+          "MINISTERE": "وزارة",
+          "EPA": "مؤسسة عمومية ذات طابع إداري (EPA)",
+          "EPIC": "مؤسسة عمومية ذات طابع صناعي وتجاري (EPIC)",
+          "ENTREPRISE_PRIVEE": "مؤسسة خاصة",
+          "ENTREPRISE_PUBLIQUE": "مؤسسة عمومية",
+          "GROUPEMENT": "مجمع"
+        },
+        "filters": {
+          "all": "الكل",
+          "verified": "✓ تم التحقق",
+          "pending": "⏳ قيد الانتظار"
+        },
+        "noOrganisations": "لم يتم العثور على أي منظمة",
+        "displayingCount": "عرض {{filtered}} من أصل {{total}} منظمات",
+        "card": {
+          "verified": "تم التحقق",
+          "pending": "قيد الانتظار"
+        }
+      },
+      "commissionsPage": {
+        "title": "لجان الصفقات",
+        "subtitle": "إدارة وإنشاء اللجان الوطنية والقطاعية والولائية والبلدية.",
+        "searchPlaceholder": "البحث بالاسم...",
+        "createButton": "إنشاء لجنة",
+        "noCommissions": "لم يتم العثور على أي لجنة",
+        "columns": {
+          "designation": "التسمية",
+          "type": "النوع",
+          "niveau": "المستوى",
+          "statut": "الحالة",
+          "date": "تاريخ التأسيس",
+          "appelOffre": "طلب العروض"
+        },
+        "modal": {
+          "title": "إنشاء لجنة",
+          "designationLabel": "التسمية",
+          "designationPlaceholder": "مثال: اللجنة الوطنية للتقييم...",
+          "typeLabel": "نوع اللجنة",
+          "niveauLabel": "المستوى",
+          "appelOffreLabel": "معرّف طلب العروض (اختياري)",
+          "appelOffrePlaceholder": "أدخل المعرّف...",
+          "cancel": "إلغاء",
+          "create": "إنشاء اللجنة"
+        },
+        "enums": {
+          "type": {
+            "EVALUATION": "تقييم",
+            "MARCHE": "صفقة"
+          },
+          "niveau": {
+            "NATIONALE": "وطنية",
+            "SECTORIELLE": "قطاعية",
+            "WILAYA": "ولائية",
+            "COMMUNALE": "بلدية"
+          },
+          "statut": {
+            "CONSTITUEE": "مؤسسة",
+            "ACTIVE": "نشطة",
+            "DISSOUTE": "منحلة"
+          }
+        }
+      },
+      "operateursPage": {
+        "title": "المتعاملون الاقتصاديون",
+        "subtitle": "إدارة المتعاملين المسجلين والممنوعين.",
+        "activeCount": "متعاملون نشطون",
+        "blacklistedCount": "متعاملون في القائمة السوداء",
+        "searchPlaceholder": "البحث بالاسم، البريد الإلكتروني...",
+        "listTitle": "قائمة المتعاملين",
+        "noOperators": "لم يتم العثور على أي متعامل",
+        "columns": {
+          "name": "اسم المتعامل",
+          "email": "البريد الإلكتروني",
+          "status": "الحالة",
+          "createdAt": "تاريخ التسجيل",
+          "actions": "إجراءات"
+        },
+        "statusLabels": {
+          "active": "نشط",
+          "inactive": "غير نشط",
+          "blacklisted": "في القائمة السوداء"
+        },
+        "actionsLabels": {
+          "blacklist": "إدراج في القائمة السوداء",
+          "unblacklist": "إزالة"
+        },
+        "modal": {
+          "title": "إدراج المتعامل في القائمة السوداء",
+          "warning1": "أنت على وشك إدراج",
+          "warning2": "يرجى تحديد سبب هذا الإجراء. سيتم استبعاد هذا المتعامل من الصفقات العمومية.",
+          "motifLabel": "سبب الإدراج في القائمة السوداء",
+          "motifPlaceholder": "اشرح سبب الاستبعاد...",
+          "cancel": "إلغاء",
+          "confirm": "تأكيد الإدراج في القائمة السوداء"
+        }
+      },
+      "notificationsPage": {
+        "title": "الإشعارات",
+        "subtitle": "إدارة التنبيهات وتحديثات الصفقات",
+        "markAllAsRead": "تحديد الكل كمقروء",
+        "filterByCategory": "تصفية حسب الفئة",
+        "unreadOnly": "غير المقروءة فقط",
+        "noNotifications": "لا توجد إشعارات",
+        "categories": {
+            "all": "الكل",
+            "publication_ao": "نشر طلب العروض",
+            "depot_confirme": "تأكيد الإيداع",
+            "ouverture_plis": "فتح الأظرفة",
+            "evaluation_resultat": "نتيجة التقييم",
+            "attribution_provisoire": "المنح المؤقت",
+            "attribution_definitive": "المنح النهائي",
+            "recours_update": "تحديث الطعن",
+            "systeme": "النظام"
+        }
+      }
+    }
+  }
 }
