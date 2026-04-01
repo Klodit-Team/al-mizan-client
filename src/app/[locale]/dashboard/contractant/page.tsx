@@ -1,28 +1,13 @@
-import Navbar from "@/components/layout/Navbar";
-import Sidebar from "@/components/layout/Sidebar";
-import { getDictionary } from "@/i18n/get-dictionaries";
 import { type Locale } from "@/i18n/config";
+import { redirect } from "next/navigation";
 
 interface DashboardPageProps {
-    params: { locale: Locale };
+  params: Promise<{ locale: string }>;
 }
 
-export default async function ContractantDashboardPage({ params: { locale } }: DashboardPageProps) {
-    const dict = await getDictionary(locale);
-
-    return (
-        <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#f1f5f9" }}>
-            <Navbar
-                isLoggedIn={true}
-                userInitial="A"
-                dict={dict.navbar}
-                locale={locale}
-            />
-            <div className="flex flex-1">
-                <Sidebar locale={locale} role="contractant" dict={dict.sidebar} />
-                <main className="flex-1 p-6">
-                </main>
-            </div>
-        </div>
-    );
+export default async function ContractantDashboardPage({
+  params,
+}: DashboardPageProps) {
+  const { locale } = await params;
+  redirect(`/${locale}/dashboard/contractant/tableau-de-bord`);
 }

@@ -3,15 +3,15 @@ import Sidebar from "@/components/layout/Sidebar";
 import { getDictionary } from "@/i18n/get-dictionaries";
 import { type Locale } from "@/i18n/config";
 
-interface AdminLayoutProps {
+interface ContractantLayoutProps {
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
 }
 
-export default async function AdminLayout({
+export default async function ContractantLayout({
   children,
   params,
-}: AdminLayoutProps) {
+}: ContractantLayoutProps) {
   const { locale } = await params;
   const commonDict = await getDictionary(locale as Locale);
 
@@ -29,7 +29,7 @@ export default async function AdminLayout({
       <div className="flex flex-1">
         <Sidebar
           locale={locale as Locale}
-          role="admin"
+          role="contractant"
           dict={commonDict.sidebar}
         />
         <main className="flex-1 overflow-auto">{children}</main>
