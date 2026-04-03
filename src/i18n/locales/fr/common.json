@@ -59,8 +59,8 @@
        "utilisateurs":"Utilisateurs ",
        "operateurs":"Operateurs",
        "commission":"Commissions",
-       "audit":"Journal d'Audit"
-       
+       "audit":"Journal d'Audit",
+       "incidents":"Incidents IA"
     },
     "mainDashboard": "Tableau de bord",
     "browseAOs": "Parcourir les AOs",
@@ -296,6 +296,72 @@
             "attribution_definitive": "Attribution définitive",
             "recours_update": "Recours update",
             "systeme": "Système"
+        }
+      },
+      "auditLogsPage": {
+        "title": "Journal d'audit",
+        "subtitle": "Consultez et recherchez l'historique des actions.",
+        "searchUserPlaceholder": "Rechercher par utilisateur...",
+        "searchActionPlaceholder": "Type d'action...",
+        "dateFilterPlaceholder": "Sélectionner une date",
+        "noLogs": "Aucun journal trouvé",
+        "displayingCount": "Affichage de {{filtered}} sur {{total}} journaux",
+        "columns": {
+          "user": "Utilisateur",
+          "role": "Rôle",
+          "action": "Action",
+          "target": "Cible",
+          "ipAddress": "Adresse IP",
+          "date": "Date"
+        },
+        "actions": {
+          "LOGIN": "Connexion",
+          "UPDATE_AO": "Mise à jour AO",
+          "CREATE_USER": "Création Utilisateur",
+          "DELETE_USER": "Suppression Utilisateur",
+          "VIEW_REPORT": "Consultation Rapport",
+          "EXPORT_DATA": "Exportation Données",
+          "UPDATE_SETTINGS": "Mise à jour Paramètres"
+        },
+        "integrityCheck": {
+          "button": "Vérifier l'intégrité",
+          "success": "Chaîne de hashs intègre. Aucune altération détectée dans les logs.",
+          "verifying": "Vérification en cours..."
+        }
+      },
+      "incidentsPage": {
+        "title": "Incidents IA",
+        "subtitle": "Consultez et résovez les incidents détectés par le système IA.",
+        "searchPlaceholder": "Rechercher par description ou identifiant...",
+        "statusFilterPlaceholder": "Sélectionner un statut",
+        "columns": {
+          "id": "Identifiant",
+          "severity": "Gravité",
+          "date": "Date",
+          "description": "Description",
+          "status": "Statut",
+          "assignedTo": "Assigné à",
+          "actions": "Actions"
+        },
+        "severity": {
+          "HIGH": "Élevée",
+          "MEDIUM": "Moyenne",
+          "LOW": "Faible"
+        },
+        "status": {
+          "OPEN": "Ouvert",
+          "IN_PROGRESS": "En cours",
+          "RESOLVED": "Résolu"
+        },
+        "modal": {
+          "title": "Résoudre l'incident IA",
+          "assignedTo": "Assigner à",
+          "assignedToPlaceholder": "Sélectionnez un administrateur...",
+          "notes": "Notes de résolution",
+          "notesPlaceholder": "Entrez l'analyse et les mesures prises...",
+          "status": "Nouveau statut",
+          "cancel": "Annuler",
+          "save": "Enregistrer et résoudre"
         }
       }
     }

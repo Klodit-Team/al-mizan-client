@@ -60,8 +60,8 @@
        "utilisateurs":"المستعملين",
        "operateurs":"المتعاملون الاقتصاديون",
        "commission":"اللجان",
-       "audit":"سجل المراجعة"
-
+       "audit":"سجل المراجعة",
+       "incidents":"حوادث الذكاء الاصطناعي"
     },
     "mainDashboard": "لوحة التحكم الرئيسية",
     "browseAOs": "تصفح طلبات العروض",
@@ -296,6 +296,72 @@
             "attribution_definitive": "المنح النهائي",
             "recours_update": "تحديث الطعن",
             "systeme": "النظام"
+        }
+      },
+      "auditLogsPage": {
+        "title": "سجل المراجعة",
+        "subtitle": "استعلم وابحث في تاريخ الإجراءات.",
+        "searchUserPlaceholder": "البحث حسب المستخدم...",
+        "searchActionPlaceholder": "نوع الإجراء...",
+        "dateFilterPlaceholder": "اختيار تاريخ",
+        "noLogs": "لم يتم العثور على أي سجل",
+        "displayingCount": "عرض {{filtered}} من أصل {{total}} سجلات",
+        "columns": {
+          "user": "المستخدم",
+          "role": "الدور",
+          "action": "الإجراء",
+          "target": "الهدف",
+          "ipAddress": "عنوان IP",
+          "date": "التاريخ"
+        },
+        "actions": {
+          "LOGIN": "تسجيل دخول",
+          "UPDATE_AO": "تحديث طلب العروض",
+          "CREATE_USER": "إنشاء مستخدم",
+          "DELETE_USER": "حذف مستخدم",
+          "VIEW_REPORT": "عرض التقرير",
+          "EXPORT_DATA": "تصدير البيانات",
+          "UPDATE_SETTINGS": "تحديث الإعدادات"
+        },
+        "integrityCheck": {
+          "button": "التحقق من السلامة",
+          "success": "سلسلة التجزئة سليمة. لم يتم اكتشاف أي تغيير في السجلات.",
+          "verifying": "جاري التحقق..."
+        }
+      },
+      "incidentsPage": {
+        "title": "حوادث الذكاء الاصطناعي",
+        "subtitle": "استعرض وحل الحوادث المكتشفة بواسطة نظام الذكاء الاصطناعي.",
+        "searchPlaceholder": "ابحث بالوصف أو المعرّف...",
+        "statusFilterPlaceholder": "اختر الحالة",
+        "columns": {
+          "id": "المعرّف",
+          "severity": "الخطورة",
+          "date": "التاريخ",
+          "description": "الوصف",
+          "status": "الحالة",
+          "assignedTo": "مُعيّن لـ",
+          "actions": "إجراءات"
+        },
+        "severity": {
+          "HIGH": "عالية",
+          "MEDIUM": "متوسطة",
+          "LOW": "منخفضة"
+        },
+        "status": {
+          "OPEN": "مفتوح",
+          "IN_PROGRESS": "قيد المعالجة",
+          "RESOLVED": "تم الحل"
+        },
+        "modal": {
+          "title": "حل حادثة الذكاء الاصطناعي",
+          "assignedTo": "تعيين لـ",
+          "assignedToPlaceholder": "اختر مسؤولاً...",
+          "notes": "ملاحظات الحل",
+          "notesPlaceholder": "أدخل التحليل والتدابير المتخذة...",
+          "status": "الحالة الجديدة",
+          "cancel": "إلغاء",
+          "save": "حفظ وحل"
         }
       }
     }
