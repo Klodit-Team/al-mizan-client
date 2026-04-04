@@ -1,6 +1,7 @@
 import { Montserrat } from "next/font/google";
 import "@/app/globals.css";
 import { locales, getLocaleDirection, type Locale } from "@/i18n/config";
+import QueryProvider from "@/components/providers/QueryProvider";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -23,7 +24,9 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} dir={direction}>
-      <body className={`${montserrat.variable} antialiased`}>{children}</body>
+      <body className={`${montserrat.variable} antialiased`}>
+        <QueryProvider>{children}</QueryProvider>
+      </body>
     </html>
   );
 }

@@ -15,7 +15,9 @@ export default function middleware(request: NextRequest) {
         );
     }
 
-    const token = request.cookies.get("token")?.value;
+    const token =
+        request.cookies.get("access_token")?.value ||
+        request.cookies.get("token")?.value;
     const isProtected = pathname.includes("/dashboard");
 
     if (isProtected && !token) {

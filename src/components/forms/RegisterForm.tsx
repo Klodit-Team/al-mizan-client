@@ -6,6 +6,8 @@ import { type Locale } from "@/i18n/config";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import { registerSchema, type RegisterFormData } from "@/lib/validations/registerSchema";
+import { useRegisterMutation } from "@/services/auth/queries";
+import { ApiClientError } from "@/services/client";
 
 import type { getAuthDictionary } from "@/i18n/get-dictionaries";
 
@@ -21,11 +23,13 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
     const locale = (params?.locale as Locale) || "fr";
     const [step, setStep] = useState(1);
     const [showPassword, setShowPassword] = useState(false);
+    const [apiError, setApiError] = useState<string | null>(null);
     const [uploadedFiles, setUploadedFiles] = useState<{ rc: File | null; nif: File | null; cnas: File | null }>({
         rc: null,
         nif: null,
         cnas: null,
     });
+    const registerMutation = useRegisterMutation();
     const totalSteps = 3;
     const progress = (step / totalSteps) * 100;
 
@@ -50,45 +54,39 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
     };
    
     const onSubmit = async (data: RegisterFormData) => {
-        
-            console.log("step", step);
-            console.log("Final submission:", data);
-            console.log("Files:", uploadedFiles);
-        
-        /*
+        setApiError(null);
+
+        const [firstName, ...restNameParts] = data.legalName.trim().split(/\s+/);
+        const nom = firstName || data.legalName;
+        const prenom = restNameParts.join(" ") || "Administrateur";
+
         try {
-            const formData = new FormData();
-            
-            
-            Object.entries(data).forEach(([key, value]) => {
-                formData.append(key, value as string);
+            const result = await registerMutation.mutateAsync({
+                email: data.email,
+                password: data.password,
+                role: "SERVICE_CONTRACTANT",
+                langue: "fr",
+                nom,
+                prenom,
+                telephone: data.phone,
+                denomination: data.legalName,
+                nif: data.nif,
+                nis: data.nis,
+                registre_commerce: data.commercialRegister,
+                type: "ENTREPRISE_PRIVEE",
+                code_service: data.nif.slice(-4),
             });
-            
-            
-            if (uploadedFiles.rc) formData.append("rc", uploadedFiles.rc);
-            if (uploadedFiles.nif) formData.append("nif", uploadedFiles.nif);
-            if (uploadedFiles.cnas) formData.append("cnas", uploadedFiles.cnas);
-            
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
-                method: "POST",
-                body: formData, 
-            });
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || "Registration failed");
-            }
-            
-            const result = await response.json();
-            router.push(`/${locale}/auth/register/success?id=${result.id}&hash=${result.hash}`);
+
+            router.push(`/${locale}/auth/register/success?id=${encodeURIComponent(result.user_id)}`);
         } catch (error) {
-            console.error("Registration error:", error);
-          
+            if (error instanceof ApiClientError) {
+                setApiError(error.message);
+                return;
+            }
+
+            setApiError("Registration failed. Please try again.");
         }
-        */
-        console.log("Registration successful");
-       router.push(`/${locale}/auth/register/success?id=ALM-2024-8881&hash=your_hash`);
-     };
+    };
 
     const handleBack = () => {
         if (step > 1) {
@@ -304,7 +302,7 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
                                         </div>
                                         <div className="text-left">
                                             <p className="text-xs font-semibold text-gray-700">{dict.fields.rc}</p>
-                                            <p className="text-xs text-gray-400 truncate max-w-[180px]">{uploadedFiles.rc.name}</p>
+                                            <p className="text-xs text-gray-400 truncate max-w-45">{uploadedFiles.rc.name}</p>
                                         </div>
                                     </div>
                                     <div className="w-6 h-6 rounded-full bg-[#4CAF50] flex items-center justify-center">
@@ -393,11 +391,18 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
 
                     <button
                         type="submit"
+                        disabled={isSubmitting || registerMutation.isPending}
                         className="w-full py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
                         style={{ backgroundColor: "#30E86E", color: "#0F172A" }}
                     >
-                        {dict.fields.submitRegistration}
+                        {isSubmitting || registerMutation.isPending
+                            ? dict.actions.processing
+                            : dict.fields.submitRegistration}
                     </button>
+
+                    {apiError && (
+                        <p className="text-red-500 text-sm text-center">{apiError}</p>
+                    )}
 
                     <div className="text-center">
                         <button type="button" onClick={handleBack} className="text-sm font-semibold text-[#64748B] hover:text-gray-700 transition-colors">
