@@ -1,7 +1,13 @@
 // ─── Shared types for the soumission wizard ───────────────────────────────────
 
 export type OeAoType   = "ouvert" | "restreint" | "gre_a_gre";
-export type OeAoStatus = "publie" | "en_cours";
+export type OeAoStatus =
+  | "publie"
+  | "en_cours"
+  | "evaluation"
+  | "attribue"
+  | "annule"
+  | "cloture";
 export type DocStatus  = "conforme" | "expire" | "manquant" | "uploade";
 export type SubStatus  =
   | "brouillon" | "deposee" | "recue" | "evaluee" | "retenue" | "rejetee";
@@ -51,6 +57,7 @@ export interface CautionData {
   reference: string;
   banque: string;
   montant: string;
+  emission: string;
   expiry: string;
   file: File | null;
 }
@@ -58,7 +65,7 @@ export interface CautionData {
 /** Full wizard state passed between steps */
 export interface WizardState {
   selectedAoId: string;
-  selectedLotIds: string[];
+  selectedLotId: string;
   docs: AdminDoc[];
   offreTechFile: File | null;
   lotBpus: LotBpu[];
@@ -125,7 +132,7 @@ export const INITIAL_DOCS: AdminDoc[] = [
 ];
 
 export const INITIAL_CAUTION: CautionData = {
-  reference: "", banque: "", montant: "", expiry: "", file: null,
+  reference: "", banque: "", montant: "", emission: "", expiry: "", file: null,
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

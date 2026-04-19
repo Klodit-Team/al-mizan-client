@@ -34,7 +34,9 @@ export default function Step5CautionBancaire({ caution, onChange, onBack, onNext
     !!caution.reference.trim() &&
     !!caution.banque.trim() &&
     !!caution.montant.trim() &&
-    !!caution.expiry;
+    !!caution.emission &&
+    !!caution.expiry &&
+    !!caution.file;
 
   return (
     <div className="space-y-5">
@@ -92,16 +94,26 @@ export default function Step5CautionBancaire({ caution, onChange, onBack, onNext
             className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none focus:border-[#4CAF50] transition-colors"
           />
         </Field>
+
+        <Field label="Date d'emission" required>
+          <input
+            type="date"
+            value={caution.emission}
+            onChange={(e) => set("emission", e.target.value)}
+            className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none focus:border-[#4CAF50] transition-colors"
+          />
+        </Field>
       </div>
 
       {/* Filled summary */}
-      {caution.reference && caution.banque && caution.montant && caution.expiry && (
+      {caution.reference && caution.banque && caution.montant && caution.emission && caution.expiry && (
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
           <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-emerald-600">Récapitulatif caution</p>
           <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-[11px]">
             <div><span className="text-slate-500">Référence :</span> <span className="font-semibold text-slate-700">{caution.reference}</span></div>
             <div><span className="text-slate-500">Banque :</span> <span className="font-semibold text-slate-700">{caution.banque}</span></div>
             <div><span className="text-slate-500">Montant :</span> <span className="font-semibold text-slate-700">{caution.montant} DZD</span></div>
+            <div><span className="text-slate-500">Emission :</span> <span className="font-semibold text-slate-700">{new Date(caution.emission).toLocaleDateString("fr-DZ", { day: "numeric", month: "long", year: "numeric" })}</span></div>
             <div><span className="text-slate-500">Expiration :</span> <span className="font-semibold text-slate-700">{new Date(caution.expiry).toLocaleDateString("fr-DZ", { day: "numeric", month: "long", year: "numeric" })}</span></div>
           </div>
         </div>
@@ -110,7 +122,7 @@ export default function Step5CautionBancaire({ caution, onChange, onBack, onNext
       {/* Scan upload */}
       <div>
         <p className="mb-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-500">
-          Scan de la caution bancaire <span className="text-slate-400">(facultatif — recommandé)</span>
+          Scan de la caution bancaire <span className="text-rose-500">*</span>
         </p>
         <FileDropzone
           label="Joindre le document de caution (PDF)"

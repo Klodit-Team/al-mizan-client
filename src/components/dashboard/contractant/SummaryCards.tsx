@@ -1,7 +1,7 @@
-import type { ServiceContractantDashboardStats } from "@/services/dashboard";
+import type { ContractantDashboardStats } from "@/services/contractant-dashboard/api";
 
 interface SummaryCardsProps {
-  stats: ServiceContractantDashboardStats;
+  stats: ContractantDashboardStats;
   labels: {
     activeAos: string;
     pendingAttributions: string;

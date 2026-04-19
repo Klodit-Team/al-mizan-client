@@ -1,4 +1,3 @@
-import Footer from "@/components/layout/Footer";
 import RegisterForm from "@/components/forms/RegisterForm";
 import RegisterNavbar from "@/components/layout/RegisterNavbar";
 import { getAuthDictionary, getDictionary } from "@/i18n/get-dictionaries";
@@ -18,13 +17,13 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
       <main className="flex-1 w-full max-w-2xl mx-auto py-16  ">
         <div className="px-4 pb-8">
           <h1 className="text-2xl font-bold text-gray-900">
-            {dict.register.title}
+            {dict.register.fields.roleOperateurEconomique}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
             {dict.register.subtitle}
           </p>
         </div>
-        <RegisterForm dict={dict.register} />
+        <RegisterForm dict={dict.register} initialRole="OPERATEUR_ECONOMIQUE" />
       </main>
     </div>
   );

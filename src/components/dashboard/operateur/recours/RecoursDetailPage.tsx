@@ -1,12 +1,17 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { type Locale } from "@/i18n/config";
+import {
+  useOperateurRecoursDetailQuery,
+  useUpdateOperateurRecoursMutation,
+} from "@/services/operateur-recours/queries";
 import {
   ArrowLeft, Download, FileText, Calendar, Clock, CheckCircle2,
   XCircle, Scale, Building2, DollarSign,
 } from "lucide-react";
-import { MOCK_RECOURS, STATUS_META, fmt } from "./types";
+import { STATUS_META, fmt } from "./types";
 
 // ─── Timeline step ─────────────────────────────────────────────────────────────
 
@@ -68,10 +73,31 @@ export default function RecoursDetailPage({ recoursId }: { recoursId: string }) 
   const params = useParams();
   const router = useRouter();
   const locale = (params?.locale as Locale) || "fr";
+  const { data: recours, isLoading, isError } = useOperateurRecoursDetailQuery(recoursId);
+  const updateMutation = useUpdateOperateurRecoursMutation();
 
-  const recours = MOCK_RECOURS.find((r) => r.id === recoursId);
+  const [isEditingMotif, setIsEditingMotif] = useState(false);
+  const [motifDraft, setMotifDraft] = useState("");
 
-  if (!recours) {
+  const canEditMotif = recours?.statut === "depose";
+
+  useEffect(() => {
+    if (recours?.motif) {
+      setMotifDraft(recours.motif);
+    }
+  }, [recours?.motif]);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        <div className="h-14 animate-pulse rounded-xl bg-gray-200" />
+        <div className="h-48 animate-pulse rounded-xl bg-gray-200" />
+        <div className="h-56 animate-pulse rounded-xl bg-gray-200" />
+      </div>
+    );
+  }
+
+  if (isError || !recours) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-slate-400">
         <Scale className="mb-3 h-12 w-12 opacity-20" />
@@ -86,6 +112,19 @@ export default function RecoursDetailPage({ recoursId }: { recoursId: string }) 
 
   const meta      = STATUS_META[recours.statut];
   const isDecided = recours.statut === "accepte" || recours.statut === "rejete";
+
+  async function handleSaveMotif() {
+    const trimmed = motifDraft.trim();
+    if (!trimmed || !recours) {
+      return;
+    }
+
+    await updateMutation.mutateAsync({
+      id: recours.id,
+      motif: trimmed,
+    });
+    setIsEditingMotif(false);
+  }
 
   return (
     <div className="space-y-4">
@@ -145,8 +184,51 @@ export default function RecoursDetailPage({ recoursId }: { recoursId: string }) 
 
           {/* Motif */}
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-500">Motif du recours</h2>
-            <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-line">{recours.motif}</p>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">Motif du recours</h2>
+              {canEditMotif && !isEditingMotif && (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingMotif(true)}
+                  className="rounded-lg border border-slate-200 px-2.5 py-1 text-[10px] font-semibold text-slate-600 hover:border-[#4CAF50] hover:text-[#4CAF50]"
+                >
+                  Modifier
+                </button>
+              )}
+            </div>
+
+            {isEditingMotif ? (
+              <div className="space-y-2">
+                <textarea
+                  value={motifDraft}
+                  onChange={(event) => setMotifDraft(event.target.value)}
+                  rows={7}
+                  className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-[#4CAF50] focus:bg-white transition-colors"
+                />
+                <div className="flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMotifDraft(recours.motif);
+                      setIsEditingMotif(false);
+                    }}
+                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveMotif}
+                    disabled={updateMutation.isPending || motifDraft.trim().length < 10}
+                    className="rounded-lg bg-[#4CAF50] px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                  >
+                    {updateMutation.isPending ? "Enregistrement..." : "Enregistrer"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-line">{recours.motif}</p>
+            )}
           </section>
 
           {/* Pièces jointes */}

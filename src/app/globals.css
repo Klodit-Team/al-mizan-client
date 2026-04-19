@@ -23,3 +23,15 @@ body {
   color: var(--foreground);
   font-family: var(--font-montserrat), sans-serif;
 }
+
+.ao-wizard input,
+.ao-wizard textarea,
+.ao-wizard select {
+  color: #0f172a;
+}
+
+.ao-wizard input::placeholder,
+.ao-wizard textarea::placeholder {
+  color: #64748b;
+  opacity: 1;
+}

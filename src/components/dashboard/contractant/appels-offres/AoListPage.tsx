@@ -62,6 +62,7 @@ interface AoListPageProps {
   data: ServiceContractantTenderItem[];
   isLoading: boolean;
   onChangeStatus: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
 export default function AoListPage({
@@ -70,6 +71,7 @@ export default function AoListPage({
   data,
   isLoading,
   onChangeStatus,
+  onDelete,
 }: AoListPageProps) {
   const router = useRouter();
   const isRtl = locale === "ar";
@@ -133,8 +135,8 @@ export default function AoListPage({
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm("Delete this AO?")) {
-      console.log("Delete AO", id);
+    if (window.confirm("Supprimer cet appel d'offres ?")) {
+      onDelete(id);
     }
   };
 

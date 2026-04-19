@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, usePathname, useSearchParams } from "next/navigation";
 import { type Locale } from "@/i18n/config";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
@@ -13,13 +13,59 @@ import type { getAuthDictionary } from "@/i18n/get-dictionaries";
 
 type AuthDict = Awaited<ReturnType<typeof getAuthDictionary>>;
 
+type RegistrationRole = "SERVICE_CONTRACTANT" | "OPERATEUR_ECONOMIQUE";
+
+const resolveRegistrationRole = (rawRole: string): RegistrationRole => {
+    const normalized = rawRole
+        .trim()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[\s-]+/g, "_")
+        .toUpperCase();
+
+    if (
+        normalized === "SERVICE_CONTRACTANT" ||
+        normalized === "CONTRACTANT" ||
+        normalized === "SERVICECONTRACTANT"
+    ) {
+        return "SERVICE_CONTRACTANT";
+    }
+
+    if (
+        normalized === "OPERATEUR_ECONOMIQUE" ||
+        normalized === "OPERATEUR" ||
+        normalized === "OPERATEURECONOMIQUE" ||
+        (normalized.includes("OPERATEUR") && normalized.includes("ECONOM"))
+    ) {
+        return "OPERATEUR_ECONOMIQUE";
+    }
+
+    // Default this public registration flow to operateur.
+    return "OPERATEUR_ECONOMIQUE";
+};
+
+const organisationTypeOptions: Array<{
+    value: RegisterFormData["organisationType"];
+    label: string;
+}> = [
+    { value: "ENTREPRISE_PRIVEE", label: "Entreprise privee" },
+    { value: "ENTREPRISE_PUBLIQUE", label: "Entreprise publique" },
+    { value: "MINISTERE", label: "Ministere" },
+    { value: "EPA", label: "EPA" },
+    { value: "EPIC", label: "EPIC" },
+    { value: "GROUPEMENT", label: "Groupement" },
+];
+
 interface RegisterFormProps {
     dict: AuthDict["register"];
+    initialRole?: RegistrationRole;
 }
 
-export default function RegisterForm({ dict }: RegisterFormProps) {
+export default function RegisterForm({ dict, initialRole }: RegisterFormProps) {
     const router = useRouter();
     const params = useParams();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     const locale = (params?.locale as Locale) || "fr";
     const [step, setStep] = useState(1);
     const [showPassword, setShowPassword] = useState(false);
@@ -33,21 +79,62 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
     const totalSteps = 3;
     const progress = (step / totalSteps) * 100;
 
+    const requestedRole = searchParams.get("role") || searchParams.get("type") || "";
+    const [registrationRole, setRegistrationRole] = useState<RegistrationRole>(
+        initialRole || resolveRegistrationRole(requestedRole),
+    );
+
+    useEffect(() => {
+        if (initialRole) {
+            setRegistrationRole(initialRole);
+        }
+    }, [initialRole]);
+
+    const updateRole = (nextRole: RegistrationRole) => {
+        setRegistrationRole(nextRole);
+
+        const targetPath =
+            nextRole === "SERVICE_CONTRACTANT"
+                ? `/${locale}/auth/register/contractant`
+                : `/${locale}/auth/register/operateur`;
+
+        if (pathname !== targetPath) {
+            router.replace(targetPath);
+        }
+    };
+
     const {
         register,
         handleSubmit,
         trigger,
+        setError,
         formState: { errors, isSubmitting },
     } = useForm<RegisterFormData>({
         resolver: zodResolver(registerSchema),
+        defaultValues: {
+            organisationType: "ENTREPRISE_PRIVEE",
+        },
     });
 
     const handleNext = async () => {
         let fields: (keyof RegisterFormData)[] = [];
         if (step === 1) {
-            fields = ["legalName", "nif", "nis", "commercialRegister"];
+            fields = ["legalName", "organisationType", "nif", "nis", "commercialRegister"];
         } else if (step === 2) {
-            fields = ["phone", "email", "password"];
+            fields = [
+                "firstName",
+                "lastName",
+                "address",
+                "wilaya",
+                "commune",
+                "phone",
+                "email",
+                "password",
+            ];
+
+            if (registrationRole === "SERVICE_CONTRACTANT") {
+                fields.push("serviceCode");
+            }
         }
         const isValid = await trigger(fields);
         if (isValid) setStep(step + 1);
@@ -56,25 +143,42 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
     const onSubmit = async (data: RegisterFormData) => {
         setApiError(null);
 
-        const [firstName, ...restNameParts] = data.legalName.trim().split(/\s+/);
-        const nom = firstName || data.legalName;
-        const prenom = restNameParts.join(" ") || "Administrateur";
+        if (registrationRole === "SERVICE_CONTRACTANT" && !data.serviceCode?.trim()) {
+            setError("serviceCode", {
+                type: "manual",
+                message: "Service code is required for service contractant",
+            });
+            setStep(2);
+            return;
+        }
 
         try {
             const result = await registerMutation.mutateAsync({
                 email: data.email,
                 password: data.password,
-                role: "SERVICE_CONTRACTANT",
+                role: registrationRole,
                 langue: "fr",
-                nom,
-                prenom,
+                nom: data.lastName,
+                prenom: data.firstName,
                 telephone: data.phone,
                 denomination: data.legalName,
                 nif: data.nif,
                 nis: data.nis,
                 registre_commerce: data.commercialRegister,
-                type: "ENTREPRISE_PRIVEE",
-                code_service: data.nif.slice(-4),
+                adresse: data.address,
+                wilaya: data.wilaya,
+                commune: data.commune,
+                type: data.organisationType,
+                ...(registrationRole === "SERVICE_CONTRACTANT"
+                    ? {
+                        code_service: data.serviceCode,
+                        secteur_activite: data.sectorActivity,
+                        ordonnateur: data.ordonnateur,
+                    }
+                    : {
+                        qualifications: data.qualifications,
+                        categories: data.categories,
+                    }),
             });
 
             router.push(`/${locale}/auth/register/success?id=${encodeURIComponent(result.user_id)}`);
@@ -134,6 +238,36 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
                 <div className="p-8 space-y-5">
                     <div>
                         <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
+                            {dict.fields.registrationRole}
+                        </label>
+                        <div className="grid grid-cols-2 gap-2 rounded-xl border border-gray-200 bg-gray-50 p-1">
+                            <button
+                                type="button"
+                                onClick={() => updateRole("OPERATEUR_ECONOMIQUE")}
+                                className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                                    registrationRole === "OPERATEUR_ECONOMIQUE"
+                                        ? "bg-white text-[#0F172A] shadow-sm"
+                                        : "text-gray-500 hover:text-[#0F172A]"
+                                }`}
+                            >
+                                {dict.fields.roleOperateurEconomique}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => updateRole("SERVICE_CONTRACTANT")}
+                                className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                                    registrationRole === "SERVICE_CONTRACTANT"
+                                        ? "bg-white text-[#0F172A] shadow-sm"
+                                        : "text-gray-500 hover:text-[#0F172A]"
+                                }`}
+                            >
+                                {dict.fields.roleServiceContractant}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
                             {dict.fields.legalName}
                         </label>
                         <input
@@ -143,6 +277,23 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
                             className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2 text-[#94A3B8] placeholder:text-[#94A3B8] ${errors.legalName ? "border-red-400 focus:ring-red-100" : "border-gray-200 focus:ring-green-100 focus:border-[#4CAF50]"}`}
                         />
                         {errors.legalName && <p className="text-red-500 text-xs mt-1">{errors.legalName.message}</p>}
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
+                            {dict.fields.organisationType}
+                        </label>
+                        <select
+                            {...register("organisationType")}
+                            className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2 text-[#0F172A] bg-white ${errors.organisationType ? "border-red-400 focus:ring-red-100" : "border-gray-200 focus:ring-green-100 focus:border-[#4CAF50]"}`}
+                        >
+                            {organisationTypeOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                        {errors.organisationType && <p className="text-red-500 text-xs mt-1">{errors.organisationType.message}</p>}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -200,7 +351,62 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
             {/* ── STEP 2 ── */}
             {step === 2 && (
                 <div className="p-8 space-y-5">
-                   
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{dict.fields.firstName}</label>
+                            <input
+                                {...register("firstName")}
+                                type="text"
+                                placeholder={dict.fields.firstNamePlaceholder}
+                                className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2 text-[#94A3B8] placeholder:text-[#94A3B8] ${errors.firstName ? "border-red-400 focus:ring-red-100" : "border-gray-200 focus:ring-green-100 focus:border-[#4CAF50]"}`}
+                            />
+                            {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName.message}</p>}
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{dict.fields.lastName}</label>
+                            <input
+                                {...register("lastName")}
+                                type="text"
+                                placeholder={dict.fields.lastNamePlaceholder}
+                                className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2 text-[#94A3B8] placeholder:text-[#94A3B8] ${errors.lastName ? "border-red-400 focus:ring-red-100" : "border-gray-200 focus:ring-green-100 focus:border-[#4CAF50]"}`}
+                            />
+                            {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName.message}</p>}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{dict.fields.address}</label>
+                        <input
+                            {...register("address")}
+                            type="text"
+                            placeholder={dict.fields.addressPlaceholder}
+                            className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2 text-[#94A3B8] placeholder:text-[#94A3B8] ${errors.address ? "border-red-400 focus:ring-red-100" : "border-gray-200 focus:ring-green-100 focus:border-[#4CAF50]"}`}
+                        />
+                        {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{dict.fields.wilaya}</label>
+                            <input
+                                {...register("wilaya")}
+                                type="text"
+                                placeholder={dict.fields.wilayaPlaceholder}
+                                className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2 text-[#94A3B8] placeholder:text-[#94A3B8] ${errors.wilaya ? "border-red-400 focus:ring-red-100" : "border-gray-200 focus:ring-green-100 focus:border-[#4CAF50]"}`}
+                            />
+                            {errors.wilaya && <p className="text-red-500 text-xs mt-1">{errors.wilaya.message}</p>}
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{dict.fields.commune}</label>
+                            <input
+                                {...register("commune")}
+                                type="text"
+                                placeholder={dict.fields.communePlaceholder}
+                                className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2 text-[#94A3B8] placeholder:text-[#94A3B8] ${errors.commune ? "border-red-400 focus:ring-red-100" : "border-gray-200 focus:ring-green-100 focus:border-[#4CAF50]"}`}
+                            />
+                            {errors.commune && <p className="text-red-500 text-xs mt-1">{errors.commune.message}</p>}
+                        </div>
+                    </div>
 
                     <div>
                         <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{dict.fields.phone}</label>
@@ -255,6 +461,64 @@ export default function RegisterForm({ dict }: RegisterFormProps) {
                         </div>
                         {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
                     </div>
+
+                    {registrationRole === "SERVICE_CONTRACTANT" ? (
+                        <>
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{dict.fields.serviceCode}</label>
+                                <input
+                                    {...register("serviceCode")}
+                                    type="text"
+                                    placeholder={dict.fields.serviceCodePlaceholder}
+                                    className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2 text-[#94A3B8] placeholder:text-[#94A3B8] ${errors.serviceCode ? "border-red-400 focus:ring-red-100" : "border-gray-200 focus:ring-green-100 focus:border-[#4CAF50]"}`}
+                                />
+                                {errors.serviceCode && <p className="text-red-500 text-xs mt-1">{errors.serviceCode.message}</p>}
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{dict.fields.sectorActivity}</label>
+                                <input
+                                    {...register("sectorActivity")}
+                                    type="text"
+                                    placeholder={dict.fields.sectorActivityPlaceholder}
+                                    className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2 text-[#94A3B8] placeholder:text-[#94A3B8] ${errors.sectorActivity ? "border-red-400 focus:ring-red-100" : "border-gray-200 focus:ring-green-100 focus:border-[#4CAF50]"}`}
+                                />
+                                {errors.sectorActivity && <p className="text-red-500 text-xs mt-1">{errors.sectorActivity.message}</p>}
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{dict.fields.ordonnateur}</label>
+                                <input
+                                    {...register("ordonnateur")}
+                                    type="text"
+                                    placeholder={dict.fields.ordonnateurPlaceholder}
+                                    className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2 text-[#94A3B8] placeholder:text-[#94A3B8] ${errors.ordonnateur ? "border-red-400 focus:ring-red-100" : "border-gray-200 focus:ring-green-100 focus:border-[#4CAF50]"}`}
+                                />
+                                {errors.ordonnateur && <p className="text-red-500 text-xs mt-1">{errors.ordonnateur.message}</p>}
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{dict.fields.qualifications}</label>
+                                <textarea
+                                    {...register("qualifications")}
+                                    rows={3}
+                                    placeholder={dict.fields.qualificationsPlaceholder}
+                                    className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2 text-[#94A3B8] placeholder:text-[#94A3B8] ${errors.qualifications ? "border-red-400 focus:ring-red-100" : "border-gray-200 focus:ring-green-100 focus:border-[#4CAF50]"}`}
+                                />
+                                {errors.qualifications && <p className="text-red-500 text-xs mt-1">{errors.qualifications.message}</p>}
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{dict.fields.categories}</label>
+                                <input
+                                    {...register("categories")}
+                                    type="text"
+                                    placeholder={dict.fields.categoriesPlaceholder}
+                                    className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2 text-[#94A3B8] placeholder:text-[#94A3B8] ${errors.categories ? "border-red-400 focus:ring-red-100" : "border-gray-200 focus:ring-green-100 focus:border-[#4CAF50]"}`}
+                                />
+                                {errors.categories && <p className="text-red-500 text-xs mt-1">{errors.categories.message}</p>}
+                            </div>
+                        </>
+                    )}
 
                     <div className="flex items-start gap-3 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
                         <div className="mt-0.5 text-[#4CAF50]">

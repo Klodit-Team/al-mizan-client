@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
-  listOeAos,
   type OeAoItem,
   type OeAoLot,
   type OeAoStatus,
   type OeAoType,
-} from "@/services/operateur-dashboard";
+} from "@/services/operateur-appels-offres/api";
+import { useOperateurAppelsOffresQuery } from "@/services/operateur-appels-offres/queries";
 import { type Locale } from "@/i18n/config";
 import {
   Search,
@@ -113,8 +113,7 @@ export default function OeAoListPage() {
   const router = useRouter();
   const locale = (params?.locale as Locale) || "fr";
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [data, setData] = useState<OeAoItem[]>([]);
+  const { data = [], isLoading } = useOperateurAppelsOffresQuery();
   const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<Filters>({
@@ -124,14 +123,6 @@ export default function OeAoListPage() {
     wilaya: "",
     hasSubmission: "all",
   });
-
-  useEffect(() => {
-    let alive = true;
-    listOeAos().then((res: OeAoItem[]) => {
-      if (alive) { setData(res); setIsLoading(false); }
-    });
-    return () => { alive = false; };
-  }, []);
 
   const wilayas = useMemo(
     () => Array.from(new Set(data.map((d) => d.wilaya))).sort(),
