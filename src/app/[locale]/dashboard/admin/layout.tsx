@@ -2,6 +2,8 @@ import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import { getDictionary } from "@/i18n/get-dictionaries";
 import { type Locale } from "@/i18n/config";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -13,6 +15,17 @@ export default async function AdminLayout({
   params,
 }: AdminLayoutProps) {
   const { locale } = await params;
+  const cookieStore = await cookies();
+  const userType = cookieStore.get("user_type")?.value;
+
+  if (userType === "contractant") {
+    redirect(`/${locale}/dashboard/contractant/tableau-de-bord`);
+  }
+
+  if (userType === "operateur") {
+    redirect(`/${locale}/dashboard/operateur/tableau-de-bord`);
+  }
+
   const commonDict = await getDictionary(locale as Locale);
 
   return (

@@ -1,13 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { type Locale } from "@/i18n/config";
 import type { ServiceContractantDashboardDict } from "@/lib/contractantDefaults";
-import {
-  getServiceContractantDashboardData,
-  type ServiceContractantDashboardData,
-} from "@/services/dashboard";
+import { useContractantDashboardQuery } from "@/services/contractant-dashboard/queries";
 import DashboardHeader from "./DashboardHeader";
 import SummaryCards from "./SummaryCards";
 import QuickActions from "./QuickActions";
@@ -23,42 +19,7 @@ export default function ServiceContractantDashboard({
 }: ServiceContractantDashboardProps) {
   const params = useParams();
   const locale = (params?.locale as Locale) || "fr";
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<ServiceContractantDashboardData | null>(
-    null,
-  );
-
-  useEffect(() => {
-    let alive = true;
-
-    const loadDashboard = async () => {
-      try {
-        const response = await getServiceContractantDashboardData();
-
-        if (!alive) {
-          return;
-        }
-
-        setData(response);
-      } catch {
-        if (alive) {
-          setError(dict.errorLoading);
-        }
-      } finally {
-        if (alive) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadDashboard();
-
-    return () => {
-      alive = false;
-    };
-  }, [dict.errorLoading]);
+  const { data, isLoading, error } = useContractantDashboardQuery();
 
   if (isLoading) {
     return (
@@ -78,7 +39,7 @@ export default function ServiceContractantDashboard({
   if (error || !data) {
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
-        {error || dict.errorLoading}
+        {error?.message || dict.errorLoading}
       </div>
     );
   }

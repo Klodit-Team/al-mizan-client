@@ -1,7 +1,7 @@
 import type {
-  ServiceContractantAlertItem,
-  ServiceContractantDeadlineItem,
-} from "@/services/dashboard";
+  ContractantAlertItem,
+  ContractantDeadlineItem,
+} from "@/services/contractant-dashboard/api";
 
 interface AlertsPanelProps {
   alertsTitle: string;
@@ -10,8 +10,8 @@ interface AlertsPanelProps {
   supportTitle: string;
   supportGuide: string;
   supportContact: string;
-  alerts: ServiceContractantAlertItem[];
-  deadlines: ServiceContractantDeadlineItem[];
+  alerts: ContractantAlertItem[];
+  deadlines: ContractantDeadlineItem[];
 }
 
 export default function AlertsPanel({

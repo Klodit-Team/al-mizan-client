@@ -4,93 +4,18 @@ import { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { type Locale } from "@/i18n/config";
 import {
+  type OeSoumissionListItem,
+  type OeSoumissionStatus,
+} from "@/services/operateur-soumissions/api";
+import { useOperateurSoumissionsQuery } from "@/services/operateur-soumissions/queries";
+import {
   FileText, Search, Eye, Send, ChevronLeft, ChevronRight,
   Clock, CheckCircle2, XCircle, BarChart2, Pencil, Scale,
 } from "lucide-react";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type SubStatus = "brouillon" | "deposee" | "recue" | "evaluee" | "retenue" | "rejetee";
-
-interface SoumissionItem {
-  id: string;
-  aoReference: string;
-  aoObject: string;
-  organizationName: string;
-  lots: string[];
-  submittedAt: string;
-  deadline: string;
-  status: SubStatus;
-  montantOffre?: string;
-  /** Whether the soumission is eligible for recours (ATTRIBUTION_PROVISOIRE and OE not retained) */
-  eligibleRecours?: boolean;
-}
-
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-const MOCK: SoumissionItem[] = [
-  {
-    id: "SUB-001", aoReference: "AO-2024-001",
-    aoObject: "Fourniture et installation d'équipements informatiques",
-    organizationName: "Direction des Systèmes d'Information - Alger",
-    lots: ["Lot 1 : Serveurs et réseaux", "Lot 2 : Postes de travail"],
-    submittedAt: "2024-10-28", deadline: "2024-11-15",
-    status: "deposee", montantOffre: "44 200 000 DZD",
-  },
-  {
-    id: "SUB-002", aoReference: "AO-2024-003",
-    aoObject: "Acquisition de matériel médical spécialisé",
-    organizationName: "CHU Mustapha Pacha - Alger",
-    lots: ["Lot 1 – Équipements de radiologie"],
-    submittedAt: "2024-10-20", deadline: "2024-10-30",
-    status: "evaluee", montantOffre: "59 500 000 DZD",
-  },
-  {
-    id: "SUB-003", aoReference: "AO-2024-006",
-    aoObject: "Fourniture de mobilier de bureau pour administrations",
-    organizationName: "Wilaya d'Annaba",
-    lots: ["Lot 1 – Mobilier standard", "Lot 2 – Mobilier direction"],
-    submittedAt: "2024-10-05", deadline: "2024-11-08",
-    status: "retenue", montantOffre: "8 350 000 DZD",
-  },
-  {
-    id: "SUB-004", aoReference: "AO-2024-007",
-    aoObject: "Développement et déploiement d'une application métier",
-    organizationName: "Ministère des Finances - DSI",
-    lots: ["Lot 1 – Développement logiciel"],
-    submittedAt: "2024-10-15", deadline: "2024-11-28",
-    status: "recue", montantOffre: "19 800 000 DZD",
-  },
-  {
-    id: "SUB-005", aoReference: "AO-2024-005",
-    aoObject: "Réhabilitation du réseau d'assainissement — Wilaya de Béjaïa",
-    organizationName: "Direction de l'hydraulique — Béjaïa",
-    lots: ["Lot unique – Génie civil"],
-    submittedAt: "2024-11-30", deadline: "2026-12-28",
-    status: "rejetee", montantOffre: "91 000 000 DZD",
-    eligibleRecours: true,
-  },
-  {
-    id: "SUB-006", aoReference: "AO-2024-010",
-    aoObject: "Entretien préventif des équipements climatiques",
-    organizationName: "Université de Sétif",
-    lots: ["Lot 1 – Climatisation centrale"],
-    submittedAt: "", deadline: "2024-12-01",
-    status: "brouillon",
-  },
-  {
-    id: "SUB-007", aoReference: "AO-2024-010",
-    aoObject: "Entretien préventif des équipements climatiques",
-    organizationName: "Université de Sétif",
-    lots: ["Lot 1 – Climatisation centrale"],
-    submittedAt: "", deadline: "2024-12-01",
-    status: "brouillon",
-  },
-];
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const STATUS_META: Record<SubStatus, { label: string; bg: string; text: string; icon: React.ReactNode }> = {
+const STATUS_META: Record<OeSoumissionStatus, { label: string; bg: string; text: string; icon: React.ReactNode }> = {
   brouillon: { label: "Brouillon", bg: "bg-slate-100",   text: "text-slate-600",   icon: <Clock className="h-3 w-3" /> },
   deposee:   { label: "Déposée",   bg: "bg-blue-100",    text: "text-blue-700",    icon: <Send className="h-3 w-3" /> },
   recue:     { label: "Reçue",     bg: "bg-sky-100",     text: "text-sky-700",     icon: <CheckCircle2 className="h-3 w-3" /> },
@@ -99,7 +24,7 @@ const STATUS_META: Record<SubStatus, { label: string; bg: string; text: string; 
   rejetee:   { label: "Rejetée",   bg: "bg-rose-100",    text: "text-rose-700",    icon: <XCircle className="h-3 w-3" /> },
 };
 
-const STATUS_FILTERS: Array<{ value: SubStatus | "all"; label: string }> = [
+const STATUS_FILTERS: Array<{ value: OeSoumissionStatus | "all"; label: string }> = [
   { value: "all",       label: "Toutes" },
   { value: "brouillon", label: "Brouillon" },
   { value: "deposee",   label: "Déposée" },
@@ -140,12 +65,13 @@ export default function MesSoumissionsPage() {
   const params = useParams();
   const router = useRouter();
   const locale = (params?.locale as Locale) || "fr";
+  const { data = [], isLoading, isError } = useOperateurSoumissionsQuery();
 
   const [keyword, setKeyword]     = useState("");
-  const [statusFilter, setStatus] = useState<SubStatus | "all">("all");
+  const [statusFilter, setStatus] = useState<OeSoumissionStatus | "all">("all");
   const [page, setPage]           = useState(1);
 
-  const filtered = useMemo(() => MOCK.filter((s) => {
+  const filtered = useMemo(() => data.filter((s) => {
     if (statusFilter !== "all" && s.status !== statusFilter) return false;
     if (keyword.trim()) {
       const kw = keyword.toLowerCase();
@@ -156,17 +82,30 @@ export default function MesSoumissionsPage() {
       ) return false;
     }
     return true;
-  }), [keyword, statusFilter]);
+  }), [data, keyword, statusFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
   const paginated  = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   const counts = useMemo(() => ({
-    total:    MOCK.length,
-    enCours:  MOCK.filter((s) => ["deposee", "recue", "evaluee"].includes(s.status)).length,
-    retenues: MOCK.filter((s) => s.status === "retenue").length,
-    rejetees: MOCK.filter((s) => s.status === "rejetee").length,
-  }), []);
+    total: data.length,
+    enCours: data.filter((s) => ["deposee", "recue", "evaluee"].includes(s.status)).length,
+    retenues: data.filter((s) => s.status === "retenue").length,
+    rejetees: data.filter((s) => s.status === "rejetee").length,
+  }), [data]);
+
+  function getResumeDraftUrl(sub: OeSoumissionListItem) {
+    const query = new URLSearchParams();
+    if (sub.aoId) {
+      query.set("aoId", sub.aoId);
+    }
+    if (sub.lotId) {
+      query.set("lotId", sub.lotId);
+    }
+
+    const suffix = query.toString();
+    return `/${locale}/dashboard/operateur/soumissions/nouvelle${suffix ? `?${suffix}` : ""}`;
+  }
 
   return (
     <div className="space-y-4">
@@ -235,7 +174,13 @@ export default function MesSoumissionsPage() {
           ))}
         </div>
 
-        {paginated.length === 0 ? (
+        {isLoading ? (
+          <div className="space-y-2 px-4 py-3">
+            {[...Array(5)].map((_, index) => (
+              <div key={index} className="h-14 animate-pulse rounded bg-slate-100" />
+            ))}
+          </div>
+        ) : paginated.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-slate-400">
             <FileText className="mb-3 h-10 w-10 opacity-20" />
             <p className="text-sm font-medium">Aucune soumission trouvée</p>
@@ -252,10 +197,7 @@ export default function MesSoumissionsPage() {
                   {/* Ref */}
                   <div>
                     <span className="font-mono text-[11px] font-bold text-slate-700">{sub.aoReference}</span>
-                    <p className="text-[10px] text-slate-400">{sub.id}</p>
-                    {sub.montantOffre && (
-                      <p className="mt-0.5 text-[10px] font-semibold text-slate-600">{sub.montantOffre}</p>
-                    )}
+                    <p className="text-[10px] text-slate-400">{sub.reference}</p>
                   </div>
 
                   {/* Object + lots */}
@@ -287,7 +229,7 @@ export default function MesSoumissionsPage() {
                     <button
                       type="button"
                       title="Voir le détail"
-                      onClick={() => router.push(`/${locale}/dashboard/operateur/appels-offres/${sub.aoReference}`)}
+                      onClick={() => router.push(`/${locale}/dashboard/operateur/soumissions/${sub.id}`)}
                       className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition-colors hover:border-[#4CAF50] hover:bg-emerald-50 hover:text-[#4CAF50]"
                     >
                       <Eye className="h-3.5 w-3.5" />
@@ -297,7 +239,7 @@ export default function MesSoumissionsPage() {
                       <button
                         type="button"
                         title="Continuer la soumission"
-                        onClick={() => router.push(`/${locale}/dashboard/operateur/soumissions/nouvelle?ao=${sub.aoReference}`)}
+                        onClick={() => router.push(getResumeDraftUrl(sub))}
                         className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[#4CAF50] text-[#4CAF50] transition-colors hover:bg-[#4CAF50] hover:text-white"
                       >
                         <Pencil className="h-3.5 w-3.5" />
@@ -308,7 +250,7 @@ export default function MesSoumissionsPage() {
                       <button
                         type="button"
                         title="Déposer un recours"
-                        onClick={() => router.push(`/${locale}/dashboard/operateur/recours/deposer?ao=${sub.aoReference}`)}
+                        onClick={() => router.push(`/${locale}/dashboard/operateur/recours/deposer?ao=${encodeURIComponent(sub.aoReference)}`)}
                         className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-amber-300 bg-amber-50 text-amber-600 transition-colors hover:bg-amber-100"
                       >
                         <Scale className="h-3.5 w-3.5" />
@@ -321,6 +263,12 @@ export default function MesSoumissionsPage() {
           </ul>
         )}
       </div>
+
+      {isError && (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700">
+          Impossible de charger les soumissions. Vérifiez la disponibilité de la passerelle API et du service soumission.
+        </div>
+      )}
 
       {/* Pagination */}
       {filtered.length > ITEMS_PER_PAGE && (

@@ -8,6 +8,12 @@ import { useRouter } from "next/navigation";
 import { loginSchema, type LoginFormData } from "@/lib/validations/loginSchema";
 import { useLoginMutation } from "@/services/auth/queries";
 import { ApiClientError } from "@/services/client";
+import { getCurrentUser } from "@/services/auth/api";
+import {
+    getDashboardHomePath,
+    mapRoleToDashboardUserType,
+    type DashboardUserType,
+} from "@/lib/auth/userType";
 
 import type { getAuthDictionary } from "@/i18n/get-dictionaries";
 
@@ -36,12 +42,38 @@ export default function LoginForm({ dict }: LoginFormProps) {
     const onSubmit = async (data: LoginFormData) => {
         setApiError(null);
         try {
-            await loginMutation.mutateAsync({
+            const loginResponse = await loginMutation.mutateAsync({
                 email: data.email,
                 password: data.password,
             });
 
-            router.push(`/${locale}/dashboard/contractant/tableau-de-bord`);
+            let userType: DashboardUserType | null =
+                mapRoleToDashboardUserType(loginResponse.userType) ||
+                mapRoleToDashboardUserType(loginResponse.role) ||
+                mapRoleToDashboardUserType(loginResponse.user?.userType) ||
+                mapRoleToDashboardUserType(loginResponse.user?.role);
+
+            if (!userType) {
+                try {
+                    const meResponse = await getCurrentUser();
+                    userType =
+                        mapRoleToDashboardUserType(meResponse.user?.userType) ||
+                        mapRoleToDashboardUserType(meResponse.user?.role);
+                } catch {
+                    // Ignore role resolution failure and handle below.
+                }
+            }
+
+            if (!userType) {
+                document.cookie = "user_type=; Path=/; Max-Age=0; SameSite=Lax";
+                setApiError("Unable to resolve your account role. Please try again.");
+                return;
+            }
+
+            const resolvedUserType: DashboardUserType = userType;
+            document.cookie = `user_type=${resolvedUserType}; Path=/; Max-Age=604800; SameSite=Lax`;
+
+            router.push(getDashboardHomePath(locale, resolvedUserType));
             return;
         } catch (error) {
             if (error instanceof ApiClientError) {
@@ -171,7 +203,7 @@ export default function LoginForm({ dict }: LoginFormProps) {
 
             <p className="text-center text-sm text-gray-500 mt-6">
                 {dict.noAccount} {" "}
-                <a href={`/${locale}/auth/register`} className="font-semibold" style={{ color: "#364150" }}>
+                <a href={`/${locale}/auth/register/operateur`} className="font-semibold" style={{ color: "#364150" }}>
                     {dict.createOne}
                 </a>
             </p>

@@ -45,12 +45,15 @@ export async function apiClient<TResponse>(
   path: string,
   init?: RequestInit,
 ): Promise<TResponse> {
+  const isFormDataBody = typeof FormData !== 'undefined' && init?.body instanceof FormData;
+  const mergedHeaders: HeadersInit = {
+    ...(isFormDataBody ? {} : { 'Content-Type': 'application/json' }),
+    ...(init?.headers || {}),
+  };
+
   const response = await fetch(buildUrl(path), {
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init?.headers || {}),
-    },
+    headers: mergedHeaders,
     ...init,
   });
 
