@@ -104,8 +104,9 @@ export default function Navbar({ isLoggedIn = false, userInitial = "R", userName
 
                     <div className="flex items-center gap-3 cursor-pointer group" onClick={() => {
                         switch(userRole){
-                            case "ADMIN": router.push('/dashboard/admin/profile'); break;
+                            case "ADMIN": router.push('/${locale}/dashboard/admin/profile'); break;
                             case "OPERATEUR": router.push('/dashboard/operateur/profil'); break;
+                            case  "COMMISSION": router.push(`/${locale}/dashboard/commission/profil`); break;
                         }
                     }}>
                         <div className="text-right">

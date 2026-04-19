@@ -15,15 +15,11 @@ export default function middleware(request: NextRequest) {
         );
     }
 
-<<<<<<< HEAD
-    // const token = request.cookies.get("token")?.value;
-    // const isProtected = pathname.includes("/dashboard");
-=======
     const token =
         request.cookies.get("access_token")?.value ||
         request.cookies.get("token")?.value;
     const isProtected = pathname.includes("/dashboard");
->>>>>>> 91a3fb843842093ec6382ae97430c89a993afbcb
+
 
     // if (isProtected && !token) {
     //     const locale = pathname.split("/")[1] || defaultLocale;

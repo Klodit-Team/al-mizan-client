@@ -63,6 +63,14 @@
        "audit":"سجل المراجعة",
        "incidents":"حوادث الذكاء الاصطناعي"
     },
+    "commission": {
+      "tableauDeBord": "لوحة التحكم",
+      "nouvelleEvaluation": "تقييم جديد",
+      "mesCommissions": "لجاني",
+      "evaluationsEnCours": "التقييمات الجارية",
+      "verificationDocumentaire": "التحقق الوثائقي",
+      "procesVerbaux": "المحاضر"
+    },
     "mainDashboard": "لوحة التحكم الرئيسية",
     "browseAOs": "تصفح طلبات العروض",
     "greAGreRequests": "طلبات التراضي",
@@ -363,6 +371,50 @@
           "status": "الحالة الجديدة",
           "cancel": "إلغاء",
           "save": "حفظ وحل"
+        }
+      }
+    },
+    "commission": {
+      "mesCommissionsPage": {
+        "title": "لجاني",
+        "subtitle": "جميع اللجان التي تشارك فيها",
+        "searchPlaceholder": "ابحث عن لجنة...",
+        "resetFilters": "إعادة تعيين المرشحات",
+        "noCommissions": "لم يتم العثور على أي لجنة",
+        "resultsCount": "نتيجة",
+        "resultsCountPlural": "نتائج",
+        "filtered": "(مصفّاة)",
+        "stats": {
+          "total": "لجنة",
+          "totalPlural": "لجان",
+          "active": "نشطة",
+          "constituee": "مؤسسة",
+          "dissoute": "منحلة"
+        },
+        "filters": {
+          "all": "جميع الحالات",
+          "ACTIVE": "نشطة",
+          "CONSTITUEE": "مؤسسة",
+          "DISSOUTE": "منحلة"
+        },
+        "columns": {
+          "designation": "التسمية",
+          "appelOffre": "طلب العروض",
+          "monRole": "دوري",
+          "dateConstitution": "تاريخ التأسيس",
+          "statut": "الحالة",
+          "actions": "إجراءات"
+        },
+        "statuts": {
+          "ACTIVE": "نشطة",
+          "CONSTITUEE": "مؤسسة",
+          "DISSOUTE": "منحلة"
+        },
+        "roles": {
+          "president": "رئيس",
+          "evaluateur": "مقيّم",
+          "rapporteur": "مقرّر",
+          "membre": "عضو"
         }
       }
     }

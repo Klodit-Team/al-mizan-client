@@ -62,6 +62,14 @@
        "audit":"Journal d'Audit",
        "incidents":"Incidents IA"
     },
+  "commission": {
+      "tableauDeBord": "Tableau de Bord",
+      "nouvelleEvaluation": "Nouvelle Évaluation",
+      "mesCommissions": "Mes Commissions",
+      "evaluationsEnCours": "Évaluations en Cours",
+      "verificationDocumentaire": "Vérification Documentaire",
+      "procesVerbaux": "Procès-verbaux"
+    },
     "mainDashboard": "Tableau de bord",
     "browseAOs": "Parcourir les AOs",
     "greAGreRequests": "Demandes Gre a Gre",
@@ -363,6 +371,50 @@
           "status": "Nouveau statut",
           "cancel": "Annuler",
           "save": "Enregistrer et résoudre"
+        }
+      }
+    },
+    "commission": {
+      "mesCommissionsPage": {
+        "title": "Mes Commissions",
+        "subtitle": "Toutes les commissions auxquelles vous participez",
+        "searchPlaceholder": "Rechercher une commission...",
+        "resetFilters": "Réinitialiser les filtres",
+        "noCommissions": "Aucune commission trouvée",
+        "resultsCount": "résultat",
+        "resultsCountPlural": "résultats",
+        "filtered": "(filtrés)",
+        "stats": {
+          "total": "commission",
+          "totalPlural": "commissions",
+          "active": "Actives",
+          "constituee": "Constituées",
+          "dissoute": "Dissoutes"
+        },
+        "filters": {
+          "all": "Tous les statuts",
+          "ACTIVE": "Active",
+          "CONSTITUEE": "Constituée",
+          "DISSOUTE": "Dissoute"
+        },
+        "columns": {
+          "designation": "Désignation",
+          "appelOffre": "Appel d'Offres",
+          "monRole": "Mon Rôle",
+          "dateConstitution": "Date Constitution",
+          "statut": "Statut",
+          "actions": "Actions"
+        },
+        "statuts": {
+          "ACTIVE": "Active",
+          "CONSTITUEE": "Constituée",
+          "DISSOUTE": "Dissoute"
+        },
+        "roles": {
+          "president": "Président",
+          "evaluateur": "Évaluateur",
+          "rapporteur": "Rapporteur",
+          "membre": "Membre"
         }
       }
     }
