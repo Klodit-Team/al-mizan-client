@@ -19,12 +19,14 @@ import {
 
 import { cn } from "@/lib/utils";
 import {
-  getServiceContractantTenderById,
-  updateServiceContractantTenderStatus,
   type ServiceContractantApiStatus,
-  type ServiceContractantTenderDetail,
   type ServiceContractantTenderType,
 } from "@/services/tenders";
+import {
+  useContractantAppelOffreDetailQuery,
+  useContractantAppelOffreStatusMutation,
+} from "@/services/contractant-appels-offres/queries";
+import { type ServiceContractantTenderDetail } from "@/services/contractant-appels-offres/api";
 import { listServiceContractantTenderSubmissions } from "@/services/tenderSubmissions";
 import AttributionTab from "./attribution/AttributionTab";
 import AvisListTab from "./avis/AvisListTab";
@@ -139,16 +141,6 @@ function nextApiStatusForStage(stage: WorkflowStage): ServiceContractantApiStatu
   return null;
 }
 
-function mapApiStatusToWorkflowStage(status: ServiceContractantApiStatus): WorkflowStage {
-  if (status === "PUBLIE") return "publie";
-  if (status === "EN_COURS") return "en_cours";
-  if (status === "OUVERTURE_PLIS") return "ouverture_plis";
-  if (status === "EVALUATION") return "evaluation";
-  if (status === "ATTRIBUE" || status === "CLOTURE") return "attribue";
-
-  return "brouillon";
-}
-
 export default function AoDetailPage({
   locale,
   aoId,
@@ -156,57 +148,20 @@ export default function AoDetailPage({
 }: AoDetailPageProps) {
   const isRtl = locale === "ar";
   const [activeTab, setActiveTab] = useState<DetailTab>(initialTab);
-  const [tender, setTender] = useState<ServiceContractantTenderDetail | null>(
-    null,
-  );
-  const [loadingTender, setLoadingTender] = useState(true);
-  const [loadingError, setLoadingError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [isApplyingStatus, setIsApplyingStatus] = useState(false);
-  const [stage, setStage] = useState<WorkflowStage>(
-    "brouillon",
-  );
   const [soumissionsCount, setSoumissionsCount] = useState<number>(0);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadTender = async () => {
-      setLoadingTender(true);
-      setLoadingError(null);
-
-      try {
-        const data = await getServiceContractantTenderById(aoId);
-        if (!isMounted) {
-          return;
-        }
-
-        if (!data) {
-          setTender(null);
-          setLoadingError("Appel d'offres introuvable ou non autorise.");
-          return;
-        }
-
-        setTender(data);
-        setStage(mapTenderStatusToWorkflowStage(data.status));
-      } catch {
-        if (isMounted) {
-          setTender(null);
-          setLoadingError("Impossible de charger cet appel d'offres.");
-        }
-      } finally {
-        if (isMounted) {
-          setLoadingTender(false);
-        }
-      }
-    };
-
-    void loadTender();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [aoId]);
+  const {
+    data: tender,
+    isLoading: loadingTender,
+    isError,
+    error,
+  } = useContractantAppelOffreDetailQuery(aoId);
+  const statusMutation = useContractantAppelOffreStatusMutation(aoId);
+  const isApplyingStatus = statusMutation.isPending;
+  const stage = useMemo<WorkflowStage>(
+    () => mapTenderStatusToWorkflowStage(tender?.status),
+    [tender?.status],
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -251,18 +206,17 @@ export default function AoDetailPage({
   const lots = tender?.lots || [];
   const eligibilityCriteria = tender?.eligibilityCriteria || [];
   const evaluationMatrix = tender?.evaluationCriteria || [];
+  const loadingError = isError
+    ? error?.message || "Impossible de charger cet appel d'offres."
+    : null;
 
   const applyStatus = async (status: ServiceContractantApiStatus) => {
-    setIsApplyingStatus(true);
     setActionError(null);
 
     try {
-      await updateServiceContractantTenderStatus(aoId, status);
-      setStage(mapApiStatusToWorkflowStage(status));
+      await statusMutation.mutateAsync(status);
     } catch {
       setActionError("Impossible de mettre a jour le statut de cet appel d'offres.");
-    } finally {
-      setIsApplyingStatus(false);
     }
   };
 
@@ -304,6 +258,14 @@ export default function AoDetailPage({
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700 shadow-sm">
         {loadingError}
+      </div>
+    );
+  }
+
+  if (!tender) {
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700 shadow-sm">
+        Appel d'offres introuvable ou non autorise.
       </div>
     );
   }
@@ -377,9 +339,7 @@ export default function AoDetailPage({
               Description
             </p>
             <p className="mt-1 text-slate-700">
-              Fourniture et installation de materiel informatique pour garantir
-              la haute disponibilite des services numeriques et la continuite d
-              activite.
+              {tender.object || "Description non renseignee."}
             </p>
           </div>
         </div>
@@ -567,7 +527,9 @@ export default function AoDetailPage({
         <AttributionTab
           locale={locale}
           aoId={aoId}
-          onDefinitiveConfirmed={() => setStage("attribue")}
+          onDefinitiveConfirmed={() => {
+            void applyStatus("ATTRIBUE");
+          }}
         />
       );
     }

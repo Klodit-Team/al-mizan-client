@@ -461,6 +461,44 @@ function buildCreateOrUpdatePayload(
   };
 }
 
+interface CreateLotRequestBody {
+  numero: string;
+  designation: string;
+  montantEstime: number;
+}
+
+function buildLotRequestBody(
+  lot: TenderLotPayload,
+  index: number,
+): CreateLotRequestBody {
+  const numero = String(lot.lotNumber || index + 1).trim() || String(index + 1);
+  const designation = String(lot.designation || `Lot ${index + 1}`).trim();
+
+  return {
+    numero,
+    designation,
+    montantEstime: parsePositiveNumber(lot.estimatedAmount),
+  };
+}
+
+async function createLotsForTender(
+  aoId: string,
+  lots: TenderLotPayload[],
+): Promise<void> {
+  if (!aoId || !Array.isArray(lots) || lots.length === 0) {
+    return;
+  }
+
+  await Promise.all(
+    lots.map((lot, index) =>
+      apiClient<unknown>(`/api/v1/appels-offres/${aoId}/lots`, {
+        method: "POST",
+        body: JSON.stringify(buildLotRequestBody(lot, index)),
+      }),
+    ),
+  );
+}
+
 function mapProcedureType(value: string): ServiceContractantTenderItem["type"] {
   const raw = String(value || "").trim().toUpperCase();
 
@@ -551,6 +589,8 @@ export async function saveServiceContractantTenderDraft(
   });
 
   const created = unwrapEnvelope<AppelOffreRecord>(createdRaw);
+  await createLotsForTender(created.id, payload.lots);
+
   return {
     id: created.id,
     reference: created.reference || payload.reference,
@@ -592,7 +632,13 @@ export async function getServiceContractantTenderDraftById(
         withdrawalPrice: "0.00",
         isPublished: false,
       },
-      lots: [],
+      lots: (ao.lots || []).map((lot, index) => ({
+        lotNumber: lot.numero || String(index + 1),
+        designation: lot.designation || `Lot ${index + 1}`,
+        description: "",
+        estimatedAmount: String(lot.montantEstime ?? ""),
+        delayDays: "",
+      })),
       eligibilityCriteria: [],
       evaluationCriteria: [],
     };
