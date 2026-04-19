@@ -16,7 +16,7 @@ export class ApiClientError extends Error {
   }
 }
 
-const FALLBACK_BASE_URL = 'http://localhost:3000';
+const FALLBACK_BASE_URL = 'http://localhost:3001';
 
 function normalizeBaseUrl(rawBaseUrl: string): string {
   return rawBaseUrl.endsWith('/') ? rawBaseUrl.slice(0, -1) : rawBaseUrl;

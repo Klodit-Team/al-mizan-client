@@ -140,12 +140,19 @@ interface SoumissionRecord {
   id: string;
   reference?: string;
   appelOffreId?: string;
+  appel_offre_id?: string;
   lotId?: string;
+  lot_id?: string;
   statut?: string;
+  status?: string;
   horodatageServeur?: string;
+  horodatage_serveur?: string;
   isDansDelai?: boolean;
+  is_dans_delai?: boolean;
   createdAt?: string;
+  created_at?: string;
   updatedAt?: string;
+  updated_at?: string;
 }
 
 interface SoumissionDetailRecord extends SoumissionRecord {
@@ -251,12 +258,41 @@ function normalizeDate(value?: string | null): string {
 }
 
 function getSubmissionDate(sub: SoumissionRecord): string {
-  const status = normalizeStatus(sub.statut);
+  const status = normalizeStatus(sub.statut || sub.status);
   if (status === "brouillon") {
     return "";
   }
 
-  return normalizeDate(sub.horodatageServeur) || normalizeDate(sub.createdAt);
+  return normalizeDate(sub.horodatageServeur || sub.horodatage_serveur)
+    || normalizeDate(sub.createdAt || sub.created_at);
+}
+
+function getSoumissionAoId(sub: SoumissionRecord): string {
+  return sub.appelOffreId || sub.appel_offre_id || "";
+}
+
+function getSoumissionLotId(sub: SoumissionRecord): string | undefined {
+  return sub.lotId || sub.lot_id;
+}
+
+function getSoumissionCreatedAt(sub: SoumissionRecord): string | undefined {
+  return sub.createdAt || sub.created_at;
+}
+
+function getSoumissionStatus(sub: SoumissionRecord): unknown {
+  return sub.statut || sub.status;
+}
+
+function getSoumissionIsDansDelai(sub: SoumissionRecord): boolean | undefined {
+  if (typeof sub.isDansDelai === "boolean") {
+    return sub.isDansDelai;
+  }
+
+  if (typeof sub.is_dans_delai === "boolean") {
+    return sub.is_dans_delai;
+  }
+
+  return undefined;
 }
 
 function lotLabelsForSubmission(ao: AppelOffreRecord | undefined, lotId?: string): string[] {
@@ -335,21 +371,23 @@ function mapSoumissionListItem(
   soumission: SoumissionRecord,
   aoById: Map<string, AppelOffreRecord>,
 ): OeSoumissionListItem {
-  const ao = aoById.get(soumission.appelOffreId || "");
+  const aoId = getSoumissionAoId(soumission);
+  const lotId = getSoumissionLotId(soumission);
+  const ao = aoById.get(aoId);
 
   return {
     id: soumission.id,
     reference: soumission.reference || soumission.id,
-    aoId: soumission.appelOffreId || ao?.id || "",
-    lotId: soumission.lotId,
-    aoReference: ao?.reference || soumission.appelOffreId || "AO",
+    aoId,
+    lotId,
+    aoReference: ao?.reference || aoId || "AO",
     aoObject: ao?.objet || "Objet non renseigne",
     organizationName: ao?.organisationName || "Organisme non renseigne",
-    lots: lotLabelsForSubmission(ao, soumission.lotId),
+    lots: lotLabelsForSubmission(ao, lotId),
     submittedAt: getSubmissionDate(soumission),
-    deadline: normalizeDate(ao?.dateLimiteSoumission) || normalizeDate(soumission.createdAt),
-    status: normalizeStatus(soumission.statut),
-    eligibleRecours: normalizeStatus(soumission.statut) === "rejetee",
+    deadline: normalizeDate(ao?.dateLimiteSoumission) || normalizeDate(getSoumissionCreatedAt(soumission)),
+    status: normalizeStatus(getSoumissionStatus(soumission)),
+    eligibleRecours: normalizeStatus(getSoumissionStatus(soumission)) === "rejetee",
   };
 }
 
@@ -359,22 +397,25 @@ function mapSoumissionDetailItem(
 ): OeSoumissionDetailItem {
   const financialTotalHt = formatAmount(soumission.offreFinanciere?.montantHt);
 
+  const aoId = getSoumissionAoId(soumission);
+  const lotId = getSoumissionLotId(soumission);
+
   return {
     id: soumission.id,
     reference: soumission.reference || soumission.id,
-    aoId: soumission.appelOffreId || ao?.id || "",
-    aoReference: ao?.reference || soumission.appelOffreId || "AO",
+    aoId,
+    aoReference: ao?.reference || aoId || "AO",
     aoObject: ao?.objet || "Objet non renseigne",
     organizationName: ao?.organisationName || "Organisme non renseigne",
     wilaya: ao?.wilaya || "N/A",
     aoDeadline: normalizeDate(ao?.dateLimiteSoumission),
     submittedAt: getSubmissionDate(soumission),
-    createdAt: normalizeDate(soumission.createdAt),
-    status: normalizeStatus(soumission.statut),
-    isDansDelai: soumission.isDansDelai,
-    lots: lotDetailsForSubmission(ao || undefined, soumission.lotId, financialTotalHt),
+    createdAt: normalizeDate(getSoumissionCreatedAt(soumission)),
+    status: normalizeStatus(getSoumissionStatus(soumission)),
+    isDansDelai: getSoumissionIsDansDelai(soumission),
+    lots: lotDetailsForSubmission(ao || undefined, lotId, financialTotalHt),
     financialTotalHt,
-    horodatageServeur: normalizeDate(soumission.horodatageServeur),
+    horodatageServeur: normalizeDate(soumission.horodatageServeur || soumission.horodatage_serveur),
     offreTechnique: soumission.offreTechnique,
     offreFinanciere: soumission.offreFinanciere
       ? {
@@ -391,6 +432,12 @@ function mapSoumissionDetailItem(
       }
       : undefined,
   };
+}
+
+async function fetchOptionalResource<T>(path: string): Promise<T | undefined> {
+  return apiClient<unknown>(path, { method: "GET" })
+    .then((payload) => unwrapEnvelope<T>(payload))
+    .catch(() => undefined);
 }
 
 function toBase64(buffer: ArrayBuffer | Uint8Array): string {
@@ -584,8 +631,30 @@ export async function getOperateurSoumissionById(id: string): Promise<OeSoumissi
     return null;
   }
 
-  const ao = await getAoById(soumission.appelOffreId || "");
-  return mapSoumissionDetailItem(soumission, ao);
+  const aoId = getSoumissionAoId(soumission);
+
+  const [ao, offreTechnique, offreFinanciere, caution] = await Promise.all([
+    getAoById(aoId),
+    soumission.offreTechnique
+      ? Promise.resolve(soumission.offreTechnique)
+      : fetchOptionalResource<SoumissionDetailRecord["offreTechnique"]>(`/api/v1/soumissions/${id}/offre-technique`),
+    soumission.offreFinanciere
+      ? Promise.resolve(soumission.offreFinanciere)
+      : fetchOptionalResource<SoumissionDetailRecord["offreFinanciere"]>(`/api/v1/soumissions/${id}/offre-financiere`),
+    soumission.caution
+      ? Promise.resolve(soumission.caution)
+      : fetchOptionalResource<SoumissionDetailRecord["caution"]>(`/api/v1/soumissions/${id}/caution`),
+  ]);
+
+  return mapSoumissionDetailItem(
+    {
+      ...soumission,
+      offreTechnique: soumission.offreTechnique || offreTechnique,
+      offreFinanciere: soumission.offreFinanciere || offreFinanciere,
+      caution: soumission.caution || caution,
+    },
+    ao,
+  );
 }
 
 export async function submitOperateurSoumissionWorkflow(

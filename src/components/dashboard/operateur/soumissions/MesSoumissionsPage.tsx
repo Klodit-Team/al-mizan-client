@@ -250,7 +250,13 @@ export default function MesSoumissionsPage() {
                       <button
                         type="button"
                         title="Déposer un recours"
-                        onClick={() => router.push(`/${locale}/dashboard/operateur/recours/deposer?ao=${encodeURIComponent(sub.aoReference)}`)}
+                        onClick={() => {
+                          const query = new URLSearchParams();
+                          query.set("ao", sub.aoReference);
+                          query.set("aoId", sub.aoId);
+                          query.set("objet", sub.aoObject);
+                          router.push(`/${locale}/dashboard/operateur/recours/deposer?${query.toString()}`);
+                        }}
                         className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-amber-300 bg-amber-50 text-amber-600 transition-colors hover:bg-amber-100"
                       >
                         <Scale className="h-3.5 w-3.5" />

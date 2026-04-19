@@ -7,8 +7,9 @@ import {
   Scale, Eye, Plus, Search, ChevronLeft, ChevronRight,
   Clock, AlertTriangle, FileCheck, XCircle, Hourglass,
 } from "lucide-react";
+import { useOperateurRecoursQuery } from "@/services/operateur-recours/queries";
 import {
-  MOCK_RECOURS, STATUS_META, fmt, isDeadlineUrgent, isDeadlinePast,
+  STATUS_META, fmt, isDeadlineUrgent, isDeadlinePast,
   type RecoursStatus,
 } from "./types";
 
@@ -62,6 +63,8 @@ function DeadlineBadge({ dateLimite, statut }: { dateLimite: string; statut: Rec
 }
 
 export default function MesRecoursPage() {
+    const { data = [], isLoading, isError } = useOperateurRecoursQuery();
+
   const params = useParams();
   const router = useRouter();
   const locale = (params?.locale as Locale) || "fr";
@@ -70,7 +73,7 @@ export default function MesRecoursPage() {
   const [statusFilter, setStatus] = useState<RecoursStatus | "all">("all");
   const [page, setPage]           = useState(1);
 
-  const filtered = useMemo(() => MOCK_RECOURS.filter((r) => {
+  const filtered = useMemo(() => data.filter((r) => {
     if (statusFilter !== "all" && r.statut !== statusFilter) return false;
     if (keyword.trim()) {
       const kw = keyword.toLowerCase();
@@ -81,17 +84,17 @@ export default function MesRecoursPage() {
       ) return false;
     }
     return true;
-  }), [keyword, statusFilter]);
+  }), [data, keyword, statusFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
   const paginated  = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   const counts = useMemo(() => ({
-    total:    MOCK_RECOURS.length,
-    enExamen: MOCK_RECOURS.filter((r) => r.statut === "en_examen").length,
-    acceptes: MOCK_RECOURS.filter((r) => r.statut === "accepte").length,
-    rejetes:  MOCK_RECOURS.filter((r) => r.statut === "rejete").length,
-  }), []);
+    total: data.length,
+    enExamen: data.filter((r) => r.statut === "en_examen").length,
+    acceptes: data.filter((r) => r.statut === "accepte").length,
+    rejetes: data.filter((r) => r.statut === "rejete").length,
+  }), [data]);
 
   return (
     <div className="space-y-4">
@@ -104,7 +107,7 @@ export default function MesRecoursPage() {
         </div>
         <button
           type="button"
-          onClick={() => router.push(`/${locale}/dashboard/operateur/soumissions`)}
+          onClick={() => router.push(`/${locale}/dashboard/operateur/recours/deposer`)}
           className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
           style={{ backgroundColor: "#4CAF50" }}
         >
@@ -159,7 +162,13 @@ export default function MesRecoursPage() {
           ))}
         </div>
 
-        {paginated.length === 0 ? (
+        {isLoading ? (
+          <div className="space-y-2 px-4 py-3">
+            {[...Array(5)].map((_, index) => (
+              <div key={index} className="h-14 animate-pulse rounded bg-slate-100" />
+            ))}
+          </div>
+        ) : paginated.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-slate-400">
             <Scale className="mb-3 h-10 w-10 opacity-20" />
             <p className="text-sm font-medium">Aucun recours trouvé</p>
@@ -206,6 +215,12 @@ export default function MesRecoursPage() {
           </ul>
         )}
       </div>
+
+      {isError && (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700">
+          Impossible de charger les recours. Vérifiez la disponibilité de la passerelle API et du recours-service.
+        </div>
+      )}
 
       {/* Pagination */}
       {filtered.length > ITEMS_PER_PAGE && (

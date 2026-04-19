@@ -247,11 +247,52 @@ async function listAllAos(): Promise<AppelOffreRecord[]> {
   return extractList<AppelOffreRecord>(payload);
 }
 
+async function getAoById(id: string): Promise<AppelOffreRecord | null> {
+  if (!id) {
+    return null;
+  }
+
+  const payload = await apiClient<unknown>(`/api/v1/appels-offres/${id}`, {
+    method: "GET",
+  }).catch(() => null);
+
+  if (!payload) {
+    return null;
+  }
+
+  const ao = unwrapEnvelope<AppelOffreRecord>(payload);
+  return ao?.id ? ao : null;
+}
+
+async function hydrateAosWithLots(aos: AppelOffreRecord[]): Promise<AppelOffreRecord[]> {
+  const missingLots = aos.filter((ao) => !Array.isArray(ao.lots) || ao.lots.length === 0);
+  if (!missingLots.length) {
+    return aos;
+  }
+
+  const detailedById = new Map<string, AppelOffreRecord>();
+
+  await Promise.all(missingLots.map(async (ao) => {
+    const detailed = await getAoById(ao.id);
+    if (detailed && Array.isArray(detailed.lots) && detailed.lots.length > 0) {
+      detailedById.set(ao.id, detailed);
+    }
+  }));
+
+  if (!detailedById.size) {
+    return aos;
+  }
+
+  return aos.map((ao) => detailedById.get(ao.id) || ao);
+}
+
 export async function listOperateurAppelsOffres(): Promise<OeAoItem[]> {
-  const [aos, submissions] = await Promise.all([
+  const [rawAos, submissions] = await Promise.all([
     listAllAos(),
     listOwnSubmissions(),
   ]);
+
+  const aos = await hydrateAosWithLots(rawAos);
 
   const submissionStatusByAoId = pickLatestSubmissionStatusByAo(submissions);
 
