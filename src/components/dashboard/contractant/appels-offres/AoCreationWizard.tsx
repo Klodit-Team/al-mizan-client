@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import Step1 from "./ao-steps/Step1";
@@ -11,6 +11,7 @@ import Step5 from "./ao-steps/Step5";
 import Step6 from "./ao-steps/Step6";
 import AoWizardHeader from "@/components/dashboard/contractant/appels-offres/AoWizardHeader";
 import {
+  getServiceContractantTenderDraftById,
   publishServiceContractantTender,
   saveServiceContractantTenderDraft,
   type SaveTenderDraftPayload,
@@ -263,6 +264,9 @@ export default function AoCreationWizard({
   const [reviewActionError, setReviewActionError] = useState<string | null>(
     null,
   );
+  const [draftHydratedFromApi, setDraftHydratedFromApi] = useState(
+    Boolean(initialDraft),
+  );
 
   const [lots, setLots] = useState<LotItem[]>(() =>
     (initialDraft?.lots || []).map((item, index) => ({
@@ -402,6 +406,94 @@ export default function AoCreationWizard({
     offerDeadline: initialDraft?.offerDeadline || "",
     openingDate: initialDraft?.openingDate || "",
   }));
+
+  useEffect(() => {
+    if (!isEditMode || !tenderId || draftHydratedFromApi) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadDraft = async () => {
+      try {
+        const draft = await getServiceContractantTenderDraftById(tenderId);
+        if (!draft || !isMounted) {
+          return;
+        }
+
+        setDraftId(draft.id);
+        setForm({
+          reference: draft.reference || initialReference(),
+          object: draft.object || "",
+          description: draft.description || "",
+          marketType: draft.marketType || "",
+          procedureType: draft.procedureType || "",
+          estimatedAmount: draft.estimatedAmount || "",
+          executionWilaya: draft.executionWilaya || "",
+          executionDelayDays: draft.executionDelayDays || "",
+          submissionBondRequired: draft.submissionBondRequired ?? true,
+          submissionBondAmount: draft.submissionBondAmount || "",
+          dceDeadline: draft.dceDeadline || "",
+          offerDeadline: draft.offerDeadline || "",
+          openingDate: draft.openingDate || "",
+        });
+
+        setCdcForm({
+          title: draft.cdc.title || "",
+          version: draft.cdc.version || "v1.0.0",
+          withdrawalPrice: draft.cdc.withdrawalPrice || "0.00",
+          isPublished: draft.cdc.isPublished || false,
+        });
+
+        setExistingCdcFileName(draft.cdc.fileName || null);
+
+        setLots(
+          (draft.lots || []).map((item, index) => ({
+            id: `lot-${index + 1}`,
+            lotNumber: item.lotNumber,
+            designation: item.designation,
+            description: item.description,
+            estimatedAmount: item.estimatedAmount,
+            delayDays: item.delayDays,
+          })),
+        );
+
+        setCriteria(
+          (draft.eligibilityCriteria || []).map((item, index) => ({
+            id: `criterion-${index + 1}`,
+            order: item.order || index + 1,
+            designation: item.designation,
+            description: item.description,
+            eliminatory: item.eliminatory,
+          })),
+        );
+
+        setEvaluationCriteria(
+          (draft.evaluationCriteria || []).map((item, index) => ({
+            id: `evaluation-${index + 1}`,
+            order: item.order || index + 1,
+            designation: item.designation,
+            type: item.type,
+            weighting: item.weighting,
+            eliminationScore: item.eliminationScore,
+            lotAssignment: item.lotAssignment,
+          })),
+        );
+
+        setDraftHydratedFromApi(true);
+      } catch {
+        if (isMounted) {
+          setReviewActionError("Impossible de charger ce brouillon.");
+        }
+      }
+    };
+
+    void loadDraft();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [draftHydratedFromApi, isEditMode, tenderId]);
 
   const progressPercent = useMemo(() => ((step - 1) / 5) * 100, [step]);
 
@@ -1479,7 +1571,7 @@ export default function AoCreationWizard({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="ao-wizard space-y-4">
       <AoWizardHeader
         step={step}
         stepPrefix={dict.stepPrefix}

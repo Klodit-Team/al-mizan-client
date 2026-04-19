@@ -1,3 +1,5 @@
+import { apiClient } from "@/services/client";
+
 export type ServiceContractantTenderType = "ouvert" | "restreint" | "gre_a_gre";
 export type ServiceContractantTenderStatus =
   | "brouillon"
@@ -14,6 +16,47 @@ export interface ServiceContractantTenderItem {
   type: ServiceContractantTenderType;
   deadline: string;
   status: ServiceContractantTenderStatus;
+}
+
+export interface ServiceContractantTenderLot {
+  id: string;
+  number: string;
+  designation: string;
+  amount: string;
+  status?: string;
+}
+
+export interface ServiceContractantEligibilityCriterion {
+  id: string;
+  label: string;
+  details: string;
+  eliminatory: boolean;
+}
+
+export interface ServiceContractantEvaluationCriterion {
+  id: string;
+  label: string;
+  category: "technique" | "financier";
+  weight: number;
+  eliminationScore?: number;
+}
+
+export interface ServiceContractantCdcDocument {
+  id: string;
+  documentId: string;
+  withdrawalPrice: string;
+  publishedAt: string;
+}
+
+export interface ServiceContractantTenderDetail extends ServiceContractantTenderItem {
+  amount: string;
+  wilaya: string;
+  sector: string;
+  publicationDate?: string;
+  lots: ServiceContractantTenderLot[];
+  eligibilityCriteria: ServiceContractantEligibilityCriterion[];
+  evaluationCriteria: ServiceContractantEvaluationCriterion[];
+  cdcDocuments: ServiceContractantCdcDocument[];
 }
 
 export interface TenderLotPayload {
@@ -83,295 +126,539 @@ export interface TenderMutationResult {
   avisReference?: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "");
+export type ServiceContractantApiStatus =
+  | "BROUILLON"
+  | "PUBLIE"
+  | "EN_COURS"
+  | "OUVERTURE_PLIS"
+  | "EVALUATION"
+  | "ATTRIBUE"
+  | "ANNULE"
+  | "CLOTURE";
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const mockedTenders: ServiceContractantTenderItem[] = [
-  {
-    id: "AO-2023-001",
-    reference: "AO-2023-001",
-    object: "Maintenance des serveurs data center",
-    type: "ouvert",
-    deadline: "2023-10-25",
-    status: "brouillon",
-  },
-  {
-    id: "AO-2023-002",
-    reference: "AO-2023-002",
-    object: "Fourniture de mobilier de bureau",
-    type: "restreint",
-    deadline: "2023-12-12",
-    status: "publie",
-  },
-  {
-    id: "AO-2023-003",
-    reference: "AO-2023-003",
-    object: "Nettoyage et entretien des locaux",
-    type: "gre_a_gre",
-    deadline: "2023-11-05",
-    status: "en_cours",
-  },
-  {
-    id: "AO-2023-004",
-    reference: "AO-2023-004",
-    object: "Audit de securite informatique annuel",
-    type: "ouvert",
-    deadline: "2023-09-30",
-    status: "attribue",
-  },
-  {
-    id: "AO-2023-005",
-    reference: "AO-2023-005",
-    object: "Acquisition de licences logicielles",
-    type: "restreint",
-    deadline: "2023-10-10",
-    status: "evaluation",
-  },
-  {
-    id: "AO-2023-006",
-    reference: "AO-2023-006",
-    object: "Travaux de rehabilitation energetique",
-    type: "ouvert",
-    deadline: "2023-08-15",
-    status: "annule",
-  },
-];
-
-const draftStore = new Map<string, SaveTenderDraftPayload>();
-
-async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  if (!API_BASE_URL) {
-    throw new Error("API base URL is not configured");
-  }
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `Request failed with status ${response.status}`);
-  }
-
-  return (await response.json()) as T;
+interface ApiEnvelope<T> {
+  data?: T;
+  success?: boolean;
+  statusCode?: number;
 }
 
-function buildDeadline(payload: SaveTenderDraftPayload) {
-  return (
-    payload.offerDeadline ||
-    payload.dceDeadline ||
-    new Date().toISOString().slice(0, 10)
+interface PaginatedPayload<T> {
+  data: T[];
+}
+
+interface MePayload {
+  user?: {
+    userId?: string;
+  };
+}
+
+interface ContractantIdentity {
+  userId: string | null;
+  serviceContractantId: string | null;
+}
+
+interface ServiceContractantRecord {
+  id: string;
+  userId?: string;
+  user_id?: string;
+}
+
+interface AppelOffreRecord {
+  id: string;
+  reference?: string;
+  objet?: string;
+  typeProcedure?: string;
+  montantEstime?: number | string;
+  datePublication?: string;
+  dateLimiteSoumission?: string;
+  dateLimiteRetraitCdc?: string;
+  statut?: string;
+  serviceContractantId?: string;
+  service_contractant_id?: string;
+  wilaya?: string;
+  secteurActivite?: string;
+  lots?: Array<{
+    id: string;
+    numero?: string;
+    designation?: string;
+    montantEstime?: number | string;
+    statut?: string;
+  }>;
+  criteresEligibilite?: Array<{
+    id: string;
+    libelle?: string;
+    type?: string;
+    valeurMinimale?: string;
+    eliminatoire?: boolean;
+  }>;
+  criteresEvaluation?: Array<{
+    id: string;
+    libelle?: string;
+    categorie?: string;
+    poids?: number;
+    noteEliminatoire?: number;
+  }>;
+  documentsCdc?: Array<{
+    id: string;
+    documentId?: string;
+    prixRetrait?: number | string;
+    publieAt?: string;
+  }>;
+}
+
+function unwrapEnvelope<T>(payload: unknown): T {
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "data" in (payload as Record<string, unknown>) &&
+    (
+      "success" in (payload as Record<string, unknown>) ||
+      "statusCode" in (payload as Record<string, unknown>)
+    )
+  ) {
+    return (payload as ApiEnvelope<T>).data as T;
+  }
+
+  return payload as T;
+}
+
+function extractList<T>(payload: unknown): T[] {
+  const unwrapped = unwrapEnvelope<unknown>(payload);
+
+  if (Array.isArray(unwrapped)) {
+    return unwrapped as T[];
+  }
+
+  if (
+    unwrapped &&
+    typeof unwrapped === "object" &&
+    Array.isArray((unwrapped as PaginatedPayload<T>).data)
+  ) {
+    return (unwrapped as PaginatedPayload<T>).data;
+  }
+
+  return [];
+}
+
+function normalizeId(value?: string | null): string | null {
+  if (!value) {
+    return null;
+  }
+
+  return value.trim().toLowerCase();
+}
+
+function mapTypeProcedureToUi(typeProcedure?: string): ServiceContractantTenderType {
+  const raw = String(typeProcedure || "").trim().toUpperCase();
+
+  if (raw === "AO_RESTREINT") {
+    return "restreint";
+  }
+
+  if (raw === "GRE_A_GRE") {
+    return "gre_a_gre";
+  }
+
+  return "ouvert";
+}
+
+function mapUiTypeToTypeProcedure(type: string): "AO_OUVERT" | "AO_RESTREINT" | "GRE_A_GRE" {
+  const raw = String(type || "").trim().toLowerCase();
+
+  if (raw === "restreint") {
+    return "AO_RESTREINT";
+  }
+
+  if (raw === "gre_a_gre") {
+    return "GRE_A_GRE";
+  }
+
+  return "AO_OUVERT";
+}
+
+function mapApiStatusToUi(statut?: string): ServiceContractantTenderStatus {
+  const raw = String(statut || "").trim().toUpperCase();
+
+  if (raw === "PUBLIE") return "publie";
+  if (raw === "EN_COURS") return "en_cours";
+  if (raw === "OUVERTURE_PLIS") return "en_cours";
+  if (raw === "EVALUATION") return "evaluation";
+  if (raw === "ATTRIBUE") return "attribue";
+  if (raw === "ANNULE") return "annule";
+  if (raw === "CLOTURE") return "attribue";
+
+  return "brouillon";
+}
+
+function mapUiStatusToApi(statut: ServiceContractantTenderStatus):
+  | "BROUILLON"
+  | "PUBLIE"
+  | "EN_COURS"
+  | "EVALUATION"
+  | "ATTRIBUE"
+  | "ANNULE" {
+  if (statut === "publie") return "PUBLIE";
+  if (statut === "en_cours") return "EN_COURS";
+  if (statut === "evaluation") return "EVALUATION";
+  if (statut === "attribue") return "ATTRIBUE";
+  if (statut === "annule") return "ANNULE";
+
+  return "BROUILLON";
+}
+
+function mapRecordToTenderItem(record: AppelOffreRecord): ServiceContractantTenderItem {
+  return {
+    id: record.id,
+    reference: record.reference || record.id,
+    object: record.objet || "Objet non renseigne",
+    type: mapTypeProcedureToUi(record.typeProcedure),
+    deadline:
+      record.dateLimiteSoumission ||
+      new Date().toISOString(),
+    status: mapApiStatusToUi(record.statut),
+  };
+}
+
+function formatAmount(value?: number | string): string {
+  const num = Number(value ?? 0);
+  if (!Number.isFinite(num) || num <= 0) {
+    return "0 DZD";
+  }
+
+  return `${new Intl.NumberFormat("fr-DZ").format(num)} DZD`;
+}
+
+function toCriterionCategory(value?: string): "technique" | "financier" {
+  const raw = String(value || "").trim().toUpperCase();
+  return raw === "FINANCIER" ? "financier" : "technique";
+}
+
+function mapRecordToTenderDetail(record: AppelOffreRecord): ServiceContractantTenderDetail {
+  return {
+    ...mapRecordToTenderItem(record),
+    amount: formatAmount(record.montantEstime),
+    wilaya: record.wilaya || "-",
+    sector: record.secteurActivite || "-",
+    publicationDate: record.datePublication,
+    lots: (record.lots || []).map((item, index) => ({
+      id: item.id,
+      number: item.numero || String(index + 1),
+      designation: item.designation || `Lot ${index + 1}`,
+      amount: formatAmount(item.montantEstime),
+      status: item.statut,
+    })),
+    eligibilityCriteria: (record.criteresEligibilite || []).map((item) => ({
+      id: item.id,
+      label: item.libelle || "Critere",
+      details:
+        item.valeurMinimale && item.type
+          ? `${item.type}: ${item.valeurMinimale}`
+          : item.valeurMinimale || item.type || "Details non renseignes",
+      eliminatory: Boolean(item.eliminatoire),
+    })),
+    evaluationCriteria: (record.criteresEvaluation || []).map((item) => ({
+      id: item.id,
+      label: item.libelle || "Critere",
+      category: toCriterionCategory(item.categorie),
+      weight: Number(item.poids ?? 0),
+      eliminationScore:
+        item.noteEliminatoire === undefined || item.noteEliminatoire === null
+          ? undefined
+          : Number(item.noteEliminatoire),
+    })),
+    cdcDocuments: (record.documentsCdc || []).map((item) => ({
+      id: item.id,
+      documentId: item.documentId || item.id,
+      withdrawalPrice: formatAmount(item.prixRetrait),
+      publishedAt: item.publieAt || "",
+    })),
+  };
+}
+
+function belongsToIdentity(record: AppelOffreRecord, identity: ContractantIdentity): boolean {
+  const allowedOwnerIds = new Set(
+    [identity.userId, identity.serviceContractantId]
+      .map((value) => normalizeId(value))
+      .filter((value): value is string => Boolean(value)),
   );
+
+  if (allowedOwnerIds.size === 0) {
+    return false;
+  }
+
+  const ownerId = normalizeId(record.serviceContractantId || record.service_contractant_id || null);
+  return ownerId !== null && allowedOwnerIds.has(ownerId);
+}
+
+function parsePositiveNumber(input: string): number {
+  const parsed = Number.parseFloat(String(input || "").replace(",", ".").trim());
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return 1;
+  }
+
+  return parsed;
+}
+
+function asIsoDate(input: string): string {
+  const parsed = new Date(input);
+  if (Number.isNaN(parsed.getTime())) {
+    return new Date().toISOString();
+  }
+
+  return parsed.toISOString();
+}
+
+async function resolveCurrentContractantIdentity(): Promise<ContractantIdentity> {
+  const meRaw = await apiClient<unknown>("/api/v1/auth/me", { method: "GET" }).catch(() => null);
+  const me = meRaw ? unwrapEnvelope<MePayload>(meRaw) : null;
+  const userId = me?.user?.userId || null;
+
+  if (!userId) {
+    return {
+      userId: null,
+      serviceContractantId: null,
+    };
+  }
+
+  const listRaw = await apiClient<unknown>("/api/v1/users/services-contractants?page=1&limit=200", {
+    method: "GET",
+  }).catch(() => null);
+
+  if (!listRaw) {
+    return {
+      userId,
+      serviceContractantId: null,
+    };
+  }
+
+  const normalizedUserId = normalizeId(userId);
+  const list = extractList<ServiceContractantRecord>(listRaw);
+  const current = list.find((item) => {
+    const linkedUserId = normalizeId(item.userId || item.user_id || null);
+    return normalizedUserId !== null && linkedUserId === normalizedUserId;
+  });
+
+  return {
+    userId,
+    serviceContractantId: current?.id || null,
+  };
+}
+
+function buildCreateOrUpdatePayload(
+  payload: SaveTenderDraftPayload,
+  serviceContractantId: string,
+) {
+  return {
+    reference: payload.reference,
+    objet: payload.object,
+    typeProcedure: mapUiTypeToTypeProcedure(payload.procedureType),
+    montantEstime: parsePositiveNumber(payload.estimatedAmount),
+    dateLimiteSoumission: asIsoDate(payload.offerDeadline),
+    dateLimiteRetraitCdc: asIsoDate(payload.dceDeadline),
+    serviceContractantId,
+    wilaya: payload.executionWilaya || "Non renseigne",
+    secteurActivite: payload.marketType || "Non renseigne",
+  };
 }
 
 function mapProcedureType(value: string): ServiceContractantTenderItem["type"] {
-  if (value === "restreint" || value === "gre_a_gre") {
-    return value;
+  const raw = String(value || "").trim().toUpperCase();
+
+  if (raw === "RESTREINT" || raw === "AO_RESTREINT") {
+    return "restreint";
+  }
+
+  if (raw === "GRE_A_GRE") {
+    return "gre_a_gre";
   }
 
   return "ouvert";
-}
-
-function mapTenderTypeToProcedureType(
-  type: ServiceContractantTenderType,
-): string {
-  if (type === "restreint" || type === "gre_a_gre") {
-    return type;
-  }
-
-  return "ouvert";
-}
-
-function buildDefaultDraftFromTender(
-  tender: ServiceContractantTenderItem,
-): ServiceContractantTenderDraft {
-  return {
-    id: tender.id,
-    reference: tender.reference,
-    object: tender.object,
-    description: "",
-    marketType: "",
-    procedureType: mapTenderTypeToProcedureType(tender.type),
-    estimatedAmount: "",
-    executionWilaya: "",
-    executionDelayDays: "",
-    submissionBondRequired: true,
-    submissionBondAmount: "",
-    dceDeadline: "",
-    offerDeadline: tender.deadline,
-    openingDate: "",
-    cdc: {
-      title: "",
-      version: "v1.0.0",
-      withdrawalPrice: "0.00",
-      isPublished: false,
-    },
-    lots: [],
-    eligibilityCriteria: [],
-    evaluationCriteria: [],
-  };
 }
 
 export async function listServiceContractantTenders(): Promise<
   ServiceContractantTenderItem[]
 > {
-  if (API_BASE_URL) {
-    return requestJson<ServiceContractantTenderItem[]>(
-      "/service-contractant/tenders",
-      {
-        method: "GET",
-      },
-    );
+  const [aosRaw, identity] = await Promise.all([
+    apiClient<unknown>("/api/v1/appels-offres?page=1&limit=500", {
+      method: "GET",
+    }),
+    resolveCurrentContractantIdentity(),
+  ]);
+
+  const rows = extractList<AppelOffreRecord>(aosRaw);
+  return rows
+    .filter((item) => belongsToIdentity(item, identity))
+    .map(mapRecordToTenderItem)
+    .sort((a, b) => new Date(b.deadline).getTime() - new Date(a.deadline).getTime());
+}
+
+export async function getServiceContractantTenderById(
+  id: string,
+): Promise<ServiceContractantTenderDetail | null> {
+  if (!id) {
+    return null;
   }
 
-  await sleep(250);
-  return [...mockedTenders];
+  const [detailRaw, identity] = await Promise.all([
+    apiClient<unknown>(`/api/v1/appels-offres/${id}`, { method: "GET" }).catch(() => null),
+    resolveCurrentContractantIdentity(),
+  ]);
+
+  if (!detailRaw) {
+    return null;
+  }
+
+  const record = unwrapEnvelope<AppelOffreRecord>(detailRaw);
+  if (!record?.id) {
+    return null;
+  }
+
+  if (!belongsToIdentity(record, identity)) {
+    return null;
+  }
+
+  return mapRecordToTenderDetail(record);
 }
 
 export async function saveServiceContractantTenderDraft(
   payload: SaveTenderDraftPayload,
 ): Promise<TenderMutationResult> {
-  if (API_BASE_URL) {
-    return requestJson<TenderMutationResult>(
-      "/service-contractant/tenders/drafts",
-      {
-        method: "POST",
-        body: JSON.stringify(payload),
-      },
-    );
+  const identity = await resolveCurrentContractantIdentity();
+  const serviceContractantId = identity.serviceContractantId || identity.userId;
+  if (!serviceContractantId) {
+    throw new Error("Impossible de resoudre le service contractant courant.");
   }
 
-  await sleep(300);
-  const draftId = payload.id || `AO-${Date.now()}`;
-  draftStore.set(draftId, payload);
+  const requestBody = buildCreateOrUpdatePayload(payload, serviceContractantId);
 
-  const existingIndex = mockedTenders.findIndex((item) => item.id === draftId);
-  const nextItem: ServiceContractantTenderItem = {
-    id: draftId,
-    reference: payload.reference,
-    object: payload.object || "Sans objet",
-    type: mapProcedureType(payload.procedureType),
-    deadline: buildDeadline(payload),
-    status: "brouillon",
-  };
+  if (payload.id) {
+    const updatedRaw = await apiClient<unknown>(`/api/v1/appels-offres/${payload.id}`, {
+      method: "PATCH",
+      body: JSON.stringify(requestBody),
+    });
 
-  if (existingIndex === -1) {
-    mockedTenders.unshift(nextItem);
-  } else {
-    mockedTenders[existingIndex] = nextItem;
+    const updated = unwrapEnvelope<AppelOffreRecord>(updatedRaw);
+    return {
+      id: updated.id,
+      reference: updated.reference || payload.reference,
+      status: mapApiStatusToUi(updated.statut || "BROUILLON"),
+    };
   }
 
+  const createdRaw = await apiClient<unknown>("/api/v1/appels-offres", {
+    method: "POST",
+    body: JSON.stringify(requestBody),
+  });
+
+  const created = unwrapEnvelope<AppelOffreRecord>(createdRaw);
   return {
-    id: draftId,
-    reference: payload.reference,
-    status: "brouillon",
+    id: created.id,
+    reference: created.reference || payload.reference,
+    status: mapApiStatusToUi(created.statut || "BROUILLON"),
   };
 }
 
 export async function getServiceContractantTenderDraftById(
   id: string,
 ): Promise<ServiceContractantTenderDraft | null> {
-  if (API_BASE_URL) {
-    try {
-      return await requestJson<ServiceContractantTenderDraft>(
-        `/service-contractant/tenders/drafts/${id}`,
-        {
-          method: "GET",
-        },
-      );
-    } catch {
+  try {
+    const aoRaw = await apiClient<unknown>(`/api/v1/appels-offres/${id}`, {
+      method: "GET",
+    });
+
+    const ao = unwrapEnvelope<AppelOffreRecord>(aoRaw);
+    if (!ao?.id) {
       return null;
     }
-  }
 
-  await sleep(180);
-
-  const draft = draftStore.get(id);
-  if (draft) {
-    return { id, ...draft };
-  }
-
-  const tender = mockedTenders.find((item) => item.id === id);
-  if (!tender || tender.status !== "brouillon") {
+    return {
+      id: ao.id,
+      reference: ao.reference || ao.id,
+      object: ao.objet || "",
+      description: "",
+      marketType: ao.secteurActivite || "",
+      procedureType: mapProcedureType(ao.typeProcedure || ""),
+      estimatedAmount: String(ao.montantEstime ?? ""),
+      executionWilaya: ao.wilaya || "",
+      executionDelayDays: "",
+      submissionBondRequired: true,
+      submissionBondAmount: "",
+      dceDeadline: ao.dateLimiteRetraitCdc?.slice(0, 10) || "",
+      offerDeadline: ao.dateLimiteSoumission?.slice(0, 10) || "",
+      openingDate: ao.dateLimiteSoumission?.slice(0, 10) || "",
+      cdc: {
+        title: "",
+        version: "v1.0.0",
+        withdrawalPrice: "0.00",
+        isPublished: false,
+      },
+      lots: [],
+      eligibilityCriteria: [],
+      evaluationCriteria: [],
+    };
+  } catch {
     return null;
   }
-
-  return buildDefaultDraftFromTender(tender);
 }
 
 export async function publishServiceContractantTender(
   payload: PublishTenderPayload,
 ): Promise<TenderMutationResult> {
-  if (API_BASE_URL) {
-    return requestJson<TenderMutationResult>(
-      "/service-contractant/tenders/publish",
-      {
-        method: "POST",
-        body: JSON.stringify(payload),
-      },
-    );
-  }
+  const persisted = await saveServiceContractantTenderDraft({
+    ...payload.draft,
+    id: payload.id,
+  });
 
-  await sleep(400);
-  const id = payload.id || `AO-${Date.now()}`;
-  const avisReference = `AVIS-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${Math.floor(100 + Math.random() * 900)}`;
-
-  const existingIndex = mockedTenders.findIndex((item) => item.id === id);
-  const nextItem: ServiceContractantTenderItem = {
-    id,
-    reference: payload.draft.reference,
-    object: payload.draft.object || "Sans objet",
-    type: mapProcedureType(payload.draft.procedureType),
-    deadline: buildDeadline(payload.draft),
-    status: "publie",
-  };
-
-  if (existingIndex === -1) {
-    mockedTenders.unshift(nextItem);
-  } else {
-    mockedTenders[existingIndex] = nextItem;
-  }
-
-  draftStore.delete(id);
+  await apiClient<unknown>(`/api/v1/appels-offres/${persisted.id}/statut`, {
+    method: "PATCH",
+    body: JSON.stringify({ statut: "PUBLIE" }),
+  });
 
   return {
-    id,
-    reference: payload.draft.reference,
+    id: persisted.id,
+    reference: persisted.reference,
     status: "publie",
-    avisReference,
   };
 }
 
 export async function toggleServiceContractantTenderStatus(
   id: string,
 ): Promise<ServiceContractantTenderStatus> {
-  if (API_BASE_URL) {
-    const result = await requestJson<{
-      status: ServiceContractantTenderStatus;
-    }>(`/service-contractant/tenders/${id}/status/toggle`, {
-      method: "PATCH",
-    });
+  const aoRaw = await apiClient<unknown>(`/api/v1/appels-offres/${id}`, {
+    method: "GET",
+  });
+  const ao = unwrapEnvelope<AppelOffreRecord>(aoRaw);
+  const current = mapApiStatusToUi(ao.statut);
 
-    return result.status;
+  const next: ServiceContractantTenderStatus =
+    current === "publie" ? "en_cours" : current === "en_cours" ? "publie" : current;
+
+  if (next === current) {
+    return current;
   }
 
-  await sleep(180);
-  const item = mockedTenders.find((row) => row.id === id);
-  if (!item) {
-    throw new Error("AO introuvable");
-  }
+  await apiClient<unknown>(`/api/v1/appels-offres/${id}/statut`, {
+    method: "PATCH",
+    body: JSON.stringify({ statut: mapUiStatusToApi(next) }),
+  });
 
-  if (item.status === "publie") {
-    item.status = "en_cours";
-  } else if (item.status === "en_cours") {
-    item.status = "publie";
-  }
+  return next;
+}
 
-  return item.status;
+export async function updateServiceContractantTenderStatus(
+  id: string,
+  statut: ServiceContractantApiStatus,
+): Promise<ServiceContractantTenderStatus> {
+  await apiClient<unknown>(`/api/v1/appels-offres/${id}/statut`, {
+    method: "PATCH",
+    body: JSON.stringify({ statut }),
+  });
+
+  return mapApiStatusToUi(statut);
+}
+
+export async function deleteServiceContractantTender(id: string): Promise<void> {
+  await apiClient<void>(`/api/v1/appels-offres/${id}`, {
+    method: "DELETE",
+  });
 }
