@@ -1,16 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
-  Award,
   Calendar,
   Check,
-  ChevronDown,
-  ClipboardList,
   Download,
-  Eye,
   Filter,
   Megaphone,
   Gavel,
@@ -26,6 +22,12 @@ import {
   type ServiceContractantTenderItem,
   type ServiceContractantTenderType,
 } from "@/services/tenders";
+import { listServiceContractantTenderSubmissions } from "@/services/tenderSubmissions";
+import AttributionTab from "./attribution/AttributionTab";
+import AvisListTab from "./avis/AvisListTab";
+import EvaluationOverviewTab from "./evaluation/EvaluationOverviewTab";
+import RecoursListTab from "./recours/RecoursListTab";
+import SoumissionsListTab from "./soumissions/SoumissionsListTab";
 
 type WorkflowStage =
   | "brouillon"
@@ -46,19 +48,11 @@ type DetailTab =
   | "recours"
   | "avis";
 
-interface TenderSubmissionItem {
-  id: string;
-  supplier: string;
-  initials: string;
-  submittedAt: string;
-  filesCount: number;
-  status: "recu" | "rejete" | "valide";
-}
-
 interface AoDetailPageProps {
   locale: string;
   aoId: string;
   tender: ServiceContractantTenderItem | null;
+  initialTab?: DetailTab;
 }
 
 const WORKFLOW_STEPS: Array<{ key: WorkflowStage; label: string }> = [
@@ -137,19 +131,44 @@ export default function AoDetailPage({
   locale,
   aoId,
   tender,
+  initialTab = "soumissions",
 }: AoDetailPageProps) {
   const isRtl = locale === "ar";
-  const [activeTab, setActiveTab] = useState<DetailTab>("soumissions");
+  const [activeTab, setActiveTab] = useState<DetailTab>(initialTab);
   const [stage, setStage] = useState<WorkflowStage>(
     mapTenderStatusToWorkflowStage(tender?.status),
   );
+  const [soumissionsCount, setSoumissionsCount] = useState<number>(0);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadSoumissionsCount = async () => {
+      try {
+        const rows = await listServiceContractantTenderSubmissions(aoId);
+        if (isMounted) {
+          setSoumissionsCount(rows.length);
+        }
+      } catch {
+        if (isMounted) {
+          setSoumissionsCount(0);
+        }
+      }
+    };
+
+    void loadSoumissionsCount();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [aoId]);
 
   const tabs: Array<{ key: DetailTab; label: string; count?: number }> = [
     { key: "general", label: "Infos Generales" },
     { key: "lots", label: "Lots" },
     { key: "cdc", label: "CDC" },
     { key: "criteria", label: "Criteres" },
-    { key: "soumissions", label: "Soumissions", count: 12 },
+    { key: "soumissions", label: "Soumissions", count: soumissionsCount },
     { key: "evaluation", label: "Evaluation" },
     { key: "attribution", label: "Attribution" },
     { key: "recours", label: "Recours" },
@@ -160,33 +179,6 @@ export default function AoDetailPage({
     () => WORKFLOW_STEPS.findIndex((item) => item.key === stage),
     [stage],
   );
-
-  const submissionRows: TenderSubmissionItem[] = [
-    {
-      id: "sub-1",
-      supplier: "Sari TechSolutions",
-      initials: "ST",
-      submittedAt: "14/11/2023 - 10:45",
-      filesCount: 2,
-      status: "recu",
-    },
-    {
-      id: "sub-2",
-      supplier: "Global Network SA",
-      initials: "GN",
-      submittedAt: "14/11/2023 - 16:12",
-      filesCount: 2,
-      status: "recu",
-    },
-    {
-      id: "sub-3",
-      supplier: "Micro Systems",
-      initials: "MS",
-      submittedAt: "15/11/2023 - 09:30",
-      filesCount: 1,
-      status: "recu",
-    },
-  ];
 
   const lots = [
     {
@@ -229,31 +221,6 @@ export default function AoDetailPage({
   const evaluationMatrix = [
     { id: "E1", label: "Offre technique", weight: 60 },
     { id: "E2", label: "Offre financiere", weight: 40 },
-  ];
-
-  const recoursItems = [
-    {
-      id: "R-2023-01",
-      date: "16/11/2023",
-      operator: "Global Network SA",
-      reason: "Contestations sur la notation technique",
-      status: "En instruction",
-    },
-  ];
-
-  const avisHistory = [
-    {
-      id: "AVIS-20231115-104",
-      type: "Publication initiale",
-      date: "15/11/2023 - 09:30",
-      channel: "Portail Al-Mizan",
-    },
-    {
-      id: "AVIS-20231118-211",
-      type: "Rectificatif delais",
-      date: "18/11/2023 - 11:05",
-      channel: "Portail + BOAMP",
-    },
   ];
 
   const nextStage = () => {
@@ -304,72 +271,14 @@ export default function AoDetailPage({
 
     if (effectiveActiveTab === "soumissions") {
       return (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-190 border-collapse">
-            <thead>
-              <tr className="border-b border-slate-200 text-left text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                <th className="px-2 py-2">Fournisseur</th>
-                <th className="px-2 py-2">Date depot</th>
-                <th className="px-2 py-2">Dossiers</th>
-                <th className="px-2 py-2">Statut</th>
-                <th className="px-2 py-2 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {submissionRows.map((row) => (
-                <tr
-                  key={row.id}
-                  className="border-b border-slate-100 text-xs text-slate-700"
-                >
-                  <td className="px-2 py-3">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex h-6 w-6 items-center justify-center rounded bg-emerald-100 text-[10px] font-semibold text-emerald-700">
-                        {row.initials}
-                      </span>
-                      <div>
-                        <p className="font-semibold">{row.supplier}</p>
-                        <p className="text-[10px] text-slate-500">
-                          ID #{row.id}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-2 py-3">{row.submittedAt}</td>
-                  <td className="px-2 py-3">
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1 text-[#2F9E44] hover:underline"
-                    >
-                      <Download className="h-3 w-3" /> {row.filesCount}
-                    </button>
-                  </td>
-                  <td className="px-2 py-3">
-                    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-blue-700">
-                      Recu
-                    </span>
-                  </td>
-                  <td className="px-2 py-3 text-right">
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-[#2F9E44] hover:underline"
-                    >
-                      <Eye className="h-3 w-3" /> Examiner
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div className="pt-3 text-center">
-            <button
-              type="button"
-              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#2F9E44] hover:underline"
-            >
-              Voir les 9 autres soumissions <ChevronDown className="h-3 w-3" />
-            </button>
-          </div>
-        </div>
+        <SoumissionsListTab
+          locale={locale}
+          aoId={aoId}
+          isRtl={isRtl}
+          canViewDetail={
+            getStageIndex(stage) >= getStageIndex("ouverture_plis")
+          }
+        />
       );
     }
 
@@ -560,155 +469,26 @@ export default function AoDetailPage({
 
     if (effectiveActiveTab === "evaluation") {
       return (
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs">
-            <p className="text-sm font-semibold text-slate-800">
-              Commission evaluation
-            </p>
-            <div className="mt-2 space-y-2">
-              <div className="flex items-center justify-between rounded bg-white px-2 py-2">
-                <span className="text-slate-700">
-                  Mme. L. Benyahia (Presidente)
-                </span>
-                <span className="text-emerald-700">Connectee</span>
-              </div>
-              <div className="flex items-center justify-between rounded bg-white px-2 py-2">
-                <span className="text-slate-700">
-                  M. A. Rahmouni (Rapporteur)
-                </span>
-                <span className="text-emerald-700">Connecte</span>
-              </div>
-              <div className="flex items-center justify-between rounded bg-white px-2 py-2">
-                <span className="text-slate-700">
-                  Mme. K. Ould Ali (Membre)
-                </span>
-                <span className="text-slate-500">En attente</span>
-              </div>
-            </div>
-          </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <p className="mb-2 text-sm font-semibold text-slate-800">
-              Classement provisoire
-            </p>
-            <table className="w-full border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-slate-200 text-left text-[10px] uppercase tracking-wide text-slate-500">
-                  <th className="py-2">Operateur</th>
-                  <th className="py-2">Technique</th>
-                  <th className="py-2">Financier</th>
-                  <th className="py-2">Score final</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-slate-100">
-                  <td className="py-2">Sari TechSolutions</td>
-                  <td className="py-2">87/100</td>
-                  <td className="py-2">35/40</td>
-                  <td className="py-2 font-semibold text-[#2F9E44]">87.4</td>
-                </tr>
-                <tr>
-                  <td className="py-2">Global Network SA</td>
-                  <td className="py-2">83/100</td>
-                  <td className="py-2">36/40</td>
-                  <td className="py-2 font-semibold text-slate-700">84.6</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <EvaluationOverviewTab locale={locale} aoId={aoId} isRtl={isRtl} />
       );
     }
 
     if (effectiveActiveTab === "attribution") {
       return (
-        <div className="space-y-3">
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs">
-            <p className="text-sm font-semibold text-slate-800">
-              Decision attribution
-            </p>
-            <p className="mt-1 text-slate-600">
-              Operateur recommande:{" "}
-              <span className="font-semibold text-slate-800">
-                Sari TechSolutions
-              </span>
-            </p>
-            <p className="mt-1 text-slate-600">
-              Montant retenu: 39 800 000 DZD
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              disabled={stage !== "evaluation"}
-              onClick={() => setStage("attribue")}
-              className="inline-flex h-9 items-center gap-1 rounded-md bg-[#4CAF50] px-3 text-xs font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <Award className="h-3.5 w-3.5" /> Prononcer attribution
-            </button>
-            <button
-              type="button"
-              className="inline-flex h-9 items-center gap-1 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              <ClipboardList className="h-3.5 w-3.5" /> Generer PV attribution
-            </button>
-          </div>
-        </div>
+        <AttributionTab
+          locale={locale}
+          aoId={aoId}
+          onDefinitiveConfirmed={() => setStage("attribue")}
+        />
       );
     }
 
     if (effectiveActiveTab === "recours") {
-      return (
-        <div className="space-y-2">
-          {recoursItems.map((item) => (
-            <article
-              key={item.id}
-              className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-semibold text-slate-800">
-                    {item.id} - {item.operator}
-                  </p>
-                  <p className="mt-1 text-slate-600">{item.reason}</p>
-                  <p className="mt-1 text-slate-500">Date: {item.date}</p>
-                </div>
-                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
-                  {item.status}
-                </span>
-              </div>
-            </article>
-          ))}
-        </div>
-      );
+      return <RecoursListTab locale={locale} aoId={aoId} isRtl={isRtl} />;
     }
 
     if (effectiveActiveTab === "avis") {
-      return (
-        <div className="space-y-2">
-          {avisHistory.map((avis) => (
-            <article
-              key={avis.id}
-              className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="font-semibold text-slate-800">{avis.type}</p>
-                  <p className="mt-0.5 text-slate-600">{avis.id}</p>
-                  <p className="mt-0.5 text-slate-500">
-                    {avis.date} - {avis.channel}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="inline-flex h-8 items-center gap-1 rounded-md border border-slate-200 bg-white px-3 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
-                >
-                  <Megaphone className="h-3 w-3" /> Voir avis
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
-      );
+      return <AvisListTab locale={locale} aoId={aoId} isRtl={isRtl} />;
     }
 
     return (

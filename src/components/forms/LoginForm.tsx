@@ -6,6 +6,8 @@ import { type Locale } from "@/i18n/config";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { loginSchema, type LoginFormData } from "@/lib/validations/loginSchema";
+import { useLoginMutation } from "@/services/auth/queries";
+import { ApiClientError } from "@/services/client";
 
 import type { getAuthDictionary } from "@/i18n/get-dictionaries";
 
@@ -21,6 +23,8 @@ export default function LoginForm({ dict }: LoginFormProps) {
     const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
     const [attempCount, setAttempCount] = useState(0);
+    const [apiError, setApiError] = useState<string | null>(null);
+    const loginMutation = useLoginMutation();
     const {
         register,
         handleSubmit,
@@ -30,36 +34,39 @@ export default function LoginForm({ dict }: LoginFormProps) {
     });
 
     const onSubmit = async (data: LoginFormData) => {
-        console.log(data);
+        setApiError(null);
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
-                method: "POST",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data),
+            await loginMutation.mutateAsync({
+                email: data.email,
+                password: data.password,
             });
-            
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || "Login failed");
-            }
-            
-            await response.json();
-            
-            router.push(`/${locale}/auth/verify`);
-            return;
 
-        } catch (error: any) {
-            console.error("Login error:", error);
+            router.push(`/${locale}/dashboard/contractant/tableau-de-bord`);
+            return;
+        } catch (error) {
+            if (error instanceof ApiClientError) {
+                const attemptsRemaining = Number(error.payload?.attemptsRemaining ?? NaN);
+                if (Number.isFinite(attemptsRemaining)) {
+                    setAttempCount(Math.max(0, 5 - attemptsRemaining));
+                }
+
+                if (error.status === 429) {
+                    router.push(`/${locale}/auth/login/account-lock`);
+                    return;
+                }
+
+                setApiError(error.message);
+                return;
+            }
+
+            setApiError("Login failed. Please try again.");
         }
 
         const newAttemptCount = attempCount + 1;
         setAttempCount(newAttemptCount);
         if (newAttemptCount >= 5) {
-            console.log("Account locked");
             router.push(`/${locale}/auth/login/account-lock`);
         }
-
     };
 
     return (
@@ -150,12 +157,16 @@ export default function LoginForm({ dict }: LoginFormProps) {
 
                 <button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || loginMutation.isPending}
                     className="w-full py-3 rounded-xl text-white font-semibold text-sm transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
                     style={{ backgroundColor: "#4CAF50" }}
                 >
-                    {isSubmitting ? dict.submitting : dict.submit}
+                    {isSubmitting || loginMutation.isPending ? dict.submitting : dict.submit}
                 </button>
+
+                {apiError && (
+                    <p className="text-red-500 text-sm">{apiError}</p>
+                )}
             </form>
 
             <p className="text-center text-sm text-gray-500 mt-6">

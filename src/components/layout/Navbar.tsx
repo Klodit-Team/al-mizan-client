@@ -70,7 +70,7 @@ export default function Navbar({ isLoggedIn = false, userInitial = "R", userName
                             if(userRole === "ADMIN"){
                                 router.push(`/${locale}/dashboard/admin/notif`)
                             }else{
-                                router.push(`/${locale}/dashboard/operator/notif`)
+                                router.push(`/${locale}/dashboard/operateur/notifications`)
                             }
                     }}>
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,9 +103,11 @@ export default function Navbar({ isLoggedIn = false, userInitial = "R", userName
                     <div className="w-px h-6 bg-gray-600" />
 
                     <div className="flex items-center gap-3 cursor-pointer group" onClick={() => {
-                        router.push('/dashboard/admin/profile')
-                        }}
-                    >
+                        switch(userRole){
+                            case "ADMIN": router.push('/dashboard/admin/profile'); break;
+                            case "OPERATEUR": router.push('/dashboard/operateur/profil'); break;
+                        }
+                    }}>
                         <div className="text-right">
                             <p className="text-sm font-semibold text-white leading-tight">{userName}</p>
                             <p className="text-xs text-gray-400 leading-tight">{userCompany}</p>
