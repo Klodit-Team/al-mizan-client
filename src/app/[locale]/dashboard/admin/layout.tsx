@@ -36,6 +36,7 @@ export default async function AdminLayout({
       <Navbar
         isLoggedIn={true}
         userInitial="A"
+        userRole="ADMIN"
         dict={commonDict.navbar}
         locale={locale as Locale}
       />

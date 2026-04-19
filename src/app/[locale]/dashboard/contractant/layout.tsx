@@ -36,6 +36,7 @@ export default async function ContractantLayout({
       <Navbar
         isLoggedIn={true}
         userInitial="A"
+        userRole="CONTRACTANT"
         dict={commonDict.navbar}
         locale={locale as Locale}
       />
