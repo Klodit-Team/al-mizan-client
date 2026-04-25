@@ -1,19 +1,19 @@
-import type { ServiceContractantActivityItem } from "@/services/dashboard";
+import type { ContractantActivityItem } from "@/services/contractant-dashboard/api";
 
 interface RecentActivityListProps {
   title: string;
   viewAll: string;
   empty: string;
-  items: ServiceContractantActivityItem[];
+  items: ContractantActivityItem[];
 }
 
-function getActivityColor(type: ServiceContractantActivityItem["type"]) {
+function getActivityColor(type: ContractantActivityItem["type"]) {
   if (type === "SOUMISSION") return "bg-green-100 text-green-600";
   if (type === "RECOURS") return "bg-red-100 text-red-600";
   return "bg-blue-100 text-blue-600";
 }
 
-function getActivityIcon(type: ServiceContractantActivityItem["type"]) {
+function getActivityIcon(type: ContractantActivityItem["type"]) {
   if (type === "SOUMISSION") {
     return "M8 12h8m-8 4h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z";
   }

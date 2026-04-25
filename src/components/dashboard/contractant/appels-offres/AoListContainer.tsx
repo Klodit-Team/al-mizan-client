@@ -7,7 +7,10 @@ import {
   getServiceContractantTenders,
   type ServiceContractantTenderItem,
 } from "@/services/dashboard";
-import { toggleServiceContractantTenderStatus } from "@/services/tenders";
+import {
+  deleteServiceContractantTender,
+  toggleServiceContractantTenderStatus,
+} from "@/services/tenders";
 
 interface TendersFiltersDict {
   status: string;
@@ -100,6 +103,15 @@ export default function AoListContainer({
     }
   }, []);
 
+  const handleDelete = useCallback(async (id: string) => {
+    try {
+      await deleteServiceContractantTender(id);
+      setData((current) => current.filter((item) => item.id !== id));
+    } catch {
+      setError("Impossible de supprimer cet appel d'offres.");
+    }
+  }, []);
+
   return (
     <div className="space-y-3">
       {error ? (
@@ -114,6 +126,7 @@ export default function AoListContainer({
         data={data}
         isLoading={isLoading}
         onChangeStatus={handleChangeStatus}
+        onDelete={handleDelete}
       />
     </div>
   );

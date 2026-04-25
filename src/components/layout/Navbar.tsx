@@ -91,6 +91,7 @@ export default function Navbar({ isLoggedIn = false, userInitial = "R", userName
                                     credentials: "include" 
                                 });
                             } catch {}
+                            document.cookie = "user_type=; Path=/; Max-Age=0; SameSite=Lax";
                             router.push(`/${locale}`);
                         }}
                     >

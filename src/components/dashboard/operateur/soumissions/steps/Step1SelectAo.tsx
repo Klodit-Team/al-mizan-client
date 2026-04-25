@@ -2,29 +2,41 @@
 
 import { useState } from "react";
 import { Search, CheckCircle2 } from "lucide-react";
-import { AO_OPTIONS, TYPE_LABELS, fmtDate, type AoOption } from "../wizard-types";
+import { TYPE_LABELS, fmtDate, type AoOption } from "../wizard-types";
 import { SectionTitle, NavButtons } from "../wizard-ui";
 
 interface Props {
+  aoOptions: AoOption[];
   selectedAoId: string;
-  selectedLotIds: string[];
+  selectedLotId: string;
+  isLoadingAos?: boolean;
+  isErrorAos?: boolean;
   onSelectAo: (id: string) => void;
-  onToggleLot: (id: string) => void;
+  onSelectLot: (id: string) => void;
   onNext: () => void;
 }
 
-export default function Step1({ selectedAoId, selectedLotIds, onSelectAo, onToggleLot, onNext }: Props) {
+export default function Step1({
+  aoOptions,
+  selectedAoId,
+  selectedLotId,
+  isLoadingAos,
+  isErrorAos,
+  onSelectAo,
+  onSelectLot,
+  onNext,
+}: Props) {
   const [search, setSearch] = useState("");
 
-  const filtered = AO_OPTIONS.filter((ao) =>
+  const filtered = aoOptions.filter((ao) =>
     !search.trim() ||
     ao.reference.toLowerCase().includes(search.toLowerCase()) ||
     ao.object.toLowerCase().includes(search.toLowerCase()) ||
     ao.organizationName.toLowerCase().includes(search.toLowerCase())
   );
 
-  const selectedAo: AoOption | undefined = AO_OPTIONS.find((ao) => ao.id === selectedAoId);
-  const canProceed = !!selectedAoId && selectedLotIds.length > 0;
+  const selectedAo: AoOption | undefined = aoOptions.find((ao) => ao.id === selectedAoId);
+  const canProceed = !!selectedAoId && !!selectedLotId;
 
   return (
     <div className="space-y-5">
@@ -40,17 +52,29 @@ export default function Step1({ selectedAoId, selectedLotIds, onSelectAo, onTogg
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Rechercher un appel d&apos;offres&amp;#8230;"
+          placeholder="Rechercher un appel d'offres..."
           className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-4 text-xs text-slate-800 outline-none placeholder:text-slate-400 focus:border-[#4CAF50] focus:bg-white transition-colors"
         />
       </div>
 
       {/* AO list */}
       <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-        {filtered.length === 0 && (
+        {isLoadingAos && (
+          <div className="space-y-2 py-1">
+            {[...Array(4)].map((_, index) => (
+              <div key={index} className="h-16 animate-pulse rounded-xl bg-slate-100" />
+            ))}
+          </div>
+        )}
+        {isErrorAos && (
+          <p className="py-4 text-center text-xs text-rose-500">
+            Impossible de charger les appels d'offres.
+          </p>
+        )}
+        {!isLoadingAos && !isErrorAos && filtered.length === 0 && (
           <p className="py-6 text-center text-xs text-slate-400">Aucun appel d&apos;offres trouvé</p>
         )}
-        {filtered.map((ao) => {
+        {!isLoadingAos && !isErrorAos && filtered.map((ao) => {
           const isSelected = ao.id === selectedAoId;
           return (
             <button
@@ -91,16 +115,16 @@ export default function Step1({ selectedAoId, selectedLotIds, onSelectAo, onTogg
       {selectedAo && (
         <div className="rounded-xl border border-[#4CAF50]/20 bg-emerald-50/50 p-4">
           <p className="mb-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-600">
-            Sélectionner les lots &mdash; {selectedAo.reference}
+            Selectionner le lot concerne - {selectedAo.reference}
           </p>
           <div className="space-y-2">
             {selectedAo.lots.map((lot) => {
-              const checked = selectedLotIds.includes(lot.id);
+              const checked = selectedLotId === lot.id;
               return (
                 <label key={lot.id} className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
                   checked ? "border-[#4CAF50] bg-white" : "border-slate-200 bg-white hover:bg-slate-50"
                 }`}>
-                  <input type="checkbox" checked={checked} onChange={() => onToggleLot(lot.id)}
+                  <input type="radio" name="selectedLot" checked={checked} onChange={() => onSelectLot(lot.id)}
                     className="mt-0.5 h-4 w-4 rounded accent-[#4CAF50]" />
                   <div>
                     <p className="text-xs font-semibold text-slate-800">Lot {lot.lotNumber} &ndash; {lot.designation}</p>

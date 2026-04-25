@@ -1,5 +1,12 @@
 import { apiClient } from '@/services/client';
 
+export type AuthRoleName =
+  | 'ADMIN'
+  | 'SERVICE_CONTRACTANT'
+  | 'OPERATEUR_ECONOMIQUE'
+  | 'MEMBRE_COMMISSION'
+  | 'CONTROLEUR';
+
 export interface LoginRequest {
   email: string;
   password: string;
@@ -7,6 +14,12 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   message: string;
+  role?: AuthRoleName;
+  userType?: AuthRoleName | 'admin' | 'contractant' | 'operateur';
+  user?: {
+    role?: AuthRoleName;
+    userType?: AuthRoleName | 'admin' | 'contractant' | 'operateur';
+  };
 }
 
 export interface RegisterRequest {
@@ -17,17 +30,41 @@ export interface RegisterRequest {
   nom: string;
   prenom: string;
   telephone?: string;
-  denomination?: string;
+  denomination: string;
   nif?: string;
   nis?: string;
   registre_commerce?: string;
-  type?: 'EPA' | 'EPIC' | 'MINISTERE' | 'ENTREPRISE_PRIVEE' | 'ENTREPRISE_PUBLIQUE' | 'GROUPEMENT';
+  adresse?: string;
+  wilaya?: string;
+  commune?: string;
+  type: 'EPA' | 'EPIC' | 'MINISTERE' | 'ENTREPRISE_PRIVEE' | 'ENTREPRISE_PUBLIQUE' | 'GROUPEMENT';
   code_service?: string;
+  secteur_activite?: string;
+  ordonnateur?: string;
+  qualifications?: string;
+  categories?: string;
 }
 
 export interface RegisterResponse {
   message: string;
   user_id: string;
+}
+
+export interface MeResponse {
+  user?: {
+    userId?: string;
+    email?: string;
+    role?: AuthRoleName;
+    userType?: AuthRoleName | 'admin' | 'contractant' | 'operateur';
+  };
+}
+
+export interface UserRoleAssignment {
+  id: string;
+  role?: {
+    id?: string;
+    name?: AuthRoleName;
+  };
 }
 
 const AUTH_BASE_PATH = '/api/v1/auth';
@@ -43,5 +80,17 @@ export function register(payload: RegisterRequest): Promise<RegisterResponse> {
   return apiClient<RegisterResponse>(`${AUTH_BASE_PATH}/register`, {
     method: 'POST',
     body: JSON.stringify(payload),
+  });
+}
+
+export function getCurrentUser(): Promise<MeResponse> {
+  return apiClient<MeResponse>(`${AUTH_BASE_PATH}/me`, {
+    method: 'GET',
+  });
+}
+
+export function listCurrentUserRoles(userId: string): Promise<UserRoleAssignment[]> {
+  return apiClient<UserRoleAssignment[]>(`/api/v1/users/user-roles/${userId}`, {
+    method: 'GET',
   });
 }

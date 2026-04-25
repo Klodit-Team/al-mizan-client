@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
-  getOeAoById,
   type OeAoItem,
   type OeAoLot,
   type OeAoStatus,
   type OeAoType,
-} from "@/services/operateur-dashboard";
+} from "@/services/operateur-appels-offres/api";
+import { useOperateurAppelOffreDetailQuery } from "@/services/operateur-appels-offres/queries";
 import { type Locale } from "@/i18n/config";
 import {
   ChevronRight,
@@ -359,17 +359,8 @@ export default function OeAoDetailPage({ aoId }: { aoId: string }) {
   const router = useRouter();
   const locale = (params?.locale as Locale) || "fr";
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [ao, setAo] = useState<OeAoItem | null>(null);
+  const { data: ao, isLoading } = useOperateurAppelOffreDetailQuery(aoId);
   const [tab, setTab] = useState<DetailTab>("general");
-
-  useEffect(() => {
-    let alive = true;
-    getOeAoById(aoId).then((res: OeAoItem | null) => {
-      if (alive) { setAo(res); setIsLoading(false); }
-    });
-    return () => { alive = false; };
-  }, [aoId]);
 
   if (isLoading) {
     return (

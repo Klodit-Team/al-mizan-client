@@ -16,7 +16,7 @@ export class ApiClientError extends Error {
   }
 }
 
-const FALLBACK_BASE_URL = 'http://localhost:3000';
+const FALLBACK_BASE_URL = 'http://localhost:3001';
 
 function normalizeBaseUrl(rawBaseUrl: string): string {
   return rawBaseUrl.endsWith('/') ? rawBaseUrl.slice(0, -1) : rawBaseUrl;
@@ -45,12 +45,15 @@ export async function apiClient<TResponse>(
   path: string,
   init?: RequestInit,
 ): Promise<TResponse> {
+  const isFormDataBody = typeof FormData !== 'undefined' && init?.body instanceof FormData;
+  const mergedHeaders: HeadersInit = {
+    ...(isFormDataBody ? {} : { 'Content-Type': 'application/json' }),
+    ...(init?.headers || {}),
+  };
+
   const response = await fetch(buildUrl(path), {
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init?.headers || {}),
-    },
+    headers: mergedHeaders,
     ...init,
   });
 

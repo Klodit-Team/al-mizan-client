@@ -39,7 +39,7 @@ export default async function Home({ params }: HomeProps) {
                         <a
                             className="flex h-12 w-full items-center justify-center gap-2 rounded-xl text-white px-8 transition-opacity hover:opacity-90 md:w-auto"
                             style={{ backgroundColor: "#4CAF50" }}
-                            href={`/${locale}/auth/register`}
+                            href={`/${locale}/auth/register/operateur`}
                         >
                             Get Started →
                         </a>

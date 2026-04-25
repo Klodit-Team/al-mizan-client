@@ -1,18 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
-  getOeDashboardData,
   type OeDashboardData,
   type OeActivityItem,
   type OeDeadlineItem,
   type OeSubmissionItem,
-} from "@/services/operateur-dashboard";
+} from "@/services/operateur-dashboard/api";
+import { useOperateurDashboardQuery } from "@/services/operateur-dashboard/queries";
 import { type Locale } from "@/i18n/config";
 import {
   Search, FileText, Clock, Award, AlertTriangle, ChevronRight,
-  Bell, Calendar, TrendingUp, Briefcase, Scale, ArrowRight,
+  Bell, Calendar, TrendingUp, Scale, ArrowRight,
 } from "lucide-react";
 
 // ─── Stat card ────────────────────────────────────────────────────────────────
@@ -103,17 +102,7 @@ export default function OperateurDashboard() {
   const params = useParams();
   const router = useRouter();
   const locale = (params?.locale as Locale) || "fr";
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [data, setData] = useState<OeDashboardData | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-    getOeDashboardData().then((res: OeDashboardData) => {
-      if (alive) { setData(res); setIsLoading(false); }
-    });
-    return () => { alive = false; };
-  }, []);
+  const { data, isLoading, error } = useOperateurDashboardQuery();
 
   if (isLoading) {
     return (
@@ -130,7 +119,13 @@ export default function OperateurDashboard() {
     );
   }
 
-  if (!data) return null;
+  if (error || !data) {
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+        {error?.message || "Impossible de charger le tableau de bord operateur."}
+      </div>
+    );
+  }
 
   const now = new Date().toLocaleDateString("fr-DZ", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
@@ -264,7 +259,7 @@ export default function OperateurDashboard() {
                       <tr key={sub.id} className="hover:bg-slate-50/60 transition-colors cursor-pointer"
                         onClick={() => router.push(`/${locale}/dashboard/operateur/soumissions`)}>
                         <td className="px-4 py-2.5 font-mono font-semibold text-slate-700">{sub.aoReference}</td>
-                        <td className="max-w-[200px] truncate px-4 py-2.5 text-slate-600">{sub.aoObject}</td>
+                        <td className="max-w-50 truncate px-4 py-2.5 text-slate-600">{sub.aoObject}</td>
                         <td className="px-4 py-2.5 text-slate-500">
                           {new Date(sub.submittedAt).toLocaleDateString("fr-DZ", { day: "numeric", month: "short", year: "numeric" })}
                         </td>

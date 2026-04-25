@@ -1,20 +1,19 @@
 "use client";
 
 import { CheckCircle2, ArrowLeft, ChevronRight, Send } from "lucide-react";
-import { Search, ShieldCheck, ClipboardList, FileText, Landmark } from "lucide-react";
+import { Search, ClipboardList, FileText, Landmark } from "lucide-react";
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
 
 const STEPS = [
   { n: 1, label: "Sélection AO",          icon: <Search        className="h-3.5 w-3.5" /> },
-  { n: 2, label: "Pièces admin",           icon: <ShieldCheck   className="h-3.5 w-3.5" /> },
-  { n: 3, label: "Offre technique",         icon: <ClipboardList className="h-3.5 w-3.5" /> },
-  { n: 4, label: "Offre financière",       icon: <FileText      className="h-3.5 w-3.5" /> },
-  { n: 5, label: "Caution",                 icon: <Landmark      className="h-3.5 w-3.5" /> },
-  { n: 6, label: "Récapitulatif",          icon: <Send          className="h-3.5 w-3.5" /> },
+  { n: 2, label: "Offre technique",         icon: <ClipboardList className="h-3.5 w-3.5" /> },
+  { n: 3, label: "Offre financière",       icon: <FileText      className="h-3.5 w-3.5" /> },
+  { n: 4, label: "Caution",                 icon: <Landmark      className="h-3.5 w-3.5" /> },
+  { n: 5, label: "Récapitulatif",          icon: <Send          className="h-3.5 w-3.5" /> },
 ] as const;
 
-export function StepIndicator({ step }: { step: 1 | 2 | 3 | 4 | 5 | 6 }) {
+export function StepIndicator({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
   return (
     <div className="flex flex-wrap items-center gap-1">
       {STEPS.map((s, i) => (

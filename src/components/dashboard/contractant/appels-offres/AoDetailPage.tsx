@@ -19,7 +19,10 @@ import {
 
 import { cn } from "@/lib/utils";
 import {
-  type ServiceContractantTenderItem,
+  getServiceContractantTenderById,
+  updateServiceContractantTenderStatus,
+  type ServiceContractantApiStatus,
+  type ServiceContractantTenderDetail,
   type ServiceContractantTenderType,
 } from "@/services/tenders";
 import { listServiceContractantTenderSubmissions } from "@/services/tenderSubmissions";
@@ -51,7 +54,6 @@ type DetailTab =
 interface AoDetailPageProps {
   locale: string;
   aoId: string;
-  tender: ServiceContractantTenderItem | null;
   initialTab?: DetailTab;
 }
 
@@ -96,7 +98,7 @@ function getTypeLabel(type: ServiceContractantTenderType) {
 }
 
 function mapTenderStatusToWorkflowStage(
-  status: ServiceContractantTenderItem["status"] | undefined,
+  status: ServiceContractantTenderDetail["status"] | undefined,
 ): WorkflowStage {
   switch (status) {
     case "brouillon":
@@ -127,18 +129,84 @@ function formatDate(dateValue: string, locale: string) {
   }).format(parsedDate);
 }
 
+function nextApiStatusForStage(stage: WorkflowStage): ServiceContractantApiStatus | null {
+  if (stage === "brouillon") return "PUBLIE";
+  if (stage === "publie") return "EN_COURS";
+  if (stage === "en_cours") return "OUVERTURE_PLIS";
+  if (stage === "ouverture_plis") return "EVALUATION";
+  if (stage === "evaluation") return "ATTRIBUE";
+
+  return null;
+}
+
+function mapApiStatusToWorkflowStage(status: ServiceContractantApiStatus): WorkflowStage {
+  if (status === "PUBLIE") return "publie";
+  if (status === "EN_COURS") return "en_cours";
+  if (status === "OUVERTURE_PLIS") return "ouverture_plis";
+  if (status === "EVALUATION") return "evaluation";
+  if (status === "ATTRIBUE" || status === "CLOTURE") return "attribue";
+
+  return "brouillon";
+}
+
 export default function AoDetailPage({
   locale,
   aoId,
-  tender,
   initialTab = "soumissions",
 }: AoDetailPageProps) {
   const isRtl = locale === "ar";
   const [activeTab, setActiveTab] = useState<DetailTab>(initialTab);
+  const [tender, setTender] = useState<ServiceContractantTenderDetail | null>(
+    null,
+  );
+  const [loadingTender, setLoadingTender] = useState(true);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isApplyingStatus, setIsApplyingStatus] = useState(false);
   const [stage, setStage] = useState<WorkflowStage>(
-    mapTenderStatusToWorkflowStage(tender?.status),
+    "brouillon",
   );
   const [soumissionsCount, setSoumissionsCount] = useState<number>(0);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadTender = async () => {
+      setLoadingTender(true);
+      setLoadingError(null);
+
+      try {
+        const data = await getServiceContractantTenderById(aoId);
+        if (!isMounted) {
+          return;
+        }
+
+        if (!data) {
+          setTender(null);
+          setLoadingError("Appel d'offres introuvable ou non autorise.");
+          return;
+        }
+
+        setTender(data);
+        setStage(mapTenderStatusToWorkflowStage(data.status));
+      } catch {
+        if (isMounted) {
+          setTender(null);
+          setLoadingError("Impossible de charger cet appel d'offres.");
+        }
+      } finally {
+        if (isMounted) {
+          setLoadingTender(false);
+        }
+      }
+    };
+
+    void loadTender();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [aoId]);
 
   useEffect(() => {
     let isMounted = true;
@@ -180,58 +248,31 @@ export default function AoDetailPage({
     [stage],
   );
 
-  const lots = [
-    {
-      id: "LOT-01",
-      designation: "Serveurs de calcul",
-      description: "Fourniture de 12 serveurs rack haute disponibilite",
-      estimatedAmount: "28 000 000 DZD",
-      delay: "45 jours",
-    },
-    {
-      id: "LOT-02",
-      designation: "Baies de stockage",
-      description: "Acquisition de 4 baies SAN et maintenance 24 mois",
-      estimatedAmount: "15 000 000 DZD",
-      delay: "30 jours",
-    },
-  ];
+  const lots = tender?.lots || [];
+  const eligibilityCriteria = tender?.eligibilityCriteria || [];
+  const evaluationMatrix = tender?.evaluationCriteria || [];
 
-  const eligibilityCriteria = [
-    {
-      id: "C1",
-      label: "Capacite financiere",
-      details: "CA annuel >= 1M DZD sur 3 ans",
-      eliminatory: true,
-    },
-    {
-      id: "C2",
-      label: "Experience similaire",
-      details: "Au moins 3 references equivalentes",
-      eliminatory: true,
-    },
-    {
-      id: "C3",
-      label: "Certification qualite",
-      details: "ISO 9001 en cours de validite",
-      eliminatory: false,
-    },
-  ];
+  const applyStatus = async (status: ServiceContractantApiStatus) => {
+    setIsApplyingStatus(true);
+    setActionError(null);
 
-  const evaluationMatrix = [
-    { id: "E1", label: "Offre technique", weight: 60 },
-    { id: "E2", label: "Offre financiere", weight: 40 },
-  ];
+    try {
+      await updateServiceContractantTenderStatus(aoId, status);
+      setStage(mapApiStatusToWorkflowStage(status));
+    } catch {
+      setActionError("Impossible de mettre a jour le statut de cet appel d'offres.");
+    } finally {
+      setIsApplyingStatus(false);
+    }
+  };
 
   const nextStage = () => {
-    setStage((current) => {
-      const idx = WORKFLOW_STEPS.findIndex((item) => item.key === current);
-      if (idx < 0 || idx === WORKFLOW_STEPS.length - 1) {
-        return current;
-      }
+    const nextStatus = nextApiStatusForStage(stage);
+    if (!nextStatus) {
+      return;
+    }
 
-      return WORKFLOW_STEPS[idx + 1].key;
-    });
+    void applyStatus(nextStatus);
   };
 
   const statusBadgeClass =
@@ -245,8 +286,27 @@ export default function AoDetailPage({
             ? "bg-amber-100 text-amber-700"
             : "bg-green-100 text-green-700";
 
-  const publishDate = tender ? formatDate(tender.deadline, locale) : "-";
+  const publishDate = tender
+    ? formatDate(tender.publicationDate || tender.deadline, locale)
+    : "-";
   const closeDate = tender ? formatDate(tender.deadline, locale) : "-";
+  const lastCdc = tender?.cdcDocuments?.[0] || null;
+
+  if (loadingTender) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
+        Chargement des details de l'appel d'offres...
+      </div>
+    );
+  }
+
+  if (loadingError) {
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700 shadow-sm">
+        {loadingError}
+      </div>
+    );
+  }
 
   const effectiveActiveTab = isTabEnabledForStage(activeTab, stage)
     ? activeTab
@@ -340,22 +400,30 @@ export default function AoDetailPage({
               </tr>
             </thead>
             <tbody>
-              {lots.map((lot) => (
+              {lots.length === 0 ? (
+                <tr className="text-xs text-slate-500">
+                  <td colSpan={5} className="px-2 py-6 text-center">
+                    Aucun lot defini pour cet appel d'offres.
+                  </td>
+                </tr>
+              ) : (
+                lots.map((lot) => (
                 <tr
                   key={lot.id}
                   className="border-b border-slate-100 text-xs text-slate-700"
                 >
                   <td className="px-2 py-3 font-semibold text-[#2F9E44]">
-                    {lot.id}
+                    {lot.number}
                   </td>
                   <td className="px-2 py-3">{lot.designation}</td>
                   <td className="px-2 py-3 text-slate-600">
-                    {lot.description}
+                    -
                   </td>
-                  <td className="px-2 py-3">{lot.estimatedAmount}</td>
-                  <td className="px-2 py-3">{lot.delay}</td>
+                  <td className="px-2 py-3">{lot.amount}</td>
+                  <td className="px-2 py-3">-</td>
                 </tr>
-              ))}
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -370,12 +438,17 @@ export default function AoDetailPage({
               Document principal
             </p>
             <p className="mt-1 text-sm font-semibold text-slate-800">
-              CDC-Infrastructure-v1.3.pdf
+              {lastCdc ? `CDC-${lastCdc.documentId}.pdf` : "Aucun CDC"}
             </p>
-            <p className="mt-1 text-xs text-slate-500">Version v1.3 - 4.2 MB</p>
+            <p className="mt-1 text-xs text-slate-500">
+              {lastCdc?.publishedAt
+                ? `Publie le ${formatDate(lastCdc.publishedAt, locale)}`
+                : "Aucune publication enregistree"}
+            </p>
             <div className="mt-3 flex gap-2">
               <button
                 type="button"
+                disabled={!lastCdc}
                 className="inline-flex h-8 items-center gap-1 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
               >
                 <Download className="h-3 w-3" /> Telecharger
@@ -392,11 +465,15 @@ export default function AoDetailPage({
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
               Parametres CDC
             </p>
-            <p className="mt-2 text-slate-700">Prix retrait: 0.00 DZD</p>
-            <p className="mt-1 text-slate-700">
-              Derniere mise a jour: 18/11/2023 11:05
+            <p className="mt-2 text-slate-700">
+              Prix retrait: {lastCdc?.withdrawalPrice || "0 DZD"}
             </p>
-            <p className="mt-1 text-slate-700">Statut publication: Publie</p>
+            <p className="mt-1 text-slate-700">
+              Derniere mise a jour: {lastCdc?.publishedAt ? formatDate(lastCdc.publishedAt, locale) : "-"}
+            </p>
+            <p className="mt-1 text-slate-700">
+              Statut publication: {lastCdc ? "Publie" : "Non publie"}
+            </p>
           </div>
         </div>
       );
@@ -410,7 +487,12 @@ export default function AoDetailPage({
               Criteres eligibilite
             </p>
             <div className="space-y-2">
-              {eligibilityCriteria.map((criterion) => (
+              {eligibilityCriteria.length === 0 ? (
+                <p className="text-xs text-slate-500">
+                  Aucun critere d'eligibilite defini.
+                </p>
+              ) : (
+                eligibilityCriteria.map((criterion) => (
                 <div
                   key={criterion.id}
                   className="rounded-md border border-slate-200 bg-slate-50 p-2 text-xs"
@@ -434,7 +516,8 @@ export default function AoDetailPage({
                   </div>
                   <p className="mt-1 text-slate-600">{criterion.details}</p>
                 </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
           <div className="rounded-lg border border-slate-200 bg-white p-3">
@@ -442,7 +525,12 @@ export default function AoDetailPage({
               Ponderation evaluation
             </p>
             <div className="space-y-2">
-              {evaluationMatrix.map((item) => (
+              {evaluationMatrix.length === 0 ? (
+                <p className="text-xs text-slate-500">
+                  Aucun critere d'evaluation defini.
+                </p>
+              ) : (
+                evaluationMatrix.map((item) => (
                 <div key={item.id}>
                   <div className="mb-1 flex items-center justify-between text-xs">
                     <span className="text-slate-700">{item.label}</span>
@@ -457,10 +545,11 @@ export default function AoDetailPage({
                     />
                   </div>
                 </div>
-              ))}
+                ))
+              )}
             </div>
             <div className="mt-3 rounded-md border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
-              Total ponderation: 100%
+              Total ponderation: {Math.round(evaluationMatrix.reduce((sum, item) => sum + item.weight, 0) * 100) / 100}%
             </div>
           </div>
         </div>
@@ -526,19 +615,29 @@ export default function AoDetailPage({
 
             <button
               type="button"
-              disabled={!canPublish}
+              disabled={isApplyingStatus || !canPublish}
               onClick={() => {
                 if (canPublish) {
-                  setStage("publie");
+                  void applyStatus("PUBLIE");
                 }
               }}
               className="inline-flex h-8 items-center gap-1 rounded-md bg-[#4CAF50] px-3 text-xs font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Check className="h-3 w-3" />
-              {canPublish ? "Publier AO" : "AO deja publie"}
+              {isApplyingStatus
+                ? "Mise a jour..."
+                : canPublish
+                  ? "Publier AO"
+                  : "AO deja publie"}
             </button>
           </div>
         </div>
+
+        {actionError && (
+          <div className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+            {actionError}
+          </div>
+        )}
       </header>
 
       <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -575,6 +674,16 @@ export default function AoDetailPage({
             </p>
             <p className="text-xs text-slate-600">
               {tender ? getTypeLabel(tender.type) : "-"}
+            </p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+              Montant estime
+            </p>
+            <p className="text-xs text-slate-600">{tender?.amount || "-"}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+              Wilaya / Secteur
+            </p>
+            <p className="text-xs text-slate-600">
+              {tender ? `${tender.wilaya} / ${tender.sector}` : "-"}
             </p>
           </div>
 
@@ -703,7 +812,8 @@ export default function AoDetailPage({
             <div className="space-y-2">
               <button
                 type="button"
-                onClick={() => setStage("ouverture_plis")}
+                disabled={isApplyingStatus}
+                onClick={() => void applyStatus("OUVERTURE_PLIS")}
                 className="flex w-full items-center justify-between rounded-md bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
               >
                 Gerer Commission
@@ -712,8 +822,9 @@ export default function AoDetailPage({
 
               <button
                 type="button"
+                disabled={isApplyingStatus}
                 onClick={nextStage}
-                className="flex w-full items-center justify-between rounded-md bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                className="flex w-full items-center justify-between rounded-md bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Changer de statut
                 <Check className="h-3.5 w-3.5" />
@@ -721,8 +832,8 @@ export default function AoDetailPage({
 
               <button
                 type="button"
-                disabled={stage !== "evaluation"}
-                onClick={() => setStage("attribue")}
+                disabled={isApplyingStatus || stage !== "evaluation"}
+                onClick={() => void applyStatus("ATTRIBUE")}
                 className="flex w-full items-center justify-between rounded-md bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Prononcer Attribution
@@ -731,6 +842,8 @@ export default function AoDetailPage({
 
               <button
                 type="button"
+                disabled={isApplyingStatus}
+                onClick={() => void applyStatus("ANNULE")}
                 className="flex w-full items-center justify-between rounded-md bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-100"
               >
                 Annuler Marche
