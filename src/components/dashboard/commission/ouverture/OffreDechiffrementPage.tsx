@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { SoumissionRetenue, CommissionRole, OuverturePlisSelectedAO } from "./types";
 
 interface OffreDechiffrementPageProps {
     locale: string;
     offreId: string;
+    userId: string;
 }
 
 const MOCK_AO: OuverturePlisSelectedAO = {
@@ -35,11 +37,11 @@ const MOCK_SOUMISSIONS: SoumissionRetenue[] = [
     },
 ];
 
-export default function OffreDechiffrementPage({ locale, offreId }: OffreDechiffrementPageProps) {
+export default function OffreDechiffrementPage({ locale, offreId, userId }: OffreDechiffrementPageProps) {
     // ── Simulation State ────────────────────────────────────────────────────────
     // We toggle this for UI testing. In prod this would come from the auth token/session.
     const [simulatedRole, setSimulatedRole] = useState<CommissionRole>("membre");
-    
+
     // keysUnlocked: 0 = start, 1 = first member, 2 = second member, 3 = president unlocks all
     const [keysUnlocked, setKeysUnlocked] = useState<number>(0);
     const [isUnlocking, setIsUnlocking] = useState(false);
@@ -61,15 +63,15 @@ export default function OffreDechiffrementPage({ locale, offreId }: OffreDechiff
     };
 
     // Determine button state based on role and progress
-    const canUnlock = 
-        (simulatedRole === "membre" && keysUnlocked < 2) || 
+    const canUnlock =
+        (simulatedRole === "membre" && keysUnlocked < 2) ||
         (simulatedRole === "president" && keysUnlocked === 2);
 
-    const buttonLabel = isUnlocking 
-        ? "Déverrouillage en cours..." 
-        : isFullyUnlocked 
-        ? "Offres Déverrouillées"
-        : "Déverrouiller les Offres";
+    const buttonLabel = isUnlocking
+        ? "Déverrouillage en cours..."
+        : isFullyUnlocked
+            ? "Offres Déverrouillées"
+            : "Déverrouiller les Offres";
 
     // Format money
     const formatMoney = (amount: number) => {
@@ -88,19 +90,17 @@ export default function OffreDechiffrementPage({ locale, offreId }: OffreDechiff
                     🔧 Mode Test: Simulez votre rôle pour avancer dans le flux
                 </span>
                 <div className="flex bg-white rounded-lg p-0.5 border border-yellow-200 shadow-sm">
-                    <button 
+                    <button
                         onClick={() => setSimulatedRole("membre")}
-                        className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
-                            simulatedRole === "membre" ? "bg-yellow-100 text-yellow-800 shadow-sm" : "text-gray-500 hover:text-gray-700"
-                        }`}
+                        className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${simulatedRole === "membre" ? "bg-yellow-100 text-yellow-800 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                            }`}
                     >
                         Membre
                     </button>
-                    <button 
+                    <button
                         onClick={() => setSimulatedRole("president")}
-                        className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
-                            simulatedRole === "president" ? "bg-yellow-100 text-yellow-800 shadow-sm" : "text-gray-500 hover:text-gray-700"
-                        }`}
+                        className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${simulatedRole === "president" ? "bg-yellow-100 text-yellow-800 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                            }`}
                     >
                         Président
                     </button>
@@ -125,7 +125,7 @@ export default function OffreDechiffrementPage({ locale, offreId }: OffreDechiff
 
             {/* ── Decryption Card ── */}
             <div className="bg-[#2D333B] rounded-2xl p-8 shadow-lg text-center relative overflow-hidden">
-                
+
                 {/* Lock icon */}
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-full border border-emerald-500/30 bg-emerald-500/10 mb-5">
                     {isFullyUnlocked ? (
@@ -172,10 +172,10 @@ export default function OffreDechiffrementPage({ locale, offreId }: OffreDechiff
                                     {step.label}
                                 </span>
                             </div>
-                            
+
                             {/* Lines between circles */}
                             {idx < arr.length - 1 && (
-                                <div className={`w-12 h-0.5 mx-2 transition-colors duration-500 ${arr[idx+1].state === "done" ? "bg-emerald-500" : "bg-gray-700"}`} />
+                                <div className={`w-12 h-0.5 mx-2 transition-colors duration-500 ${arr[idx + 1].state === "done" ? "bg-emerald-500" : "bg-gray-700"}`} />
                             )}
                         </div>
                     ))}
@@ -183,13 +183,13 @@ export default function OffreDechiffrementPage({ locale, offreId }: OffreDechiff
 
                 {/* Unlock Action */}
                 <div className="pt-4">
-                    <button 
+                    <button
                         onClick={handleUnlockClick}
                         disabled={!canUnlock || isUnlocking || isFullyUnlocked}
                         className={`inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-bold transition-all duration-300
                             ${isFullyUnlocked ? "bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 cursor-default"
-                            : canUnlock && !isUnlocking ? "bg-emerald-500 text-white hover:bg-emerald-600 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/20"
-                            : "bg-gray-700 text-gray-500 cursor-not-allowed"}`}
+                                : canUnlock && !isUnlocking ? "bg-emerald-500 text-white hover:bg-emerald-600 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/20"
+                                    : "bg-gray-700 text-gray-500 cursor-not-allowed"}`}
                     >
                         {!isFullyUnlocked && (
                             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,7 +201,7 @@ export default function OffreDechiffrementPage({ locale, offreId }: OffreDechiff
                     {!canUnlock && !isFullyUnlocked && (
                         <p className="text-xs text-red-400 mt-3 font-medium">
                             {simulatedRole === "membre" && keysUnlocked >= 2 ? "Vous avez déjà validé. En attente du Président." :
-                             simulatedRole === "president" && keysUnlocked < 2 ? "En attente des validations des membres d'abord." : ""}
+                                simulatedRole === "president" && keysUnlocked < 2 ? "En attente des validations des membres d'abord." : ""}
                         </p>
                     )}
                 </div>
@@ -271,6 +271,20 @@ export default function OffreDechiffrementPage({ locale, offreId }: OffreDechiff
                 </div>
             </div>
 
+            {/* ── Final Navigation (Visible when fully unlocked) ── */}
+            {isFullyUnlocked && (
+                <div className="flex justify-end pt-4">
+                    <Link
+                        href={`/${locale}/dashboard/commission/${userId}/mes-commissions/${offreId}/evaluation`}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-[#4CAF50] text-white rounded-xl font-bold hover:bg-[#43A047] transition-all shadow-md hover:-translate-y-0.5"
+                    >
+                        Procéder à la Délibération
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </Link>
+                </div>
+            )}
         </div>
     );
 }

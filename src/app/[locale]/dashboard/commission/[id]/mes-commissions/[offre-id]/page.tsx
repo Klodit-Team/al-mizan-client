@@ -7,6 +7,6 @@ export default async function Page({
     params: Promise<{ locale: Locale; id: string; "offre-id": string }>;
 }) {
     const { locale, id, "offre-id": offreId } = await params;
-    
-    return <OffreDechiffrementPage locale={locale} offreId={offreId} />;
+
+    return <OffreDechiffrementPage locale={locale} offreId={offreId} userId={id} />;
 }

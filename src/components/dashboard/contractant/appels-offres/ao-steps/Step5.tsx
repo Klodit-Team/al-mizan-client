@@ -13,74 +13,24 @@ export default function Step5({ props }: { props: WizardStepProps }) {
   const {
     dict,
     stepTitles,
-    getSwitchThumbClass,
-    form,
-    updateField,
-    errors,
-    lots,
-    setLots,
-    lotForm,
-    setLotForm,
-    showLotForm,
-    setShowLotForm,
-    editingLotId,
-    setEditingLotId,
-    saveLot,
-    editLot,
-    deleteLot,
-    lotErrors,
-    cdcForm,
-    setCdcForm,
-    updateCdcField,
-    cdcFile,
-    handleCdcFileChange,
-    existingCdcFileName,
-    setExistingCdcFileName,
-    triggerCdcFileInput,
-    removeCdcFile,
-    cdcErrors,
-    criteria,
-    setCriteria,
-    showCriterionForm,
-    setShowCriterionForm,
-    criterionForm,
-    setCriterionForm,
-    editingCriterionId,
-    setEditingCriterionId,
-    saveCriterion,
-    editCriterion,
-    deleteCriterion,
-    moveCriterionUp,
-    moveCriterionDown,
-    criterionErrors,
+    
     evaluationCriteria,
-    setEvaluationCriteria,
+    
     showEvaluationForm,
-    setShowEvaluationForm,
+    
     evaluationForm,
-    setEvaluationForm,
     editingEvaluationId,
-    setEditingEvaluationId,
     evaluationTab,
     setEvaluationTab,
     evaluationErrors,
     saveEvaluationCriterion,
-    editEvaluationCriterion,
     deleteEvaluationCriterion,
     moveEvaluationCriterionUp,
     moveEvaluationCriterionDown,
     evaluationStepError,
     goBack,
     goNextAfterValidation,
-    isSubmittingAction,
-    saveReviewDraft,
-    reviewActionError,
-    reviewActionMessage,
-    generatedAvisRef,
-    step,
-    isRtl,
-    fileInputRef,
-    setEvaluationStepError,
+   
     openCreateEvaluationForm,
     openEditEvaluationForm,
     updateEvaluationField,
@@ -123,7 +73,7 @@ export default function Step5({ props }: { props: WizardStepProps }) {
                   : "border-transparent text-slate-500 hover:text-slate-700",
               )}
             >
-              Criteres techniques
+              {dict.step5.tabTechnical}
             </button>
             <button
               type="button"
@@ -135,14 +85,14 @@ export default function Step5({ props }: { props: WizardStepProps }) {
                   : "border-transparent text-slate-500 hover:text-slate-700",
               )}
             >
-              Criteres financiers
+              {dict.step5.tabFinancial}
             </button>
           </div>
         </div>
         <div className="p-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-semibold text-slate-900">
-              Liste des criteres
+              {dict.step5.criteriaListTitle}
             </h2>
             <button
               type="button"
@@ -150,27 +100,32 @@ export default function Step5({ props }: { props: WizardStepProps }) {
               className="inline-flex h-8 items-center justify-center gap-1 rounded-md text-xs font-semibold text-[#2F9E44] hover:bg-emerald-50 px-2.5"
             >
               <Plus className="h-3.5 w-3.5" />
-              Ajouter critere
+              {dict.step5.addCriterionBtn}
             </button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 text-left text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                  <th className="px-2 py-2">Order</th>
-                  <th className="px-2 py-2">Designation</th>
-                  <th className="px-2 py-2">Type</th>
-                  <th className="px-2 py-2">Lot</th>
-                  <th className="px-2 py-2">Ponderation (%)</th>
-                  <th className="px-2 py-2">Note Elimin.</th>
-                  <th className="px-2 py-2 text-right">Actions</th>
+                  <th className="px-2 py-2">{dict.step5.columns.order}</th>
+                  <th className="px-2 py-2">{dict.step5.columns.designation}</th>
+                  <th className="px-2 py-2">{dict.step5.columns.type}</th>
+                  <th className="px-2 py-2">{dict.step5.columns.lot}</th>
+                  <th className="px-2 py-2">{dict.step5.columns.weighting}</th>
+                  <th className="px-2 py-2">{dict.step5.columns.eliminationScore}</th>
+                  <th className="px-2 py-2 text-right">{dict.step5.columns.actions}</th>
                 </tr>
               </thead>
               <tbody>
                 {activeEvaluationCriteria.length === 0 ? (
                   <tr className="text-xs text-slate-500">
                     <td colSpan={7} className="px-2 py-6 text-center">
-                      Aucun critere {evaluationTab} pour le moment.
+                      {dict.step5.emptyMessage.replace(
+                        "{type}",
+                        evaluationTab === "technique"
+                          ? dict.step5.typeOptions.technique
+                          : dict.step5.typeOptions.financier,
+                      )}
                     </td>
                   </tr>
                 ) : (
@@ -218,7 +173,9 @@ export default function Step5({ props }: { props: WizardStepProps }) {
                         </td>
                         <td className="px-2 py-3">
                           <span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-700">
-                            {criterion.type}
+                            {criterion.type === "technique"
+                              ? dict.step5.typeOptions.technique
+                              : dict.step5.typeOptions.financier}
                           </span>
                         </td>
                         <td className="px-2 py-3 text-slate-500">
@@ -265,20 +222,20 @@ export default function Step5({ props }: { props: WizardStepProps }) {
             <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
               <h3 className="mb-3 text-sm font-semibold text-slate-800">
                 {editingEvaluationId
-                  ? "Modifier le critere"
-                  : "Nouveau critere d'evaluation"}
+                  ? dict.step5.editCriterionTitle
+                  : dict.step5.newCriterionTitle}
               </h3>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-[11px] font-semibold text-slate-600">
-                    Designation
+                    {dict.step5.designationLabel}
                   </label>
                   <input
                     value={evaluationForm.designation}
                     onChange={(event) =>
                       updateEvaluationField("designation", event.target.value)
                     }
-                    placeholder="Ex. Methodology & Work Plan"
+                    placeholder={dict.step5.designationPlaceholder}
                     className={cn(
                       "h-9 w-full rounded-md border px-3 text-xs outline-none focus:border-[#4CAF50]",
                       evaluationErrors.designation
@@ -294,7 +251,7 @@ export default function Step5({ props }: { props: WizardStepProps }) {
                 </div>
                 <div>
                   <label className="mb-1 block text-[11px] font-semibold text-slate-600">
-                    Type
+                    {dict.step5.typeLabel}
                   </label>
                   <select
                     value={evaluationForm.type}
@@ -303,20 +260,20 @@ export default function Step5({ props }: { props: WizardStepProps }) {
                     }
                     className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-xs outline-none focus:border-[#4CAF50]"
                   >
-                    <option value="technique">Technique</option>
-                    <option value="financier">Financier</option>
+                    <option value="technique">{dict.step5.typeOptions.technique}</option>
+                    <option value="financier">{dict.step5.typeOptions.financier}</option>
                   </select>
                 </div>
                 <div>
                   <label className="mb-1 block text-[11px] font-semibold text-slate-600">
-                    Ponderation (%)
+                    {dict.step5.weightingLabel}
                   </label>
                   <input
                     value={evaluationForm.weighting}
                     onChange={(event) =>
                       updateEvaluationField("weighting", event.target.value)
                     }
-                    placeholder="0 - 100"
+                    placeholder={dict.step5.weightingPlaceholder}
                     className={cn(
                       "h-9 w-full rounded-md border px-3 text-xs outline-none focus:border-[#4CAF50]",
                       evaluationErrors.weighting
@@ -332,7 +289,7 @@ export default function Step5({ props }: { props: WizardStepProps }) {
                 </div>
                 <div>
                   <label className="mb-1 block text-[11px] font-semibold text-slate-600">
-                    Note eliminatoire (/100)
+                    {dict.step5.eliminationScoreLabel}
                   </label>
                   <input
                     value={evaluationForm.eliminationScore}
@@ -342,7 +299,7 @@ export default function Step5({ props }: { props: WizardStepProps }) {
                         event.target.value,
                       )
                     }
-                    placeholder="Optionnel"
+                    placeholder={dict.step5.eliminationScorePlaceholder}
                     className={cn(
                       "h-9 w-full rounded-md border px-3 text-xs outline-none focus:border-[#4CAF50]",
                       evaluationErrors.eliminationScore
@@ -358,14 +315,14 @@ export default function Step5({ props }: { props: WizardStepProps }) {
                 </div>
                 <div className="md:col-span-2">
                   <label className="mb-1 block text-[11px] font-semibold text-slate-600">
-                    Lot (si applicable)
+                    {dict.step5.lotLabel}
                   </label>
                   <input
                     value={evaluationForm.lotAssignment}
                     onChange={(event) =>
                       updateEvaluationField("lotAssignment", event.target.value)
                     }
-                    placeholder="Ex. Lot 01, All Lots"
+                    placeholder={dict.step5.lotPlaceholder}
                     className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-xs outline-none focus:border-[#4CAF50]"
                   />
                 </div>
@@ -376,14 +333,14 @@ export default function Step5({ props }: { props: WizardStepProps }) {
                   onClick={cancelEvaluationEdit}
                   className="inline-flex h-9 items-center justify-center rounded-md border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100"
                 >
-                  Annuler
+                  {dict.buttons.cancel}
                 </button>
                 <button
                   type="button"
                   onClick={saveEvaluationCriterion}
                   className="inline-flex h-9 items-center justify-center rounded-md bg-[#4CAF50] px-3 text-xs font-semibold text-white hover:opacity-95"
                 >
-                  Enregistrer
+                  {dict.step5.saveBtn}
                 </button>
               </div>
             </div>
@@ -397,10 +354,10 @@ export default function Step5({ props }: { props: WizardStepProps }) {
               {roundedTotalWeight}%
             </p>
             <p className="mt-1 text-lg font-semibold text-slate-800">
-              Ponderation totale
+              {dict.step5.totalWeightTitle}
             </p>
             <p className="mt-1 text-xs text-slate-500">
-              La somme des ponderations doit etre egale a 100%
+              {dict.step5.totalWeightDescription}
             </p>
           </div>
           <div className="mt-3 h-2 rounded-full bg-slate-200">
@@ -420,15 +377,15 @@ export default function Step5({ props }: { props: WizardStepProps }) {
             )}
           >
             {isWeightBalanced
-              ? "VALIDATED"
+              ? dict.step5.validated
               : isWeightOverflow
-                ? `DEPASSEMENT: +${Math.abs(remainingWeight)}%`
-                : `RESTANT: ${Math.abs(remainingWeight)}%`}
+                ? `${dict.step5.overflow}: +${Math.abs(remainingWeight)}%`
+                : `${dict.step5.remaining}: ${Math.abs(remainingWeight)}%`}
           </p>
 
           <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-600">
             <div className="flex items-center justify-between">
-              <span>Poids de l&apos;onglet actif ({evaluationTab})</span>
+              <span>{dict.step5.activeTabWeight} ({evaluationTab === 'technique' ? dict.step5.typeOptions.technique : dict.step5.typeOptions.financier})</span>
               <span className="font-semibold text-slate-800">
                 {roundedActiveWeight}%
               </span>
@@ -436,31 +393,30 @@ export default function Step5({ props }: { props: WizardStepProps }) {
           </div>
         </div>
         <div className="rounded-xl border border-[#D8EFD9] bg-[#EFF9EF] p-3">
-          <p className="text-xs font-semibold text-[#2F9E44]">Exigence</p>
+          <p className="text-xs font-semibold text-[#2F9E44]">{dict.step5.requirementTitle}</p>
           <p className="mt-1 text-[11px] text-slate-600">
-            Assurez-vous que chaque critere a un ordre unique et un lot coherent
-            avant la revue finale.
+            {dict.step5.requirementDescription}
           </p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-3">
           <p className="text-sm font-semibold text-slate-800">
-            Statistiques rapides
+            {dict.step5.quickStatsTitle}
           </p>
           <div className="mt-2 space-y-1.5 text-xs text-slate-600">
             <div className="flex items-center justify-between">
-              <span>Groupes techniques</span>
+              <span>{dict.step5.technicalGroups}</span>
               <span className="font-semibold text-slate-800">
                 {technicalCriteriaCount}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span>Groupes financiers</span>
+              <span>{dict.step5.financialGroups}</span>
               <span className="font-semibold text-slate-800">
                 {financialCriteriaCount}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span>Lots assignes</span>
+              <span>{dict.step5.assignedLots}</span>
               <span className="font-semibold text-slate-800">
                 {
                   evaluationCriteria.filter(

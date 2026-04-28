@@ -22,23 +22,27 @@ interface GreAGreTableProps {
   isRtl: boolean;
   data: ServiceContractantGreAGreRequestItem[];
   isLoading: boolean;
+  dict?: any;
   onViewDetail: (id: string) => void;
 }
 
-function getStatusLabel(status: GreAGreRequestStatus) {
+function getStatusLabel(status: GreAGreRequestStatus, dict: any) {
+  const statusDict = dict?.filters;
+  if (!statusDict) return status;
+
   switch (status) {
     case "brouillon":
-      return "Brouillon";
+      return statusDict.brouillon;
     case "soumise":
-      return "Soumise";
+      return statusDict.soumise;
     case "en_analyse_ia":
-      return "En analyse IA";
+      return statusDict.en_analyse_ia;
     case "acceptee":
-      return "Acceptee";
+      return statusDict.acceptee;
     case "rejetee":
-      return "Rejetee";
+      return statusDict.rejetee;
     case "en_revision":
-      return "En revision";
+      return statusDict.en_revision;
     default:
       return status;
   }
@@ -76,13 +80,15 @@ function formatDate(dateValue: string, locale: string) {
   }).format(parsedDate);
 }
 
-function formatAmount(amount: string) {
+function formatAmount(amount: string, dict: any) {
   const parsed = Number.parseFloat(amount.replace(/\s/g, ""));
+  const currency = "DZD";
+
   if (Number.isNaN(parsed)) {
-    return `${amount} DZD`;
+    return `${amount} ${currency}`;
   }
 
-  return `${new Intl.NumberFormat("fr-FR").format(parsed)} DZD`;
+  return `${new Intl.NumberFormat("fr-FR").format(parsed)} ${currency}`;
 }
 
 export default function GreAGreTable({
@@ -90,6 +96,7 @@ export default function GreAGreTable({
   isRtl,
   data,
   isLoading,
+  dict,
   onViewDetail,
 }: GreAGreTableProps) {
   if (isLoading) {
@@ -98,7 +105,9 @@ export default function GreAGreTable({
         <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
           <Loader2 className="h-5 w-5 animate-spin text-slate-500" />
         </div>
-        <p className="text-xs text-slate-600">Chargement des demandes...</p>
+        <p className="text-xs text-slate-600">
+          {dict?.table?.loading || dict?.loading || "Chargement..."}
+        </p>
       </div>
     );
   }
@@ -109,10 +118,14 @@ export default function GreAGreTable({
         <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
           <FileSearch className="h-5 w-5 text-slate-500" />
         </div>
-        <p className="text-xs text-slate-600">Aucune demande trouvee.</p>
+        <p className="text-xs text-slate-600">
+          {dict?.table?.empty || dict?.empty || "Aucune demande trouvée."}
+        </p>
       </div>
     );
   }
+
+  const tableDict = dict?.table || {};
 
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -120,22 +133,22 @@ export default function GreAGreTable({
         <TableHeader>
           <TableRow className="bg-slate-50 hover:bg-slate-50">
             <TableHead className="h-10 whitespace-nowrap px-4 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
-              Reference
+              {tableDict.reference || "Référence"}
             </TableHead>
             <TableHead className="h-10 whitespace-nowrap px-4 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
-              Objet
+              {tableDict.object || "Objet"}
             </TableHead>
             <TableHead className="h-10 whitespace-nowrap px-4 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
-              Montant estime
+              {tableDict.estimatedAmount || "Montant estimé"}
             </TableHead>
             <TableHead className="h-10 whitespace-nowrap px-4 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
-              Statut
+              {tableDict.status || "Statut"}
             </TableHead>
             <TableHead className="h-10 whitespace-nowrap px-4 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
-              Date soumission
+              {tableDict.submissionDate || "Date soumission"}
             </TableHead>
             <TableHead className="h-10 whitespace-nowrap px-4 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
-              Score conformite IA
+              {tableDict.iaComplianceScore || "IA Score"}
             </TableHead>
             <TableHead
               className={cn(
@@ -143,7 +156,7 @@ export default function GreAGreTable({
                 isRtl ? "text-left" : "text-right",
               )}
             >
-              Actions
+              {tableDict.actions || "Actions"}
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -161,7 +174,7 @@ export default function GreAGreTable({
                 {row.object}
               </TableCell>
               <TableCell className="whitespace-nowrap px-4 py-3 text-xs text-slate-600">
-                {formatAmount(row.estimatedAmount)}
+                {formatAmount(row.estimatedAmount, dict)}
               </TableCell>
               <TableCell className="px-4 py-3">
                 <Badge
@@ -171,7 +184,7 @@ export default function GreAGreTable({
                     getStatusClass(row.status),
                   )}
                 >
-                  {getStatusLabel(row.status)}
+                  {getStatusLabel(row.status, dict)}
                 </Badge>
               </TableCell>
               <TableCell className="whitespace-nowrap px-4 py-3 text-xs text-slate-600">
@@ -191,7 +204,7 @@ export default function GreAGreTable({
                   className="inline-flex h-7 items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
                 >
                   <Eye className="h-3 w-3" />
-                  Voir
+                  {tableDict.view || "Voir"}
                 </button>
               </TableCell>
             </TableRow>

@@ -4,8 +4,7 @@
     "contactSupport": "Contacter le support",
     "signIn": "Se connecter",
     "searchPlaceholder": "Rechercher dans les appels d'offres...",
-        "logout":"Déconnexion",
-
+    "logout": "Déconnexion",
     "links": {
       "home": "Accueil",
       "tenders": "Appels d'offres",
@@ -41,28 +40,27 @@
     "copyright": "© 2024 Al-Mizan. Tous droits réservés. République Algérienne Démocratique et Populaire."
   },
   "loginPanel": {
-  "sovereignProcurement": "Marchés Publics Souverains",
-  "title": "Gestion Souveraine & Intelligente des Marchés Publics",
-  "subtitle": "La plateforme officielle de marchés publics B2B pour l'Algérie, au service des Services Contractants et Opérateurs Économiques avec transparence et efficacité.",
-  "securedBy": "Sécurisé par les Normes Nationales",
-  "realTime": "Données en Temps Réel",
-  "ministere": "Ministère des Finances"
-
-},
-"loggedInNavbar": {
+    "sovereignProcurement": "Marchés Publics Souverains",
+    "title": "Gestion Souveraine & Intelligente des Marchés Publics",
+    "subtitle": "La plateforme officielle de marchés publics B2B pour l'Algérie, au service des Services Contractants et Opérateurs Économiques avec transparence et efficacité.",
+    "securedBy": "Sécurisé par les Normes Nationales",
+    "realTime": "Données en Temps Réel",
+    "ministere": "Ministère des Finances"
+  },
+  "loggedInNavbar": {
     "userName": "Ahmed Mansour",
     "userCompany": "MANSOUR CONSTRUCTION SPA"
-},
-"sidebar": {
-  "admin": {
-       "organisation":"Organisations",
-       "utilisateurs":"Utilisateurs ",
-       "operateurs":"Operateurs",
-       "commission":"Commissions",
-       "audit":"Journal d'Audit",
-       "incidents":"Incidents IA"
+  },
+  "sidebar": {
+    "admin": {
+      "organisation": "Organisations",
+      "utilisateurs": "Utilisateurs ",
+      "operateurs": "Operateurs",
+      "commission": "Commissions",
+      "audit": "Journal d'Audit",
+      "incidents": "Incidents IA"
     },
-  "commission": {
+    "commission": {
       "tableauDeBord": "Tableau de Bord",
       "nouvelleEvaluation": "Nouvelle Évaluation",
       "mesCommissions": "Mes Commissions",
@@ -80,29 +78,28 @@
     "appelsDOffres": "Appels d'offres",
     "rapports": "Rapports",
     "tableauDeBord": "Tableau de bord"
-    
-},
-"dashboard": {
+  },
+  "dashboard": {
     "admin": {
       "title": "Tableau de Bord",
       "subtitle": "Gérez vos procédures de commande publique en toute transparence.",
       "createAO": "Créer un Nouvel AO",
       "stats": {
-          "utilisateursActifs": "Utilisateurs actifs",
-          "utilisateursActifsBadge": "+5 ce mois",
-          "aoEnCours": "AOs en cours",
-          "aoEnCoursBadge": "En cours",
-          "recoursOuverts": "Recours ouverts",
-          "recoursOuvertsBadge": "Attention",
-          "incidentsIA": "Incidents IA détectés",
-          "incidentsIABadge": "Urgent"
+        "utilisateursActifs": "Utilisateurs actifs",
+        "utilisateursActifsBadge": "+5 ce mois",
+        "aoEnCours": "AOs en cours",
+        "aoEnCoursBadge": "En cours",
+        "recoursOuverts": "Recours ouverts",
+        "recoursOuvertsBadge": "Attention",
+        "incidentsIA": "Incidents IA détectés",
+        "incidentsIABadge": "Urgent"
       },
       "actionsRapides": {
         "title": "Actions Rapides",
         "historique": "Historique des connexions",
         "mesAOs": "Mes AO",
         "utilisateurs": "Liste des utilisateurs",
-        "commission":"Commission"
+        "commission": "Commission"
       },
       "activiteRecente": {
         "title": "Activité Récente",
@@ -296,15 +293,15 @@
         "unreadOnly": "Non lus seulement",
         "noNotifications": "Aucune notification",
         "categories": {
-            "all": "Toutes",
-            "publication_ao": "Publication AO",
-            "depot_confirme": "Dépôt confirmé",
-            "ouverture_plis": "Ouverture plis",
-            "evaluation_resultat": "Evaluation résultat",
-            "attribution_provisoire": "Attribution provisoire",
-            "attribution_definitive": "Attribution définitive",
-            "recours_update": "Recours update",
-            "systeme": "Système"
+          "all": "Toutes",
+          "publication_ao": "Publication AO",
+          "depot_confirme": "Dépôt confirmé",
+          "ouverture_plis": "Ouverture plis",
+          "evaluation_resultat": "Evaluation résultat",
+          "attribution_provisoire": "Attribution provisoire",
+          "attribution_definitive": "Attribution définitive",
+          "recours_update": "Recours update",
+          "systeme": "Système"
         }
       },
       "auditLogsPage": {
@@ -415,6 +412,1448 @@
           "evaluateur": "Évaluateur",
           "rapporteur": "Rapporteur",
           "membre": "Membre"
+        },
+        "evaluationPage": {
+          "title": "Classement Final : {{ao}}",
+          "subtitle": "Étape 3/3 : Délibération et attribution",
+          "generateReport": "Générer Rapport d'Évaluation",
+          "stats": {
+            "processed": "Soumissions Traitées",
+            "rejected": "Rejetées (Technique/Admin)",
+            "eligible": "Éligibles (Financière)"
+          },
+          "table": {
+            "title": "Comparaison: Commission vs IA",
+            "subtitle": "Les écarts de plus de 10 points sont mis en surbrillance.",
+            "cols": {
+              "rank": "RANG",
+              "operator": "OPÉRATEUR",
+              "commissionScore": "SCORE GLOBAL (COMMISSION)",
+              "iaScore": "SCORE GLOBAL (IA)",
+              "deviation": "ÉCART",
+              "iaRecommendation": "RECOMMANDATION IA",
+              "finalDecision": "DÉCISION FINALE"
+            },
+            "divergence": "Divergence",
+            "iaRecommendations": {
+              "retain": "Retenir",
+              "analyze": "Analyser Plus",
+              "eliminate": "Éliminer"
+            },
+            "decisions": {
+              "retain": "Retenir",
+              "pending": "En attente",
+              "eliminated": "Éliminé (Note tech < 50)"
+            }
+          },
+          "quorumMessage": "Toutes les notes ont été saisies par le quorum (5/5 membres).",
+          "validateButton": "Valider la Délibération (Irréversible)"
+        }
+      }
+    },
+    "contractant": {
+      "dashboard": {
+        "header": {
+          "title": "Tableau de Bord",
+          "subtitle": "Gérez vos procédures de commande publique en toute transparence.",
+          "createButton": "Créer une Nouvelle AO",
+          "notifications": "Notifications",
+          "logout": "Se déconnecter"
+        },
+        "summary": {
+          "activeAos": "AOs Actifs",
+          "pendingAttributions": "Attributions en attente",
+          "openRecours": "Recours ouverts",
+          "ongoingMarches": "Marchés en cours"
+        },
+        "quickActions": {
+          "title": "Actions Rapides",
+          "createAo": "Nouvel AO",
+          "myAos": "Mes AO",
+          "commissions": "Commissions"
+        },
+        "recentActivity": {
+          "title": "Activité Récente",
+          "viewAll": "Voir tout",
+          "empty": "Aucune activité récente."
+        },
+        "alerts": {
+          "title": "Alertes IA Al-Mizan",
+          "empty": "Aucune alerte en cours.",
+          "deadlinesTitle": "Échéances prochaines (48h)"
+        },
+        "support": {
+          "title": "Support & Guide",
+          "guide": "Guide des procédures 2024",
+          "contact": "Contacter le support technique"
+        },
+        "errorLoading": "Impossible de charger les données du tableau de bord."
+      },
+      "tendersList": {
+        "title": "Mes Appels d'Offres",
+        "createBtn": "Créer une Nouvelle AO",
+        "searchPlaceholder": "Rechercher par référence ou objet...",
+        "filters": {
+          "status": "Statut",
+          "all": "Tous",
+          "draft": "Brouillon",
+          "published": "Publié",
+          "ongoing": "En cours",
+          "evaluation": "Évaluation",
+          "awarded": "Attribué",
+          "cancelled": "Annulé",
+          "dateStart": "Date début",
+          "dateEnd": "Date fin",
+          "reset": "Réinitialiser"
+        },
+        "table": {
+          "reference": "Référence",
+          "object": "Objet",
+          "type": "Type",
+          "deadline": "Date limite dépôt",
+          "status": "Statut",
+          "actions": "Actions"
+        },
+        "actions": {
+          "view": "Voir les détails",
+          "edit": "Modifier",
+          "changeStatus": "Changer le statut",
+          "delete": "Supprimer"
+        },
+        "empty": "Aucun appel d'offres trouvé.",
+        "types": {
+          "open": "Ouvert",
+          "restricted": "Restreint",
+          "direct": "Gré à gré"
+        },
+        "pagination": {
+          "showing": "Affichage de",
+          "to": "à",
+          "of": "sur",
+          "entries": "entrées",
+          "previous": "Précédent",
+          "next": "Suivant"
+        },
+        "confirmDelete": "Voulez-vous vraiment supprimer cet appel d'offres ?",
+        "aoCreation": {
+          "createTitle": "Création d'Appel d'Offres",
+          "currency": "DZD",
+          "stepPrefix": "Étape",
+          "stepOn": "sur",
+          "stepTitles": [
+            "Informations Générales",
+            "Lots",
+            "CDC",
+            "Éligibilité",
+            "Évaluation",
+            "Révision et Publication"
+          ],
+          "buttons": {
+            "next": "Étape suivante",
+            "back": "Retour",
+            "saveDraft": "Enregistrer en brouillon",
+            "saveAsDraft": "Sauvegarder en brouillon",
+            "publishAo": "Publier AO",
+            "publishCdc": "Publier CDC",
+            "uploadFile": "Upload fichier",
+            "replaceFile": "Remplacer le fichier",
+            "downloadCdc": "Télécharger CDC",
+            "cancel": "Annuler"
+          },
+          "review": {
+            "title": "Étape 6: Révision et Publication",
+            "subtitle": "Vérification finale des informations avant publication.",
+            "validationChecks": "Contrôles de validation",
+            "generalInfo": "Informations générales",
+            "statusPublished": "Publié",
+            "statusUnpublished": "Non publié"
+          },
+          "messages": {
+            "draftSaved": "Brouillon enregistré avec succès.",
+            "publishBlockedPrefix": "Impossible de publier:",
+            "publishSuccessPrefix": "AO publié avec succès. Avis généré:"
+          },
+          "header": {
+            "breadcrumbDashboard": "Tableau de bord",
+            "breadcrumbAo": "Appels d'offres",
+            "editModeLabel": "Édition du brouillon AO en cours.",
+            "progression": "Progression"
+          },
+          "validation": {
+            "required": "Champ obligatoire",
+            "offerDeadlineAfterDce": "Doit être après la date DCE",
+            "openingDateAfterOffer": "Doit être après la date limite dépôt",
+            "weightingInvalid": "Valeur invalide (0 < % <= 100)",
+            "eliminationScoreRange": "Doit être entre 0 et 100",
+            "fileTooLarge": "Le fichier ne doit pas dépasser 25 MB",
+            "pdfOnly": "Seuls les fichiers PDF sont autorisés",
+            "cdcFileRequired": "Veuillez télécharger le fichier CDC",
+            "addEvaluationCriterion": "Ajoutez au moins un critère d'évaluation.",
+            "totalWeightMustBe100": "La somme totale des pondérations doit être égale à 100%."
+          },
+          "errors": {
+            "draftSaveFailed": "Échec de sauvegarde du brouillon.",
+            "publishFailed": "Échec de publication de l'AO.",
+            "loadDraftFailed": "Impossible de charger ce brouillon."
+          },
+          "step1": {
+            "referenceLabel": "Référence (Auto-générée)",
+            "objectLabel": "Objet de l'AO",
+            "objectPlaceholder": "Ex. Acquisition de matériel informatique",
+            "descriptionLabel": "Description détaillée",
+            "descriptionPlaceholder": "Décrivez les besoins et les spécifications techniques principales...",
+            "marketTypeLabel": "Type de marché",
+            "marketTypePlaceholder": "Sélectionner un type",
+            "marketTypes": {
+              "fournitures": "Fournitures",
+              "services": "Services",
+              "travaux": "Travaux"
+            },
+            "procedureTypeLabel": "Type d'appel",
+            "procedureTypePlaceholder": "Sélectionner une procédure",
+            "procedureTypes": {
+              "ouvert": "Ouvert",
+              "restreint": "Restreint",
+              "greAgre": "Gré à gré"
+            },
+            "estimatedAmountLabel": "Montant estimé (DZD)",
+            "wilayaLabel": "Wilaya d'exécution",
+            "wilayaPlaceholder": "Saisir la wilaya",
+            "executionDelayLabel": "Délai d'exécution (jours)",
+            "executionDelayPlaceholder": "Ex. 90",
+            "submissionBondTitle": "Caution de soumission",
+            "submissionBondAmountLabel": "Montant de la caution (DZD)",
+            "submissionBondPlaceholder": "Ex. 500,000.00",
+            "deadlinesTitle": "Échéances clés",
+            "dceDeadlineLabel": "Date limite retrait DCE",
+            "offerDeadlineLabel": "Date limite dépôt offres",
+            "openingDateLabel": "Date ouverture des plis"
+          },
+          "step2": {
+            "title": "Liste des Lots",
+            "subtitle": "Gérez les divisions de votre appel d'offres",
+            "addLotBtn": "Ajouter un Lot",
+            "columns": {
+              "number": "N°",
+              "designation": "Désignation",
+              "description": "Description",
+              "estimatedAmount": "Montant Estimé",
+              "delay": "Délai (jours)",
+              "actions": "Actions"
+            },
+            "emptyMessage": "Aucun lot ajouté pour le moment.",
+            "editLotTitle": "Modifier le Lot",
+            "newLotTitle": "Détails du Nouveau Lot",
+            "lotNumberLabel": "Numéro du Lot",
+            "designationLabel": "Désignation",
+            "designationPlaceholder": "Titre du lot",
+            "delayLabel": "Délai (jours)",
+            "delayPlaceholder": "ex: 30",
+            "descriptionLabel": "Description détaillée",
+            "descriptionPlaceholder": "Décrivez les travaux spécifiques...",
+            "estimatedAmountLabel": "Montant Estimé (DA)",
+            "saveLotBtn": "Enregistrer le Lot",
+            "daysUnit": "jours"
+          },
+          "step3": {
+            "aiTitle": "Générer avec l'Assistant IA Al-Mizan",
+            "aiDescription": "L'intelligence artificielle peut vous aider à structurer vos spécifications techniques selon les standards en vigueur.",
+            "aiButton": "Assistant Rédaction",
+            "cdcTitleLabel": "Titre du Cahier des Charges",
+            "cdcFileLabel": "Fichier CDC (Format PDF recommandé)",
+            "uploadDropLabel": "Cliquer pour télécharger ou glisser-déposer",
+            "uploadHint": "PDF jusqu'à 25MB",
+            "versionLabel": "Numéro de Version",
+            "withdrawalPriceLabel": "Prix de Retrait (DZD)",
+            "cdcStatusLabel": "Statut CDC",
+            "fileAlreadySaved": "Fichier déjà enregistré"
+          },
+          "step4": {
+            "title": "Critères d'Éligibilité",
+            "subtitle": "Définissez les conditions obligatoires de participation",
+            "addCriterionBtn": "Ajouter critère",
+            "columns": {
+              "order": "Ordre",
+              "designation": "Désignation",
+              "description": "Description",
+              "eliminatory": "Éliminatoire",
+              "actions": "Actions"
+            },
+            "emptyMessage": "Aucun critère défini pour le moment.",
+            "editCriterionTitle": "Modifier le critère",
+            "newCriterionTitle": "Nouveau critère d'éligibilité",
+            "designationLabel": "Désignation",
+            "designationPlaceholder": "Ex. Capacité financière",
+            "eliminatoryLabel": "Éliminatoire",
+            "descriptionLabel": "Description",
+            "descriptionPlaceholder": "Décrire le critère et les exigences attendues...",
+            "saveBtn": "Enregistrer",
+            "minCriterionWarning": "Ajoutez au moins un critère pour passer à l'étape suivante."
+          },
+          "step5": {
+            "tabTechnical": "Critères techniques",
+            "tabFinancial": "Critères financiers",
+            "criteriaListTitle": "Liste des critères",
+            "addCriterionBtn": "Ajouter critère",
+            "columns": {
+              "order": "Ordre",
+              "designation": "Désignation",
+              "type": "Type",
+              "lot": "Lot",
+              "weighting": "Pondération (%)",
+              "eliminationScore": "Note Élimin.",
+              "actions": "Actions"
+            },
+            "emptyMessage": "Aucun critère {type} pour le moment.",
+            "editCriterionTitle": "Modifier le critère",
+            "newCriterionTitle": "Nouveau critère d'évaluation",
+            "designationLabel": "Désignation",
+            "designationPlaceholder": "Ex. Methodology & Work Plan",
+            "typeLabel": "Type",
+            "typeOptions": {
+              "technique": "Technique",
+              "financier": "Financier"
+            },
+            "weightingLabel": "Pondération (%)",
+            "weightingPlaceholder": "0 - 100",
+            "eliminationScoreLabel": "Note éliminatoire (/100)",
+            "eliminationScorePlaceholder": "Optionnel",
+            "lotLabel": "Lot (si applicable)",
+            "lotPlaceholder": "Ex. Lot 01, All Lots",
+            "saveBtn": "Enregistrer",
+            "totalWeightTitle": "Pondération totale",
+            "totalWeightDescription": "La somme des pondérations doit être égale à 100%",
+            "validated": "VALIDÉ",
+            "overflow": "DÉPASSEMENT",
+            "remaining": "RESTANT",
+            "activeTabWeight": "Poids de l'onglet actif",
+            "requirementTitle": "Exigence",
+            "requirementDescription": "Assurez-vous que chaque critère a un ordre unique et un lot cohérent avant la revue finale.",
+            "quickStatsTitle": "Statistiques rapides",
+            "technicalGroups": "Groupes techniques",
+            "financialGroups": "Groupes financiers",
+            "assignedLots": "Lots assignés"
+          },
+          "step6": {
+            "editBtn": "Modifier",
+            "reviewLabels": {
+              "aoName": "Nom de l'AO",
+              "category": "Catégorie",
+              "duration": "Durée",
+              "estimatedValue": "Valeur estimée"
+            },
+            "lotsTitle": "Lots et spécifications",
+            "lotsColumns": {
+              "lotId": "Lot ID",
+              "description": "Description",
+              "quantityDelay": "Quantité/Délai"
+            },
+            "lotsEmpty": "Aucun lot ajouté.",
+            "scoringTitle": "Critères de notation",
+            "scoringEmpty": "Aucun critère d'évaluation.",
+            "totalWeighting": "Pondération totale",
+            "eligibilityTitle": "Règles d'éligibilité",
+            "eligibilityCriteria": "critères",
+            "eliminatoryRules": "règles éliminatoires actives.",
+            "checks": {
+              "generalInfoTitle": "Informations générales",
+              "generalInfoDesc": "Tous les champs obligatoires sont renseignés.",
+              "lotsTitle": "Lots configurés",
+              "lotsDesc": "Au moins un lot est requis.",
+              "cdcTitle": "CDC téléchargé",
+              "cdcDesc": "Le document des spécifications est présent.",
+              "weightTitle": "Calcul de pondération",
+              "weightDesc": "La somme des critères doit être égale à 100%.",
+              "datesTitle": "Cohérence des dates",
+              "datesDesc": "Les dates suivent un ordre chronologique logique.",
+              "eligibilityTitle": "Critères d'éligibilité",
+              "eligibilityDesc": "Au moins un critère d'éligibilité est requis."
+            },
+            "cdcDocTitle": "Document CDC",
+            "cdcNoFile": "Aucun fichier CDC.",
+            "versionLabel": "Version:",
+            "avisGenerated": "Avis généré:"
+          },
+          "footer": "Besoin d'aide ? • Centre de l'assistant",
+          "blockingReasons": {
+            "generalInfoIncomplete": "Informations générales incomplètes",
+            "noLots": "Aucun lot ajouté",
+            "cdcNotUploaded": "CDC non téléchargé",
+            "weightInvalid": "Pondération totale différente de 100% (étape 5)",
+            "noEligibility": "Aucun critère d'éligibilité",
+            "datesIncoherent": "Dates non cohérentes"
+          }
+        }
+      },
+      "marches": {
+        "title": "Registres des marchés",
+        "description": "Les informations de marches sont accessibles depuis les dossiers d'appel d'offres (attribution et contractualisation).",
+        "viewAos": "Voir les dossiers d'AO"
+      },
+      "greAGre": {
+        "title": "Demandes Gré à Gré",
+        "subtitle": "Suivi des demandes, analyse IA et décisions.",
+        "createBtn": "Nouvelle demande",
+        "errorLoading": "Impossible de charger les demandes Gré à Gré.",
+        "filters": {
+          "title": "Filtrer par statut",
+          "all": "Tous",
+          "brouillon": "Brouillon",
+          "soumise": "Soumise",
+          "en_analyse_ia": "En analyse IA",
+          "acceptee": "Acceptée",
+          "rejetee": "Rejetée",
+          "en_revision": "En révision"
+        },
+        "table": {
+          "reference": "Référence",
+          "object": "Objet",
+          "estimatedAmount": "Montant estimé",
+          "status": "Statut",
+          "submissionDate": "Date soumission",
+          "iaComplianceScore": "Score conformité IA",
+          "actions": "Actions",
+          "view": "Voir",
+          "loading": "Chargement des demandes...",
+          "empty": "Aucune demande trouvée."
+        },
+        "form": {
+          "titleCreate": "Informations de la demande",
+          "subtitleCreate": "Complétez les champs puis ajoutez les justifications.",
+          "titleResubmit": "Modifier et resoumettre la demande",
+          "subtitleResubmit": "Mettez à jour les informations puis resoumettez la demande après correction.",
+          "reference": "Référence (auto)",
+          "estimatedAmount": "Montant estimé (DZD)",
+          "object": "Objet",
+          "description": "Description",
+          "justificationsTitle": "Justifications",
+          "justificationsSubtitle": "Ajoutez des justifications claires et ordonnées pour appuyer la demande.",
+          "addedLabel": "ajoutée(s)",
+          "addJustification": "Ajouter une justification",
+          "type": "Type",
+          "order": "Ordre",
+          "fileOptional": "Fichier joint (optionnel)",
+          "addBtn": "Ajouter",
+          "tableHeaders": {
+            "order": "Ordre",
+            "type": "Type",
+            "description": "Description",
+            "file": "Fichier",
+            "actions": "Actions"
+          },
+          "emptyJustifications": "Aucune justification ajoutée.",
+          "moveUp": "Monter",
+          "moveDown": "Descendre",
+          "delete": "Supprimer",
+          "backBtn": "Retour",
+          "submitBtn": "Soumettre la demande",
+          "submittingBtn": "Soumission...",
+          "resubmitBtn": "Modifier et resoumettre",
+          "resubmittingBtn": "Resoumission...",
+          "errors": {
+            "object": "L'objet est obligatoire.",
+            "description": "La description est obligatoire.",
+            "amount": "Le montant estimé est obligatoire.",
+            "justificationDesc": "La description de la justification est obligatoire.",
+            "justificationOrder": "L'ordre doit être un nombre supérieur à 0.",
+            "justificationOrderDuplicate": "Cet ordre est déjà utilisé. Choisissez un ordre unique.",
+            "emptyJustifications": "Ajoutez au moins une justification.",
+            "submitError": "Impossible de soumettre la demande pour le moment.",
+            "resubmitError": "Impossible de resoumettre la demande pour le moment."
+          },
+          "justificationTypes": {
+            "urgence": "Urgence",
+            "technique": "Technique",
+            "economique": "Économique",
+            "juridique": "Juridique",
+            "autre": "Autre"
+          }
+        },
+        "detail": {
+          "title": "Détail demande Gré à Gré",
+          "editAndResubmit": "Modifier et resoumettre",
+          "backToList": "Retour à la liste",
+          "info": {
+            "reference": "Référence",
+            "object": "Objet",
+            "estimatedAmount": "Montant estimé",
+            "submissionDate": "Date soumission",
+            "iaComplianceScore": "Score conformité IA",
+            "notAnalyzed": "Non analysé",
+            "description": "Description",
+            "status": "Statut",
+            "amountCurrency": "DZD"
+          },
+          "justifications": {
+            "title": "Justifications",
+            "subtitle": "Justifications fournies avec les fichiers annexes.",
+            "noJustifications": "Aucune justification disponible.",
+            "table": {
+              "order": "Ordre",
+              "type": "Type",
+              "description": "Description",
+              "file": "Fichier"
+            }
+          },
+          "iaAnalysis": {
+            "title": "Analyse IA",
+            "subtitle": "Évaluation automatique de conformité et recommandation.",
+            "scoreCompliance": "Score conformité",
+            "confidenceLevel": "Niveau de confiance",
+            "recommendation": "Recommandation IA",
+            "justification": "Justification IA",
+            "analysisDate": "Date analyse",
+            "noAnalysis": "Aucune analyse IA disponible pour cette demande."
+          },
+          "controller": {
+            "title": "Décision contrôleur",
+            "subtitle": "Décision finale et alignement avec la recommandation IA.",
+            "finalDecision": "Décision finale",
+            "reason": "Motif",
+            "matchesIa": "Correspond à la recommandation IA",
+            "decisionDate": "Date décision",
+            "noDecision": "Aucune décision contrôleur disponible pour cette demande.",
+            "yes": "Oui",
+            "no": "Non"
+          },
+          "recommendations": {
+            "accepter": "Accepter",
+            "rejeter": "Rejeter",
+            "demander_complements": "Demander des compléments"
+          }
+        }
+      },
+      "soumissions": {
+        "landing": {
+          "description": "Consultez les soumissions via la liste des appels d'offres. Ouvrez un AO pour voir le détail des soumissions et leur statut.",
+          "goToAos": "Aller aux appels d'offres"
+        },
+        "mesSoumissions": {
+          "title": "Mes Soumissions",
+          "subtitle": "Suivi de vos offres déposées et en cours",
+          "newSubmission": "Nouvelle soumission",
+          "stats": {
+            "total": "Total",
+            "enCours": "En cours",
+            "retenues": "Retenues",
+            "rejetees": "Rejetées"
+          },
+          "searchPlaceholder": "Référence, objet, organisme…",
+          "filters": {
+            "all": "Toutes",
+            "brouillon": "Brouillon",
+            "deposee": "Déposée",
+            "recue": "Reçue",
+            "evaluee": "Évaluée",
+            "retenue": "Retenue",
+            "rejetee": "Rejetée"
+          },
+          "table": {
+            "referenceId": "Référence / ID",
+            "objectOrg": "Objet & Organisme",
+            "dateDepot": "Date dépôt",
+            "status": "Statut",
+            "actions": "Actions"
+          },
+          "empty": {
+            "title": "Aucune soumission trouvée",
+            "subtitle": "Modifiez vos filtres ou déposez une nouvelle soumission"
+          },
+          "errorLoading": "Impossible de charger les soumissions. Vérifiez la disponibilité de la passerelle API et du service soumission.",
+          "actions": {
+            "view": "Voir le détail",
+            "continue": "Continuer la soumission",
+            "recours": "Déposer un recours"
+          }
+        },
+        "detail": {
+          "nav": {
+            "dashboard": "Tableau de bord",
+            "soumissions": "Mes soumissions"
+          },
+          "back": "Retour",
+          "depositedOn": "Déposée le",
+          "tabs": {
+            "apercu": "Aperçu",
+            "documents": "Documents",
+            "financier": "Offre financière",
+            "timeline": "Suivi"
+          },
+          "apercu": {
+            "lots": "Lots soumissionnés",
+            "noLots": "Aucun lot associé.",
+            "proof": "Preuve d'intégrité",
+            "serverTime": "Horodatage serveur :",
+            "sha256": "SHA-256 (offre financière) :",
+            "caution": "Caution bancaire",
+            "reference": "Référence :",
+            "bank": "Banque :",
+            "amount": "Montant :",
+            "expiration": "Expiration :"
+          },
+          "documents": {
+            "desc": "Documents disponibles pour cette soumission.",
+            "labels": {
+              "technique": "Offre technique",
+              "caution": "Caution bancaire",
+              "financiere": "Offre financière chiffrée"
+            },
+            "download": "Télécharger",
+            "unavailable": "Document indisponible"
+          },
+          "financier": {
+            "encryptedWarning": "L'offre financière est chiffrée de bout en bout. Les montants ne sont visibles qu'après déchiffrement officiel.",
+            "cols": {
+              "lot": "Lot",
+              "designation": "Désignation",
+              "montant": "Montant HT"
+            },
+            "noLots": "Aucun lot disponible.",
+            "total": "Total HT",
+            "meta": {
+              "verified": "Signature vérifiée :",
+              "decrypted": "Offre déchiffrée :",
+              "hash": "Hash fichier :",
+              "yes": "Oui",
+              "no": "Non",
+              "noVerified": "Non ou non vérifiée"
+            }
+          },
+          "timeline": {
+            "events": {
+              "creation": {
+                "label": "Brouillon créé",
+                "desc": "La soumission a été initialisée et enregistrée en brouillon."
+              },
+              "depot": {
+                "label": "Dépôt de la soumission",
+                "desc": "Le dépôt final a été déclenché par l'opérateur."
+              },
+              "reception": {
+                "label": "Réception et horodatage",
+                "desc": "La plateforme a confirmé la réception de l'offre."
+              },
+              "eval": {
+                "label": "Évaluation",
+                "desc": "La commission poursuit l'évaluation technique et financière."
+              },
+              "retenue": {
+                "label": "Attribution provisoire",
+                "desc": "Votre soumission est retenue."
+              },
+              "rejetee": {
+                "label": "Soumission rejetée",
+                "desc": "Votre soumission n'a pas été retenue."
+              },
+              "pendingResult": {
+                "label": "Résultat d'attribution",
+                "desc": "Le résultat sera communiqué après clôture de l'évaluation."
+              }
+            },
+            "dates": {
+              "enAttente": "En attente",
+              "resultPublished": "Résultat publié",
+              "toPlan": "À planifier"
+            }
+          },
+          "conformite": {
+            "title": "Infos de conformité",
+            "legalDelay": "Dans délai légal :",
+            "deadlineAo": "Date limite AO :",
+            "yes": "Oui",
+            "no": "Non",
+            "unspecified": "Non précisé"
+          },
+          "notFound": "Soumission introuvable"
+        },
+        "wizard": {
+          "success": {
+            "title": "Soumission déposée avec succès !",
+            "desc1": "Votre offre",
+            "desc2": "a été reçue, horodatée et chiffrée. Un accusé de réception vous sera envoyé par notification.",
+            "serverTime": "Horodatage serveur :",
+            "viewAction": "Voir mes soumissions"
+          },
+          "errors": {
+            "noAo": "Sélectionnez un appel d'offres avant de déposer.",
+            "noLot": "Sélectionnez un lot valide pour continuer.",
+            "noTechFile": "Le fichier de l'offre technique est obligatoire.",
+            "noBpu": "Renseignez l'offre financière pour le lot sélectionné.",
+            "incompleteCaution": "Les informations de caution bancaire sont incomplètes.",
+            "submitFailed": "Le dépôt a échoué. Veuillez réessayer."
+          },
+          "header": {
+            "title": "Nouvelle Soumission",
+            "step": "étape",
+            "cancel": "Annuler"
+          },
+          "steps": {
+            "step1": {
+              "title": "Sélection de l'appel d'offres",
+              "subtitle": "Choisissez l'AO auquel vous souhaitez soumissionner, puis sélectionnez les lots concernés.",
+              "searchPlaceholder": "Rechercher un appel d'offres...",
+              "loadingError": "Impossible de charger les appels d'offres.",
+              "notFound": "Aucun appel d'offres trouvé",
+              "selected": "Sélectionné",
+              "limit": "Limite",
+              "selectLot": "Sélectionner le lot concerné",
+              "lot": "Lot",
+              "estimatedAmount": "Montant estimé :"
+            },
+            "step3": {
+              "title": "Offre Technique",
+              "subtitle": "Téléversez le dossier technique requis par l'appel d'offres.",
+              "fileLabel": "Dossier technique",
+              "fileDesc": "Un seul fichier PDF contenant l'ensemble de votre offre technique.",
+              "selectFile": "Sélectionner un fichier",
+              "dragFile": "ou glisser-déposer ici",
+              "maxSize": "PDF jusqu'à 50 MB",
+              "replace": "Remplacer le fichier"
+            },
+            "step4": {
+              "title": "Offre Financière (BPU)",
+              "subtitle": "Renseignez les quantités et les prix unitaires pour chaque prestation du lot sélectionné.",
+              "line": "Prestation",
+              "unit": "Unité",
+              "quantity": "Quantité",
+              "unitPrice": "Prix U. HT",
+              "totalHt": "Total HT :",
+              "add": "Ajouter une ligne",
+              "remove": "Supprimer"
+            },
+            "step5": {
+              "title": "Caution Bancaire de Soumission",
+              "subtitle": "Saisissez les références de la garantie bancaire et téléversez le scan justificatif.",
+              "reference": "Référence",
+              "bank": "Banque émettrice",
+              "amount": "Montant",
+              "emission": "Date d'émission",
+              "expiry": "Date d'expiration",
+              "scan": "Scan de la caution",
+              "scanDesc": "Format PDF ou Image (max 10MB)",
+              "scanSelect": "Choisir le fichier",
+              "scanReplace": "Remplacer le scan"
+            },
+            "review": {
+              "title": "Vérification et Dépôt",
+              "subtitle": "Veuillez vérifier l'intégralité de vos informations avant de confirmer le dépôt définitif de votre offre.",
+              "alertTitle": "Chiffrement et Scellement",
+              "alertDesc": "Dès validation, votre offre financière sera chiffrée de bout en bout.",
+              "submit": "Confirmer et déposer mon offre"
+            }
+          }
+        }
+      },
+      "recoursClaims": {
+        "list": {
+          "title": "Recours & Réclamations",
+          "description": "Les recours sont rattachés à chaque appel d'offres et soumission. Ouvrez un AO pour consulter les recours disponibles et leur avancement.",
+          "browseAos": "Parcourir les appels d'offres",
+          "statusLabels": {
+            "depose": "Déposé",
+            "en_examen": "En examen",
+            "accepte": "Accepté",
+            "rejete": "Rejeté"
+          },
+          "table": {
+            "reference": "Référence",
+            "operator": "Opérateur",
+            "dateDepot": "Date dépôt",
+            "dateLimite": "Date limite réponse",
+            "status": "Statut",
+            "actions": "Actions",
+            "view": "Voir",
+            "overdue": "Retard"
+          },
+          "empty": "Aucun recours déposé pour cet AO.",
+          "loading": "Chargement des recours...",
+          "error": "Impossible de charger les recours."
+        },
+        "detail": {
+          "breadcrumb": "Détail recours",
+          "title": "Détail recours",
+          "backToList": "Retour à la liste des recours",
+          "info": {
+            "reference": "Référence",
+            "operator": "Opérateur",
+            "dateDepot": "Date dépôt",
+            "dateLimite": "Date limite réponse",
+            "motif": "Motif",
+            "status": "Statut"
+          },
+          "attachments": {
+            "title": "Pièces jointes",
+            "empty": "Aucune pièce jointe."
+          },
+          "decision": {
+            "title": "Décision",
+            "label": "Décision",
+            "date": "Date décision",
+            "motif": "Motif décision",
+            "notAvailable": "Décision non encore disponible.",
+            "accepted": "Accepté",
+            "rejected": "Rejeté"
+          },
+          "footerNotice": "SC peut consulter ce recours. Son traitement est effectué par la Commission/Contrôleur."
+        }
+      },
+      "appelsOffres": {
+        "detail": {
+          "title": "Détails Appel d'Offres",
+          "back": "Retour",
+          "gestionAo": "Gestion AO",
+          "buttons": {
+            "manageCommission": "Gérer Commission",
+            "changeStatus": "Changer de statut",
+            "pronounceAttribution": "Prononcer Attribution",
+            "cancelTender": "Annuler Marché"
+          },
+          "help": {
+            "title": "Aide et support",
+            "description": "Consultez le manuel de l'acteur public pour la phase d'ouverture des plis et d'évaluation technique.",
+            "documentation": "Documentation",
+            "integrity": "Intégrité commission",
+            "members": "Membres commission"
+          },
+          "statusLabels": {
+            "publie": "Publié",
+            "en_cours": "En cours",
+            "evaluation": "Évaluation",
+            "attribue": "Attribué",
+            "annule": "Annulé",
+            "cloture": "Clôturé"
+          },
+          "typeLabels": {
+            "ouvert": "Appel d'offres ouvert",
+            "restreint": "Appel d'offres restreint",
+            "gre_a_gre": "Gré à gré"
+          },
+          "tabs": {
+            "general": "Informations générales",
+            "lots": "Lots",
+            "documents": "Documents CDC",
+            "soumission": "Ma Soumission"
+          },
+          "general": {
+            "reference": "Référence",
+            "object": "Objet",
+            "organization": "Organisme",
+            "wilaya": "Wilaya",
+            "sector": "Secteur",
+            "type": "Type de procédure",
+            "status": "Statut",
+            "estimatedAmount": "Montant estimé",
+            "deadline": "Date limite de dépôt",
+            "eligibility": "Conditions d'éligibilité",
+            "eligibilityMock": [
+              "Registre de commerce en cours de validité",
+              "Attestation fiscale valide (CNAS/CASNOS)",
+              "Bilan des 3 dernières années",
+              "Casier judiciaire du gérant",
+              "Attestation de qualification technique"
+            ]
+          },
+          "lots": {
+            "lot": "LOT",
+            "estimatedAmount": "Montant estimé :",
+            "submit": "Soumissionner"
+          },
+          "documents": {
+            "desc": "Téléchargez les documents du dossier de consultation des entreprises (DCE).",
+            "download": "Télécharger"
+          },
+          "soumission": {
+            "statusLabels": {
+              "brouillon": "Brouillon",
+              "deposee": "Déposée",
+              "recue": "Reçue et horodatée",
+              "evaluee": "En cours d'évaluation",
+              "retenue": "Retenue — Attribution provisoire",
+              "rejetee": "Rejetée"
+            },
+            "banner": {
+              "title": "Soumission existante",
+              "currentStatus": "Statut actuel :"
+            },
+            "summary": {
+              "reference": "Référence AO",
+              "lots": "Lots soumissionnés",
+              "lotsCount": "lot(s)",
+              "date": "Date de dépôt",
+              "hash": "Empreinte SHA-256"
+            },
+            "actions": {
+              "view": "Voir mon dossier",
+              "download": "Télécharger l'accusé de réception"
+            },
+            "notSubmitted": {
+              "expiredTitle": "Date limite dépassée",
+              "expiredDesc": "La période de soumission pour cet appel d'offres est clôturée.",
+              "noSubTitle": "Aucune soumission déposée",
+              "noSubDesc": "Vous n'avez pas encore soumis d'offre pour cet appel d'offres.",
+              "deadline": "Date limite :"
+            },
+            "checklist": {
+              "title": "Documents à préparer",
+              "items": [
+                "Offre technique (cahier des charges rempli)",
+                "Bordereau des prix unitaires",
+                "Pièces administratives (NIF, NIS, RC, CNAS…)",
+                "Caution de soumission bancaire",
+                "Bilan financier des 3 dernières années"
+              ]
+            },
+            "start": "Commencer ma soumission"
+          },
+          "page": {
+            "notFound": "Appel d'offres introuvable",
+            "breadcrumb": {
+              "dashboard": "Tableau de bord",
+              "aos": "Appels d'Offres"
+            },
+            "back": "Retour",
+            "deadline": "Limite :",
+            "submitCta": "Soumissionner",
+            "viewSubmission": "Voir ma soumission"
+          }
+        }
+      }
+    },
+    "operateur": {
+      "profil": {
+        "title": "Mon Profil",
+        "desc": "Gérez vos informations personnelles et professionnelles",
+        "securityTitle": "Sécurité",
+        "securityDesc": "Gérez la sécurité de votre compte",
+        "tabs": {
+          "profil": "Mon profil",
+          "securite": "Sécurité"
+        },
+        "avatar": {
+          "role": "Opérateur Économique",
+          "verified": "Compte vérifié"
+        },
+        "personal": {
+          "title": "Informations personnelles",
+          "edit": "Modifier",
+          "cancel": "Annuler",
+          "saving": "Enregistrement…",
+          "save": "Enregistrer",
+          "firstName": "Prénom",
+          "lastName": "Nom",
+          "email": "Email",
+          "phone": "Téléphone",
+          "language": "Langue préférée",
+          "fr": "Français",
+          "ar": "العربية"
+        },
+        "organization": {
+          "title": "Informations de l'organisation",
+          "denomination": "Dénomination sociale",
+          "nif": "NIF",
+          "nis": "NIS",
+          "rc": "Registre de Commerce",
+          "type": "Forme juridique",
+          "address": "Adresse",
+          "wilaya": "Wilaya",
+          "status": "Statut vérification",
+          "verified": "Vérifié",
+          "notVerified": "Non vérifié"
+        },
+        "oe": {
+          "title": "Profil Opérateur Économique",
+          "eligibility": "Éligibilité",
+          "eligible": "Éligible",
+          "notEligible": "Non éligible",
+          "blacklist": "Liste noire",
+          "blacklisted": "Blacklisté",
+          "notBlacklisted": "Non blacklisté",
+          "qualifications": "Qualifications",
+          "categories": "Catégories prof.",
+          "desc": "Ces informations sont gérées par l'administrateur de la plateforme. Contactez le support pour toute modification."
+        },
+        "security": {
+          "mfa": {
+            "title": "Authentification à deux facteurs (MFA)",
+            "enabled": "Activé",
+            "disabled": "Désactivé",
+            "enabledDesc": "Le MFA est activé sur votre compte. Votre compte est protégé.",
+            "disabledDesc": "Le MFA est désactivé. Activez-le pour renforcer la sécurité de votre compte.",
+            "btnDisable": "Désactiver",
+            "btnEnable": "Activer le MFA",
+            "loading": "Chargement…",
+            "qrDesc": "Scannez ce QR code avec votre application d'authentification (Google Authenticator, Authy…)",
+            "manualKey": "Clé manuelle :",
+            "btnConfigured": "J'ai configuré l'application →",
+            "verifying": "Vérification…",
+            "confirmDesc": "Confirmez votre mot de passe pour désactiver le MFA",
+            "pwPlaceholder": "Mot de passe actuel",
+            "pwRequired": "Le mot de passe est requis.",
+            "btnConfirmDisable": "Confirmer la désactivation",
+            "disabling": "Désactivation…",
+            "cancel": "Annuler"
+          },
+          "sessions": {
+            "title": "Sessions actives",
+            "revokeAll": "Révoquer toutes les autres",
+            "current": "Session actuelle",
+            "ip": "IP :",
+            "revokeTitle": "Révoquer cette session"
+          },
+          "password": {
+            "title": "Changer le mot de passe",
+            "success": "Mot de passe mis à jour avec succès.",
+            "current": "Mot de passe actuel",
+            "next": "Nouveau mot de passe",
+            "confirm": "Confirmer le mot de passe",
+            "errorReq": "Requis",
+            "errorMin": "Minimum 8 caractères",
+            "errorMatch": "Les mots de passe ne correspondent pas",
+            "updating": "Mise à jour…",
+            "update": "Mettre à jour le mot de passe"
+          }
+        }
+      },
+      "dashboard": {
+        "header": {
+          "greeting": "Bonjour",
+          "browseAos": "Parcourir les AOs"
+        },
+        "stats": {
+          "activeAos": "AOs Actifs",
+          "activeAosSub": "LIVE",
+          "submissionsInProgress": "Soumissions en cours",
+          "submissionsInProgressSub": "EN COURS",
+          "marchesWon": "Marchés Remportés",
+          "marchesWonSub": "ATTRIBUÉS",
+          "openRecours": "Recours Ouverts",
+          "openRecoursSub": "SUIVI"
+        },
+        "quickActions": {
+          "title": "Actions Rapides",
+          "browseAos": "Parcourir les AOs",
+          "mySubmissions": "Mes Soumissions",
+          "myRecours": "Mes Recours",
+"notifications": "Notifications"
+        },
+        "activity": {
+          "title": "Activité Récente",
+          "viewAll": "Voir tout"
+        },
+        "submissions": {
+          "title": "Mes Soumissions Récentes",
+          "viewAll": "Voir tout",
+          "cols": {
+            "reference": "Référence",
+            "object": "Objet",
+            "date": "Date dépôt",
+            "status": "Statut"
+          },
+          "statusLabels": {
+            "brouillon": "Brouillon",
+            "deposee": "Déposée",
+            "recue": "Reçue",
+            "evaluee": "Évaluée",
+            "retenue": "Retenue",
+            "rejetee": "Rejetée"
+          }
+        },
+       "soumissions": {
+        "mesSoumissions": {
+          "title": "Mes Soumissions",
+          "subtitle": "Suivi de vos offres déposées et en cours",
+          "newSubmission": "Nouvelle soumission",
+          "stats": {
+            "total": "Total",
+            "enCours": "En cours",
+            "retenues": "Retenues",
+            "rejetees": "Rejetées"
+          },
+          "searchPlaceholder": "Référence, objet, organisme…",
+          "filters": {
+            "all": "Toutes",
+            "brouillon": "Brouillon",
+            "deposee": "Déposée",
+            "recue": "Reçue",
+            "evaluee": "Évaluée",
+            "retenue": "Retenue",
+            "rejetee": "Rejetée"
+          },
+          "table": {
+            "referenceId": "Référence / ID",
+            "objectOrg": "Objet & Organisme",
+            "dateDepot": "Date dépôt",
+            "status": "Statut",
+            "actions": "Actions"
+          },
+          "empty": {
+            "title": "Aucune soumission trouvée",
+            "subtitle": "Modifiez vos filtres ou déposez une nouvelle soumission"
+          },
+          "errorLoading": "Impossible de charger les soumissions. Vérifiez la disponibilité de la passerelle API et du service soumission.",
+          "actions": {
+            "view": "Voir le détail",
+            "continue": "Continuer la soumission",
+            "recours": "Déposer un recours"
+          }
+        },
+        "detail": {
+          "nav": {
+            "dashboard": "Tableau de bord",
+            "soumissions": "Mes soumissions"
+          },
+          "back": "Retour",
+          "depositedOn": "Déposée le",
+          "tabs": {
+            "apercu": "Aperçu",
+            "documents": "Documents",
+            "financier": "Offre financière",
+            "timeline": "Suivi"
+          },
+          "apercu": {
+            "lots": "Lots soumissionnés",
+            "noLots": "Aucun lot associé.",
+            "proof": "Preuve d'intégrité",
+            "serverTime": "Horodatage serveur :",
+            "sha256": "SHA-256 (offre financière) :",
+            "caution": "Caution bancaire",
+            "reference": "Référence :",
+            "bank": "Banque :",
+            "amount": "Montant :",
+            "expiration": "Expiration :"
+          },
+          "documents": {
+            "desc": "Documents disponibles pour cette soumission.",
+            "labels": {
+              "technique": "Offre technique",
+              "caution": "Caution bancaire",
+              "financiere": "Offre financière chiffrée"
+            },
+            "download": "Télécharger",
+            "unavailable": "Document indisponible"
+          },
+          "financier": {
+            "encryptedWarning": "L'offre financière est chiffrée de bout en bout. Les montants ne sont visibles qu'après déchiffrement officiel.",
+            "cols": {
+              "lot": "Lot",
+              "designation": "Désignation",
+              "montant": "Montant HT"
+            },
+            "noLots": "Aucun lot disponible.",
+            "total": "Total HT",
+            "meta": {
+              "verified": "Signature vérifiée :",
+              "decrypted": "Offre déchiffrée :",
+              "hash": "Hash fichier :",
+              "yes": "Oui",
+              "no": "Non",
+              "noVerified": "Non ou non vérifiée"
+            }
+          },
+          "timeline": {
+            "events": {
+              "creation": {
+                "label": "Brouillon créé",
+                "desc": "La soumission a été initialisée et enregistrée en brouillon."
+              },
+              "depot": {
+                "label": "Dépôt de la soumission",
+                "desc": "Le dépôt final a été déclenché par l'opérateur."
+              },
+              "reception": {
+                "label": "Réception et horodatage",
+                "desc": "La plateforme a confirmé la réception de l'offre."
+              },
+              "eval": {
+                "label": "Évaluation",
+                "desc": "La commission poursuit l'évaluation technique et financière."
+              },
+              "retenue": {
+                "label": "Retenue",
+                "desc": "L'offre a été retenue par la commission."
+              },
+              "rejetee": {
+                "label": "Rejetée",
+                "desc": "L'offre n'a pas été retenue."
+              }
+            }
+          }
+        },
+        "wizard": {
+          "success": {
+            "title": "Soumission déposée avec succès !",
+            "desc1": "Votre offre",
+            "desc2": "a été reçue, horodatée et chiffrée. Un accusé de réception vous sera envoyé par notification.",
+            "serverTime": "Horodatage serveur :",
+            "viewAction": "Voir mes soumissions"
+          },
+          "nav": {
+            "back": "Retour",
+            "continue": "Continuer",
+            "steps": {
+              "step1": "Sélection AO",
+              "step2": "Offre technique",
+              "step3": "Offre financière",
+              "step4": "Caution",
+              "step5": "Récapitulatif"
+            }
+          },
+          "errors": {
+            "noAo": "Sélectionnez un appel d'offres avant de déposer.",
+            "noLot": "Sélectionnez un lot valide pour continuer.",
+            "noTechFile": "Le fichier de l'offre technique est obligatoire.",
+            "noBpu": "Renseignez l'offre financière pour le lot sélectionné.",
+            "incompleteCaution": "Les informations de caution bancaire sont incomplètes.",
+            "submitFailed": "Le dépôt a échoué. Veuillez réessayer."
+          },
+          "header": {
+            "title": "Nouvelle Soumission",
+            "step": "étape",
+            "cancel": "Annuler"
+          },
+          "steps": {
+            "step1": {
+              "title": "Sélection de l'appel d'offres",
+              "subtitle": "Choisissez l'AO auquel vous souhaitez soumissionner, puis sélectionnez les lots concernés.",
+              "searchPlaceholder": "Rechercher un appel d'offres...",
+              "loadingError": "Impossible de charger les appels d'offres.",
+              "notFound": "Aucun appel d'offres trouvé",
+              "selected": "Sélectionné",
+              "limit": "Limite",
+              "selectLot": "Sélectionner le lot concerné",
+              "lot": "Lot",
+              "estimatedAmount": "Montant estimé :"
+            },
+            "step3": {
+              "title": "Offre Technique",
+              "subtitle": "Téléversez le dossier technique requis par l'appel d'offres.",
+              "fileLabel": "Dossier technique",
+              "fileDesc": "Un seul fichier PDF contenant l'ensemble de votre offre technique.",
+              "selectFile": "Sélectionner un fichier",
+              "dragFile": "ou glisser-déposer ici",
+              "maxSize": "PDF jusqu'à 50 MB",
+              "replace": "Remplacer le fichier"
+            },
+            "step4": {
+              "title": "Offre Financière (BPU)",
+              "subtitle": "Renseignez les quantités et les prix unitaires pour chaque prestation du lot sélectionné.",
+              "line": "Prestation",
+              "unit": "Unité",
+              "quantity": "Quantité",
+              "unitPrice": "Prix U. HT",
+              "totalHt": "Total HT :",
+              "add": "Ajouter une ligne",
+              "remove": "Supprimer"
+            },
+            "step5": {
+              "title": "Caution Bancaire de Soumission",
+              "subtitle": "Saisissez les références de la garantie bancaire et téléversez le scan justificatif.",
+              "reference": "Référence",
+              "bank": "Banque émettrice",
+              "amount": "Montant",
+              "emission": "Date d'émission",
+              "expiry": "Date d'expiration",
+              "scan": "Scan de la caution",
+              "scanDesc": "Format PDF ou Image (max 10MB)",
+              "scanSelect": "Choisir le fichier",
+              "scanReplace": "Remplacer le scan"
+            },
+            "review": {
+              "title": "Vérification et Dépôt",
+              "subtitle": "Veuillez vérifier l'intégralité de vos informations avant de confirmer le dépôt définitif de votre offre.",
+              "alertTitle": "Chiffrement et Scellement",
+              "alertDesc": "Dès validation, votre offre financière sera chiffrée de bout en bout.",
+              "submit": "Confirmer et déposer mon offre"
+            }
+          }
+        }
+      },
+        "deadlines": {
+          "title": "Échéances Prochaines",
+          "fullCalendar": "Calendrier complet"
+        },
+        "recours": {
+          "title": "Recours en cours",
+          "statusExamen": "En examen",
+          "viewMyRecours": "Voir mes recours",
+          "mesRecours": {
+            "title": "Mes Recours",
+            "subtitle": "Suivi de vos recours déposés et en cours de traitement",
+            "newRecours": "Nouveau recours",
+            "stats": {
+              "total": "Total",
+              "enExamen": "En examen",
+              "acceptes": "Acceptés",
+              "rejetes": "Rejetés"
+            },
+            "searchPlaceholder": "Référence, objet, AO…",
+            "filters": {
+              "all": "Tous",
+              "depose": "Déposé",
+              "en_examen": "En examen",
+              "accepte": "Accepté",
+              "rejete": "Rejeté"
+            },
+            "table": {
+              "reference": "Référence",
+              "aoObject": "Objet AO",
+              "dateDepot": "Date dépôt",
+              "dateLimite": "Date limite réponse",
+              "status": "Statut"
+            },
+            "empty": {
+              "title": "Aucun recours trouvé",
+              "subtitle": "Modifiez vos filtres ou déposez un nouveau recours"
+            },
+            "errorLoading": "Impossible de charger les recours.",
+            "actions": {
+              "view": "Voir le détail"
+            },
+            "badges": {
+              "depasse": "Dépassé"
+            },
+            "paginationOf": "sur"
+          },
+          "create": {
+            "success": {
+              "title": "Recours envoyé avec succès !",
+              "desc": "Votre recours a été enregistré. Il sera examiné par le service contractant et la commission compétente. Vous recevrez des mises à jour sur l'avancement de votre dossier.",
+              "viewList": "Voir mes recours",
+              "viewDetail": "Consulter ce recours"
+            },
+            "header": {
+              "title": "Déposer un recours",
+              "subtitle": "Formulaire officiel de dépôt de recours précontractuel"
+            },
+            "context": {
+              "title": "Contexte de l'AO",
+              "ao": "Appel d'offre",
+              "emptyAo": "Aucun AO sélectionné",
+              "winner": "Attributaire provisoire",
+              "amount": "Montant du lot",
+              "date": "Date d'attribution"
+            },
+            "info": {
+              "title": "Informations de Procédure",
+              "aoSelect": "Sélectionner l'appel d'offres",
+              "decisionSelect": "Sélectionner la décision contestée",
+              "noAo": "Aucun AO disponible",
+              "noDecision": "Aucune décision d'attribution trouvée pour cet AO",
+              "errorLoad": "Erreur lors du chargement des options.",
+              "required": "Veuillez sélectionner un AO et une décision."
+            },
+            "content": {
+              "title": "Motif & Pièces Jointes",
+              "motifLabel": "Motif détaillé du recours",
+              "motifPholder": "Veuillez expliquer précisément les raisons de votre contestation (min. 50 caractères)...",
+              "minChars": "Minimum 50 caractères requis",
+              "chars": "caractères",
+              "filesLabel": "Documents justificatifs",
+              "dragText": "Glissez vos fichiers ici",
+              "or": "ou",
+              "browse": "Parcourir",
+              "filesDesc": "Formats PDF, PNG, JPG (Max 10MB par fichier). Tout document utile à l'examen de votre recours."
+            },
+            "sidebar": {
+              "expiredTitle": "Délai de recours dépassé",
+              "expiredDesc": "Le délai légal pour déposer un recours sur cette décision a expiré le",
+              "daysText": "jour",
+              "daysPlural": "s",
+              "remainingText": "restant",
+              "remainingPlural": "s",
+              "deadline": "Date limite :",
+              "noteTitle": "IMPORTANT",
+              "note1": "Le dépôt d'un recours suspend temporairement la signature du contrat.",
+              "note2": "Assurez-vous de fournir des éléments tangibles pour l'examen de votre dossier.",
+              "errorCreate": "Une erreur est survenue lors du dépôt.",
+              "submitting": "Envoi en cours...",
+              "submit": "Déposer le recours définitif",
+              "cancel": "Annuler"
+            }
+          }
+        },
+        "support": {
+          "title": "Support & Guides",
+          "guide": "Guide du soumissionnaire 2024",
+          "contact": "Contacter le support technique",
+          "faq": "FAQ & questions fréquentes"
+        },
+        "errorLoading": "Impossible de charger le tableau de bord opérateur.",
+        "settings": {
+          "description": "Cette page centralise les paramètres du compte contractant. Les sections de configuration seront ajoutées ici.",
+          "status": "Paramètres en cours d'intégration."
+        }
+      },
+      "tendersList": {
+        "title": "Appels d'Offres",
+        "loading": "Chargement…",
+        "errors": {
+          "load": "Impossible de charger les appels d'offres.",
+          "changeStatus": "Impossible de changer le statut de cet appel d'offres.",
+          "delete": "Impossible de supprimer cet appel d'offres."
+        },
+        "searchPlaceholder": "Référence, objet, organisme…",
+        "searchLabel": "Recherche",
+        "filterByStatus": "Filtrer par statut",
+        "filtersBtn": "Filtres",
+        "advancedFilters": "Filtres avancés",
+        "reset": "Réinitialiser",
+        "filters": {
+          "status": "Statut",
+          "all": "Tous",
+          "draft": "Brouillon",
+          "published": "Publié",
+          "ongoing": "En cours",
+          "evaluation": "Évaluation",
+          "awarded": "Attribué",
+          "cancelled": "Annulé",
+          "dateStart": "Date début",
+          "dateEnd": "Date fin",
+          "reset": "Réinitialiser",
+          "searchLabel": "Recherche",
+          "filterByStatus": "Filtrer par statut"
+        },
+        "labels": {
+          "status": "Statut",
+          "type": "Type de procédure",
+          "wilaya": "Wilaya",
+          "mySubmission": "Ma soumission"
+        },
+        "values": {
+          "allStatuses": "Tous les statuts",
+          "allTypes": "Tous les types",
+          "allWilayas": "Toutes les wilayas",
+          "all": "Tous",
+          "alreadySubmitted": "Déjà soumis",
+          "notSubmitted": "Non soumis"
+        },
+        "statusLabels": {
+          "publie": "Publié",
+          "en_cours": "En cours",
+          "evaluation": "Évaluation",
+          "attribue": "Attribué",
+          "annule": "Annulé",
+          "cloture": "Clôturé"
+        },
+        "typeLabels": {
+          "ouvert": "Appel d'offres ouvert",
+          "restreint": "Appel d'offres restreint",
+          "gre_a_gre": "Gré à gré"
+        },
+        "empty": {
+          "title": "Aucun appel d'offres trouvé",
+          "subtitle": "Modifiez vos critères de recherche"
+        },
+        "card": {
+          "submitted": "Soumis",
+          "reference": "Référence",
+          "estimatedAmount": "Montant estimé",
+          "deadline": "Date limite",
+          "viewDetail": "Voir le détail"
+        },
+        "pagination": {
+          "displaying": "Affichage",
+          "of": "sur"
         }
       }
     }

@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { type Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/get-dictionaries";
 import {
   getServiceContractantGreAGreRequestById,
   type GreAGreControllerFinalDecision,
@@ -42,20 +44,21 @@ function formatDateTime(dateValue: string, locale: string) {
   }).format(parsedDate);
 }
 
-function getStatusLabel(status: string) {
+function getStatusLabel(status: string, dict: any) {
+  const statusDict = dict.dashboard.contractant.greAGre.filters;
   switch (status) {
     case "brouillon":
-      return "Brouillon";
+      return statusDict.brouillon;
     case "soumise":
-      return "Soumise";
+      return statusDict.soumise;
     case "en_analyse_ia":
-      return "En analyse IA";
+      return statusDict.en_analyse_ia;
     case "acceptee":
-      return "Acceptee";
+      return statusDict.acceptee;
     case "rejetee":
-      return "Rejetee";
+      return statusDict.rejetee;
     case "en_revision":
-      return "En revision";
+      return statusDict.en_revision;
     default:
       return status;
   }
@@ -80,62 +83,44 @@ function getStatusClass(status: string) {
   }
 }
 
-function getJustificationTypeLabel(type: GreAGreJustificationType) {
-  switch (type) {
-    case "urgence":
-      return "Urgence";
-    case "technique":
-      return "Technique";
-    case "economique":
-      return "Economique";
-    case "juridique":
-      return "Juridique";
-    case "autre":
-      return "Autre";
-    default:
-      return type;
-  }
+function getJustificationTypeLabel(type: GreAGreJustificationType, dict: any) {
+  const types = dict.dashboard.contractant.greAGre.form.justificationTypes;
+  return types[type] || type;
 }
 
-function getIaRecommendationLabel(recommendation: GreAGreIaRecommendation) {
-  switch (recommendation) {
-    case "accepter":
-      return "Accepter";
-    case "rejeter":
-      return "Rejeter";
-    case "demander_complements":
-      return "Demander des complements";
-    default:
-      return recommendation;
-  }
+function getIaRecommendationLabel(
+  recommendation: GreAGreIaRecommendation,
+  dict: any,
+) {
+  const recs = dict.dashboard.contractant.greAGre.detail.recommendations;
+  return recs[recommendation] || recommendation;
 }
 
-function getFinalDecisionLabel(decision: GreAGreControllerFinalDecision) {
-  switch (decision) {
-    case "accepter":
-      return "Accepter";
-    case "rejeter":
-      return "Rejeter";
-    case "demander_complements":
-      return "Demander des complements";
-    default:
-      return decision;
-  }
+function getFinalDecisionLabel(
+  decision: GreAGreControllerFinalDecision,
+  dict: any,
+) {
+  const recs = dict.dashboard.contractant.greAGre.detail.recommendations;
+  return recs[decision] || decision;
 }
 
-function formatAmount(amount: string) {
+function formatAmount(amount: string, dict: any) {
   const parsed = Number.parseFloat(amount.replace(/\s/g, ""));
+  const currency = dict.dashboard.contractant.greAGre.detail.info.amountCurrency;
+
   if (Number.isNaN(parsed)) {
-    return `${amount} DZD`;
+    return `${amount} ${currency}`;
   }
 
-  return `${new Intl.NumberFormat("fr-FR").format(parsed)} DZD`;
+  return `${new Intl.NumberFormat("fr-FR").format(parsed)} ${currency}`;
 }
 
 export default async function GreAGreRequestDetailPage({
   params,
 }: GreAGreRequestDetailPageProps) {
   const { locale, id } = await params;
+  const dict = await getDictionary(locale as Locale);
+  const detailDict = dict.dashboard.contractant.greAGre.detail;
   const item = await getServiceContractantGreAGreRequestById(id);
 
   if (!item) {
@@ -151,10 +136,10 @@ export default async function GreAGreRequestDetailPage({
         <header className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">
-              Detail demande Gre a Gre
+              {detailDict.title}
             </h1>
             <p className="text-xs text-slate-500">
-              Reference: {item.reference}
+              {detailDict.info.reference}: {item.reference}
             </p>
           </div>
 
@@ -164,14 +149,14 @@ export default async function GreAGreRequestDetailPage({
                 href={editHref}
                 className="inline-flex h-9 items-center rounded-md bg-[#4CAF50] px-3 text-xs font-semibold text-white hover:opacity-95"
               >
-                Modifier et resoumettre
+                {detailDict.editAndResubmit}
               </Link>
             )}
             <Link
               href={listHref}
               className="inline-flex h-9 items-center rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
             >
-              Retour a la liste
+              {detailDict.backToList}
             </Link>
           </div>
         </header>
@@ -179,30 +164,30 @@ export default async function GreAGreRequestDetailPage({
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              Reference
+              {detailDict.info.reference}
             </p>
             <p className="mt-1 text-slate-800">{item.reference}</p>
           </div>
 
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              Objet
+              {detailDict.info.object}
             </p>
             <p className="mt-1 text-slate-800">{item.object}</p>
           </div>
 
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              Montant estime
+              {detailDict.info.estimatedAmount}
             </p>
             <p className="mt-1 text-slate-800">
-              {formatAmount(item.estimatedAmount)}
+              {formatAmount(item.estimatedAmount, dict)}
             </p>
           </div>
 
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              Date soumission
+              {detailDict.info.submissionDate}
             </p>
             <p className="mt-1 text-slate-800">
               {formatDate(item.submittedAt, locale)}
@@ -211,18 +196,18 @@ export default async function GreAGreRequestDetailPage({
 
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              Score conformite IA
+              {detailDict.info.iaComplianceScore}
             </p>
             <p className="mt-1 text-slate-800">
               {typeof item.iaComplianceScore === "number"
                 ? `${item.iaComplianceScore}/100`
-                : "Non analyse"}
+                : detailDict.info.notAnalyzed}
             </p>
           </div>
 
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs md:col-span-2">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              Description
+              {detailDict.info.description}
             </p>
             <p className="mt-1 whitespace-pre-wrap text-slate-800">
               {item.description}
@@ -231,7 +216,7 @@ export default async function GreAGreRequestDetailPage({
 
           <div className="rounded-lg border border-slate-200 bg-white p-3 text-xs md:col-span-2">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              Statut
+              {detailDict.info.status}
             </p>
             <Badge
               variant="outline"
@@ -240,7 +225,7 @@ export default async function GreAGreRequestDetailPage({
                 getStatusClass(item.status),
               )}
             >
-              {getStatusLabel(item.status)}
+              {getStatusLabel(item.status, dict)}
             </Badge>
           </div>
         </div>
@@ -249,10 +234,10 @@ export default async function GreAGreRequestDetailPage({
       <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <header className="mb-3">
           <h2 className="text-lg font-semibold text-slate-900">
-            Justifications
+            {detailDict.justifications.title}
           </h2>
           <p className="text-xs text-slate-500">
-            Justifications fournies avec les fichiers annexes.
+            {detailDict.justifications.subtitle}
           </p>
         </header>
 
@@ -260,10 +245,18 @@ export default async function GreAGreRequestDetailPage({
           <table className="w-full min-w-[760px] border-collapse">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11px] font-semibold text-slate-600">
-                <th className="px-3 py-2">Ordre</th>
-                <th className="px-3 py-2">Type</th>
-                <th className="px-3 py-2">Description</th>
-                <th className="px-3 py-2">Fichier</th>
+                <th className="px-3 py-2">
+                  {detailDict.justifications.table.order}
+                </th>
+                <th className="px-3 py-2">
+                  {detailDict.justifications.table.type}
+                </th>
+                <th className="px-3 py-2">
+                  {detailDict.justifications.table.description}
+                </th>
+                <th className="px-3 py-2">
+                  {detailDict.justifications.table.file}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -273,7 +266,7 @@ export default async function GreAGreRequestDetailPage({
                     className="px-3 py-4 text-center text-xs text-slate-500"
                     colSpan={4}
                   >
-                    Aucune justification disponible.
+                    {detailDict.justifications.noJustifications}
                   </td>
                 </tr>
               ) : (
@@ -287,7 +280,7 @@ export default async function GreAGreRequestDetailPage({
                     >
                       <td className="px-3 py-2">{justification.order}</td>
                       <td className="px-3 py-2 font-semibold text-[#2F9E44]">
-                        {getJustificationTypeLabel(justification.type)}
+                        {getJustificationTypeLabel(justification.type, dict)}
                       </td>
                       <td className="px-3 py-2">{justification.description}</td>
                       <td className="px-3 py-2">
@@ -304,9 +297,11 @@ export default async function GreAGreRequestDetailPage({
       <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <header className="mb-3">
-            <h2 className="text-lg font-semibold text-slate-900">Analyse IA</h2>
+            <h2 className="text-lg font-semibold text-slate-900">
+              {detailDict.iaAnalysis.title}
+            </h2>
             <p className="text-xs text-slate-500">
-              Evaluation automatique de conformite et recommandation.
+              {detailDict.iaAnalysis.subtitle}
             </p>
           </header>
 
@@ -315,7 +310,7 @@ export default async function GreAGreRequestDetailPage({
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                    Score conformite
+                    {detailDict.iaAnalysis.scoreCompliance}
                   </p>
                   <p className="mt-1 text-slate-800">
                     {item.iaAnalysis.scoreCompliance}/100
@@ -324,7 +319,7 @@ export default async function GreAGreRequestDetailPage({
 
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                    Niveau de confiance
+                    {detailDict.iaAnalysis.confidenceLevel}
                   </p>
                   <p className="mt-1 text-slate-800">
                     {item.iaAnalysis.confidenceLevel}%
@@ -333,17 +328,20 @@ export default async function GreAGreRequestDetailPage({
 
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                    Recommandation IA
+                    {detailDict.iaAnalysis.recommendation}
                   </p>
                   <p className="mt-1 font-semibold text-[#2F9E44]">
-                    {getIaRecommendationLabel(item.iaAnalysis.recommendation)}
+                    {getIaRecommendationLabel(
+                      item.iaAnalysis.recommendation,
+                      dict,
+                    )}
                   </p>
                 </div>
               </div>
 
               <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                  Justification IA
+                  {detailDict.iaAnalysis.justification}
                 </p>
                 <p className="mt-1 whitespace-pre-wrap text-slate-800">
                   {item.iaAnalysis.justification}
@@ -351,13 +349,13 @@ export default async function GreAGreRequestDetailPage({
               </div>
 
               <p className="text-[11px] text-slate-500">
-                Date analyse:{" "}
+                {detailDict.iaAnalysis.analysisDate}:{" "}
                 {formatDateTime(item.iaAnalysis.analysisDate, locale)}
               </p>
             </div>
           ) : (
             <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-4 text-xs text-slate-500">
-              Aucune analyse IA disponible pour cette demande.
+              {detailDict.iaAnalysis.noAnalysis}
             </p>
           )}
         </article>
@@ -365,10 +363,10 @@ export default async function GreAGreRequestDetailPage({
         <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <header className="mb-3">
             <h2 className="text-lg font-semibold text-slate-900">
-              Decision controleur
+              {detailDict.controller.title}
             </h2>
             <p className="text-xs text-slate-500">
-              Decision finale et alignement avec la recommandation IA.
+              {detailDict.controller.subtitle}
             </p>
           </header>
 
@@ -376,16 +374,19 @@ export default async function GreAGreRequestDetailPage({
             <div className="space-y-3 text-xs">
               <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                  Decision finale
+                  {detailDict.controller.finalDecision}
                 </p>
                 <p className="mt-1 font-semibold text-slate-800">
-                  {getFinalDecisionLabel(item.controllerDecision.finalDecision)}
+                  {getFinalDecisionLabel(
+                    item.controllerDecision.finalDecision,
+                    dict,
+                  )}
                 </p>
               </div>
 
               <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                  Motif
+                  {detailDict.controller.reason}
                 </p>
                 <p className="mt-1 whitespace-pre-wrap text-slate-800">
                   {item.controllerDecision.reason}
@@ -395,18 +396,18 @@ export default async function GreAGreRequestDetailPage({
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                    Correspond a la recommandation IA
+                    {detailDict.controller.matchesIa}
                   </p>
                   <p className="mt-1 text-slate-800">
                     {item.controllerDecision.matchesIaRecommendation
-                      ? "Oui"
-                      : "Non"}
+                      ? detailDict.controller.yes
+                      : detailDict.controller.no}
                   </p>
                 </div>
 
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                    Date decision
+                    {detailDict.controller.decisionDate}
                   </p>
                   <p className="mt-1 text-slate-800">
                     {formatDateTime(
@@ -419,7 +420,7 @@ export default async function GreAGreRequestDetailPage({
             </div>
           ) : (
             <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-4 text-xs text-slate-500">
-              Aucune decision controleur disponible pour cette demande.
+              {detailDict.controller.noDecision}
             </p>
           )}
         </article>

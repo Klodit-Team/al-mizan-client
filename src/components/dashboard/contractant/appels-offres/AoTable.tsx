@@ -57,6 +57,7 @@ interface TendersListDict {
   filters: TendersFiltersDict;
   types: TendersTypeDict;
   empty: string;
+  loading?: string;
 }
 
 interface AoTableProps {
@@ -158,7 +159,7 @@ export default function AoTable({
         <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
           <Loader2 className="h-5 w-5 animate-spin text-slate-500" />
         </div>
-        <p className="text-xs text-slate-600">Loading...</p>
+        <p className="text-xs text-slate-600">{dict.loading || "Loading..."}</p>
       </div>
     );
   }

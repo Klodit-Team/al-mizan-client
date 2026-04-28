@@ -4,15 +4,13 @@
     "contactSupport": "التواصل مع الدعم",
     "signIn": "تسجيل الدخول",
     "searchPlaceholder": "ابحث في المناقصات...",
-    "logout":"تسجيل الخروج",
+    "logout": "تسجيل الخروج",
     "links": {
       "home": "الرئيسية",
       "tenders": "المناقصات",
       "statistics": "الإحصائيات",
       "legal": "القانونية",
       "contact": "اتصل بنا"
-      
-
     }
   },
   "navbarRegister": {
@@ -42,26 +40,25 @@
     "copyright": "© 2024 الميزان. جميع الحقوق محفوظة. الجمهورية الجزائرية الديمقراطية الشعبية."
   },
   "loginPanel": {
-  "sovereignProcurement": "المشتريات السيادية",
-  "title": "إدارة المشتريات السيادية والذكية",
-  "subtitle": "المنصة الرسمية للمشتريات B2B في الجزائر، تخدم الجهات المتعاقدة والمتعاملين الاقتصاديين بشفافية وكفاءة.",
-  "securedBy": "مؤمّن بالمعايير الوطنية",
-  "realTime": "بيانات فورية",
-  "ministere": "وزارة المالية"
-
-},
-"loggedInNavbar": {
+    "sovereignProcurement": "المشتريات السيادية",
+    "title": "إدارة المشتريات السيادية والذكية",
+    "subtitle": "المنصة الرسمية للمشتريات B2B في الجزائر، تخدم الجهات المتعاقدة والمتعاملين الاقتصاديين بشفافية وكفاءة.",
+    "securedBy": "مؤمّن بالمعايير الوطنية",
+    "realTime": "بيانات فورية",
+    "ministere": "وزارة المالية"
+  },
+  "loggedInNavbar": {
     "userName": "أحمد منصور",
     "userCompany": "شركة منصور للمقاولات ش.م.ذ"
-},
-"sidebar": {
+  },
+  "sidebar": {
     "admin": {
-       "organisation":"المنظمات",
-       "utilisateurs":"المستعملين",
-       "operateurs":"المتعاملون الاقتصاديون",
-       "commission":"اللجان",
-       "audit":"سجل المراجعة",
-       "incidents":"حوادث الذكاء الاصطناعي"
+      "organisation": "المنظمات",
+      "utilisateurs": "المستعملين",
+      "operateurs": "المتعاملون الاقتصاديون",
+      "commission": "اللجان",
+      "audit": "سجل المراجعة",
+      "incidents": "حوادث الذكاء الاصطناعي"
     },
     "commission": {
       "tableauDeBord": "لوحة التحكم",
@@ -81,28 +78,28 @@
     "appelsDOffres": "عروض الأسعار",
     "rapports": "التقارير",
     "tableauDeBord": "لوحة القيادة"
-},
+  },
   "dashboard": {
     "admin": {
       "title": "لوحة التحكم",
       "subtitle": "أدر إجراءات الصفقات العمومية بكل شفافية.",
       "createAO": "إنشاء طلب عروض جديد",
       "stats": {
-          "utilisateursActifs": "المستخدمون النشطون",
-          "utilisateursActifsBadge": "+5 هذا الشهر",
-          "aoEnCours": "طلبات العروض الجارية",
-          "aoEnCoursBadge": "جارية",
-          "recoursOuverts": "الطعون المفتوحة",
-          "recoursOuvertsBadge": "تنبيه",
-          "incidentsIA": "حوادث الذكاء الاصطناعي",
-          "incidentsIABadge": "عاجل"
+        "utilisateursActifs": "المستخدمون النشطون",
+        "utilisateursActifsBadge": "+5 هذا الشهر",
+        "aoEnCours": "طلبات العروض الجارية",
+        "aoEnCoursBadge": "جارية",
+        "recoursOuverts": "الطعون المفتوحة",
+        "recoursOuvertsBadge": "تنبيه",
+        "incidentsIA": "حوادث الذكاء الاصطناعي",
+        "incidentsIABadge": "عاجل"
       },
       "actionsRapides": {
         "title": "الإجراءات السريعة",
         "historique": "تسجيلات الدخول",
         "mesAOs": "طلباتي",
         "utilisateurs": "المستعملين",
-        "commission":"اللجان"
+        "commission": "اللجان"
       },
       "activiteRecente": {
         "title": "النشاط الأخير",
@@ -296,15 +293,15 @@
         "unreadOnly": "غير المقروءة فقط",
         "noNotifications": "لا توجد إشعارات",
         "categories": {
-            "all": "الكل",
-            "publication_ao": "نشر طلب العروض",
-            "depot_confirme": "تأكيد الإيداع",
-            "ouverture_plis": "فتح الأظرفة",
-            "evaluation_resultat": "نتيجة التقييم",
-            "attribution_provisoire": "المنح المؤقت",
-            "attribution_definitive": "المنح النهائي",
-            "recours_update": "تحديث الطعن",
-            "systeme": "النظام"
+          "all": "الكل",
+          "publication_ao": "نشر طلب العروض",
+          "depot_confirme": "تأكيد الإيداع",
+          "ouverture_plis": "فتح الأظرفة",
+          "evaluation_resultat": "نتيجة التقييم",
+          "attribution_provisoire": "المنح المؤقت",
+          "attribution_definitive": "المنح النهائي",
+          "recours_update": "تحديث الطعن",
+          "systeme": "النظام"
         }
       },
       "auditLogsPage": {
@@ -415,6 +412,1448 @@
           "evaluateur": "مقيّم",
           "rapporteur": "مقرّر",
           "membre": "عضو"
+        },
+        "evaluationPage": {
+          "title": "الترتيب النهائي : {{ao}}",
+          "subtitle": "المرحلة 3/3 : المداولة والترسية",
+          "generateReport": "توليد تقرير التقييم",
+          "stats": {
+            "processed": "العروض المعالجة",
+            "rejected": "المرفوضة (تقني/إداري)",
+            "eligible": "المؤهلة (مالي)"
+          },
+          "table": {
+            "title": "مقارنة: اللجنة مقابل الذكاء الاصطناعي",
+            "subtitle": "يتم تمييز الفجوات التي تزيد عن 10 نقاط.",
+            "cols": {
+              "rank": "الرتبة",
+              "operator": "المتعامل",
+              "commissionScore": "النقطة الإجمالية (اللجنة)",
+              "iaScore": "النقطة الإجمالية (الذكاء الاصطناعي)",
+              "deviation": "الفارق",
+              "iaRecommendation": "توصية الذكاء الاصطناعي",
+              "finalDecision": "القرار النهائي"
+            },
+            "divergence": "فجوة",
+            "iaRecommendations": {
+              "retain": "احتفاظ",
+              "analyze": "تحليل أكثر",
+              "eliminate": "استبعاد"
+            },
+            "decisions": {
+              "retain": "مقبول",
+              "pending": "في الانتظار",
+              "eliminated": "مستبعد (نقطة تقنية < 50)"
+            }
+          },
+          "quorumMessage": "تم إدخال جميع العلامات من قبل النصاب القانوني (5/5 أعضاء).",
+          "validateButton": "تأكيد المداولة (غير قابل للتراجع)"
+        }
+      }
+    },
+    "contractant": {
+      "dashboard": {
+        "header": {
+          "title": "لوحة التحكم",
+          "subtitle": "أدر إجراءات الصفقات العمومية بكل شفافية.",
+          "createButton": "إنشاء طلب عروض جديد",
+          "notifications": "الإشعارات",
+          "logout": "تسجيل الخروج"
+        },
+        "summary": {
+          "activeAos": "طلبات العروض النشطة",
+          "pendingAttributions": "المنح في الانتظار",
+          "openRecours": "الطعون المفتوحة",
+          "ongoingMarches": "الصفقات الجارية"
+        },
+        "quickActions": {
+          "title": "إجراءات سريعة",
+          "createAo": "طلب عروض جديد",
+          "myAos": "طلباتي",
+          "commissions": "اللجان"
+        },
+        "recentActivity": {
+          "title": "النشاط الأخير",
+          "viewAll": "عرض الكل",
+          "empty": "لا يوجد نشاط أخير."
+        },
+        "alerts": {
+          "title": "تنبيهات الذكاء الاصطناعي - الميزان",
+          "empty": "لا توجد تنبيهات حالياً.",
+          "deadlinesTitle": "المواعيد القادمة (48 ساعة)"
+        },
+        "support": {
+          "title": "الدعم والدليل",
+          "guide": "دليل الإجراءات 2024",
+          "contact": "التواصل مع الدعم التقني"
+        },
+        "errorLoading": "تعذر تحميل بيانات لوحة التحكم."
+      },
+      "tendersList": {
+        "title": "طلبات العروض الخاصة بي",
+        "createBtn": "إنشاء طلب عروض جديد",
+        "searchPlaceholder": "البحث بالمرجع أو الموضوع...",
+        "filters": {
+          "status": "الحالة",
+          "all": "الكل",
+          "draft": "مسودة",
+          "published": "منشور",
+          "ongoing": "جاري",
+          "evaluation": "تقييم",
+          "awarded": "تم المنح",
+          "cancelled": "ملغى",
+          "dateStart": "تاريخ البدء",
+          "dateEnd": "تاريخ الانتهاء",
+          "reset": "إعادة تعيين"
+        },
+        "table": {
+          "reference": "المرجع",
+          "object": "الموضوع",
+          "type": "النوع",
+          "deadline": "آخر أجل لإيداع العروض",
+          "status": "الحالة",
+          "actions": "الإجراءات"
+        },
+        "actions": {
+          "view": "عرض التفاصيل",
+          "edit": "تعديل",
+          "changeStatus": "تغيير الحالة",
+          "delete": "حذف"
+        },
+        "empty": "لم يتم العثور على أي طلب عروض.",
+        "types": {
+          "open": "مفتوح",
+          "restricted": "محدود",
+          "direct": "تراضي"
+        },
+        "pagination": {
+          "showing": "عرض من",
+          "to": "إلى",
+          "of": "من أصل",
+          "entries": "سجلات",
+          "previous": "السابق",
+          "next": "التالي"
+        },
+        "confirmDelete": "هل أنت متأكد أنك تريد حذف طلب العروض هذا؟",
+        "aoCreation": {
+          "createTitle": "إنشاء طلب عروض",
+          "currency": "د.ج",
+          "stepPrefix": "المرحلة",
+          "stepOn": "من أصل",
+          "stepTitles": [
+            "معلومات عامة",
+            "الحصص",
+            "دفتر الشروط",
+            "الأهلية",
+            "التقييم",
+            "المراجعة والنشر"
+          ],
+          "buttons": {
+            "next": "المرحلة التالية",
+            "back": "رجوع",
+            "saveDraft": "حفظ كمسودة",
+            "saveAsDraft": "حفظ كمسودة",
+            "publishAo": "نشر طلب العروض",
+            "publishCdc": "نشر دفتر الشروط",
+            "uploadFile": "رفع ملف",
+            "replaceFile": "استبدال الملف",
+            "downloadCdc": "تحميل دفتر الشروط",
+            "cancel": "إلغاء"
+          },
+          "review": {
+            "title": "المرحلة 6: المراجعة والنشر",
+            "subtitle": "التحقق النهائي من المعلومات قبل النشر.",
+            "validationChecks": "ضوابط التحقق",
+            "generalInfo": "معلومات عامة",
+            "statusPublished": "منشور",
+            "statusUnpublished": "غير منشور"
+          },
+          "messages": {
+            "draftSaved": "تم حفظ المسودة بنجاح.",
+            "publishBlockedPrefix": "تعذر النشر:",
+            "publishSuccessPrefix": "تم نشر طلب العروض بنجاح. تم إنشاء الإشعار:"
+          },
+          "header": {
+            "breadcrumbDashboard": "لوحة التحكم",
+            "breadcrumbAo": "طلبات العروض",
+            "editModeLabel": "تعديل مسودة طلب العروض جارٍ.",
+            "progression": "التقدم"
+          },
+          "validation": {
+            "required": "حقل إلزامي",
+            "offerDeadlineAfterDce": "يجب أن يكون بعد تاريخ دفتر الشروط",
+            "openingDateAfterOffer": "يجب أن يكون بعد تاريخ آخر أجل للإيداع",
+            "weightingInvalid": "قيمة غير صالحة (0 < % <= 100)",
+            "eliminationScoreRange": "يجب أن تكون بين 0 و 100",
+            "fileTooLarge": "يجب ألا يتجاوز حجم الملف 25 ميغابايت",
+            "pdfOnly": "يُسمح فقط بملفات PDF",
+            "cdcFileRequired": "يرجى رفع ملف دفتر الشروط",
+            "addEvaluationCriterion": "أضف معيار تقييم واحد على الأقل.",
+            "totalWeightMustBe100": "يجب أن يكون مجموع الأوزان مساوياً لـ 100%."
+          },
+          "errors": {
+            "draftSaveFailed": "فشل حفظ المسودة.",
+            "publishFailed": "فشل نشر طلب العروض.",
+            "loadDraftFailed": "تعذر تحميل هذه المسودة."
+          },
+          "step1": {
+            "referenceLabel": "المرجع (تلقائي)",
+            "objectLabel": "موضوع طلب العروض",
+            "objectPlaceholder": "مثال: اقتناء معدات معلوماتية",
+            "descriptionLabel": "وصف مفصل",
+            "descriptionPlaceholder": "صف الاحتياجات والمواصفات التقنية الرئيسية...",
+            "marketTypeLabel": "نوع السوق",
+            "marketTypePlaceholder": "اختر نوعاً",
+            "marketTypes": {
+              "fournitures": "توريدات",
+              "services": "خدمات",
+              "travaux": "أشغال"
+            },
+            "procedureTypeLabel": "نوع الإجراء",
+            "procedureTypePlaceholder": "اختر إجراءً",
+            "procedureTypes": {
+              "ouvert": "مفتوح",
+              "restreint": "محدود",
+              "greAgre": "تراضي"
+            },
+            "estimatedAmountLabel": "المبلغ المقدر (دج)",
+            "wilayaLabel": "ولاية التنفيذ",
+            "wilayaPlaceholder": "أدخل الولاية",
+            "executionDelayLabel": "مهلة التنفيذ (أيام)",
+            "executionDelayPlaceholder": "مثال: 90",
+            "submissionBondTitle": "كفالة التقديم",
+            "submissionBondAmountLabel": "مبلغ الكفالة (دج)",
+            "submissionBondPlaceholder": "مثال: 500,000.00",
+            "deadlinesTitle": "المواعيد الرئيسية",
+            "dceDeadlineLabel": "آخر أجل لسحب دفتر الشروط",
+            "offerDeadlineLabel": "آخر أجل لإيداع العروض",
+            "openingDateLabel": "تاريخ فتح الأظرفة"
+          },
+          "step2": {
+            "title": "قائمة الحصص",
+            "subtitle": "أدر أقسام طلب العروض الخاص بك",
+            "addLotBtn": "إضافة حصة",
+            "columns": {
+              "number": "رقم",
+              "designation": "التسمية",
+              "description": "الوصف",
+              "estimatedAmount": "المبلغ المقدر",
+              "delay": "المهلة (أيام)",
+              "actions": "إجراءات"
+            },
+            "emptyMessage": "لم يتم إضافة أي حصة حتى الآن.",
+            "editLotTitle": "تعديل الحصة",
+            "newLotTitle": "تفاصيل الحصة الجديدة",
+            "lotNumberLabel": "رقم الحصة",
+            "designationLabel": "التسمية",
+            "designationPlaceholder": "عنوان الحصة",
+            "delayLabel": "المهلة (أيام)",
+            "delayPlaceholder": "مثال: 30",
+            "descriptionLabel": "وصف مفصل",
+            "descriptionPlaceholder": "صف الأشغال المحددة...",
+            "estimatedAmountLabel": "المبلغ المقدر (دج)",
+            "saveLotBtn": "حفظ الحصة",
+            "daysUnit": "أيام"
+          },
+          "step3": {
+            "aiTitle": "التوليد بمساعدة الذكاء الاصطناعي - الميزان",
+            "aiDescription": "يمكن للذكاء الاصطناعي مساعدتك في هيكلة المواصفات التقنية وفقاً للمعايير المعمول بها.",
+            "aiButton": "مساعد التحرير",
+            "cdcTitleLabel": "عنوان دفتر الشروط",
+            "cdcFileLabel": "ملف دفتر الشروط (يُنصح بصيغة PDF)",
+            "uploadDropLabel": "انقر للرفع أو اسحب وأفلت",
+            "uploadHint": "PDF حتى 25 ميغابايت",
+            "versionLabel": "رقم النسخة",
+            "withdrawalPriceLabel": "ثمن السحب (دج)",
+            "cdcStatusLabel": "حالة دفتر الشروط",
+            "fileAlreadySaved": "ملف محفوظ مسبقاً"
+          },
+          "step4": {
+            "title": "معايير الأهلية",
+            "subtitle": "حدد الشروط الإلزامية للمشاركة",
+            "addCriterionBtn": "إضافة معيار",
+            "columns": {
+              "order": "الترتيب",
+              "designation": "التسمية",
+              "description": "الوصف",
+              "eliminatory": "إقصائي",
+              "actions": "إجراءات"
+            },
+            "emptyMessage": "لم يتم تحديد أي معيار حتى الآن.",
+            "editCriterionTitle": "تعديل المعيار",
+            "newCriterionTitle": "معيار أهلية جديد",
+            "designationLabel": "التسمية",
+            "designationPlaceholder": "مثال: القدرة المالية",
+            "eliminatoryLabel": "إقصائي",
+            "descriptionLabel": "الوصف",
+            "descriptionPlaceholder": "صف المعيار والمتطلبات المتوقعة...",
+            "saveBtn": "حفظ",
+            "minCriterionWarning": "أضف معياراً واحداً على الأقل للانتقال إلى المرحلة التالية."
+          },
+          "step5": {
+            "tabTechnical": "المعايير التقنية",
+            "tabFinancial": "المعايير المالية",
+            "criteriaListTitle": "قائمة المعايير",
+            "addCriterionBtn": "إضافة معيار",
+            "columns": {
+              "order": "الترتيب",
+              "designation": "التسمية",
+              "type": "النوع",
+              "lot": "الحصة",
+              "weighting": "الوزن (%)",
+              "eliminationScore": "نقطة الإقصاء",
+              "actions": "إجراءات"
+            },
+            "emptyMessage": "لا يوجد معيار {type} حالياً.",
+            "editCriterionTitle": "تعديل المعيار",
+            "newCriterionTitle": "معيار تقييم جديد",
+            "designationLabel": "التسمية",
+            "designationPlaceholder": "مثال: المنهجية وخطة العمل",
+            "typeLabel": "النوع",
+            "typeOptions": {
+              "technique": "تقني",
+              "financier": "مالي"
+            },
+            "weightingLabel": "الوزن (%)",
+            "weightingPlaceholder": "0 - 100",
+            "eliminationScoreLabel": "نقطة الإقصاء (/100)",
+            "eliminationScorePlaceholder": "اختياري",
+            "lotLabel": "الحصة (إن وُجدت)",
+            "lotPlaceholder": "مثال: حصة 01، جميع الحصص",
+            "saveBtn": "حفظ",
+            "totalWeightTitle": "الوزن الإجمالي",
+            "totalWeightDescription": "يجب أن يكون مجموع الأوزان مساوياً لـ 100%",
+            "validated": "تم التحقق",
+            "overflow": "تجاوز",
+            "remaining": "متبقي",
+            "activeTabWeight": "وزن علامة التبويب النشطة",
+            "requirementTitle": "شرط",
+            "requirementDescription": "تأكد من أن كل معيار له ترتيب فريد وحصة متسقة قبل المراجعة النهائية.",
+            "quickStatsTitle": "إحصائيات سريعة",
+            "technicalGroups": "المجموعات التقنية",
+            "financialGroups": "المجموعات المالية",
+            "assignedLots": "الحصص المعينة"
+          },
+          "step6": {
+            "editBtn": "تعديل",
+            "reviewLabels": {
+              "aoName": "اسم طلب العروض",
+              "category": "الفئة",
+              "duration": "المدة",
+              "estimatedValue": "القيمة المقدرة"
+            },
+            "lotsTitle": "الحصص والمواصفات",
+            "lotsColumns": {
+              "lotId": "رقم الحصة",
+              "description": "الوصف",
+              "quantityDelay": "الكمية/المهلة"
+            },
+            "lotsEmpty": "لم يتم إضافة أي حصة.",
+            "scoringTitle": "معايير التنقيط",
+            "scoringEmpty": "لا يوجد معايير تقييم.",
+            "totalWeighting": "الوزن الإجمالي",
+            "eligibilityTitle": "قواعد الأهلية",
+            "eligibilityCriteria": "معايير",
+            "eliminatoryRules": "قواعد إقصائية نشطة.",
+            "checks": {
+              "generalInfoTitle": "معلومات عامة",
+              "generalInfoDesc": "جميع الحقول الإلزامية مستوفاة.",
+              "lotsTitle": "الحصص مُعدّة",
+              "lotsDesc": "مطلوب حصة واحدة على الأقل.",
+              "cdcTitle": "دفتر الشروط مرفوع",
+              "cdcDesc": "وثيقة المواصفات موجودة.",
+              "weightTitle": "حساب الأوزان",
+              "weightDesc": "يجب أن يكون مجموع المعايير مساوياً لـ 100%.",
+              "datesTitle": "اتساق التواريخ",
+              "datesDesc": "التواريخ تتبع ترتيباً زمنياً منطقياً.",
+              "eligibilityTitle": "معايير الأهلية",
+              "eligibilityDesc": "مطلوب معيار أهلية واحد على الأقل."
+            },
+            "cdcDocTitle": "وثيقة دفتر الشروط",
+            "cdcNoFile": "لا يوجد ملف دفتر شروط.",
+            "versionLabel": "النسخة:",
+            "avisGenerated": "تم إنشاء الإشعار:"
+          },
+          "footer": "تحتاج مساعدة؟ • مركز المساعدة",
+          "blockingReasons": {
+            "generalInfoIncomplete": "معلومات عامة غير مكتملة",
+            "noLots": "لم يتم إضافة أي حصة",
+            "cdcNotUploaded": "لم يتم رفع دفتر الشروط",
+            "weightInvalid": "الوزن الإجمالي مختلف عن 100% (المرحلة 5)",
+            "noEligibility": "لا يوجد معايير أهلية",
+            "datesIncoherent": "تواريخ غير متسقة"
+          }
+        }
+      },
+      "marches": {
+        "title": "سجلات الصفقات",
+        "description": "يمكن الوصول إلى معلومات الصفقات من خلال ملفات طلبات العروض (المنح والتعاقد).",
+        "viewAos": "عرض ملفات طلبات العروض"
+      },
+      "greAGre": {
+        "title": "طلبات التراضي",
+        "subtitle": "متابعة الطلبات، تحليل الذكاء الاصطناعي والقرارات.",
+        "createBtn": "طلب جديد",
+        "errorLoading": "تعذر تحميل طلبات التراضي.",
+        "filters": {
+          "title": "تصفية حسب الحالة",
+          "all": "الكل",
+          "brouillon": "مسودة",
+          "soumise": "مقدمة",
+          "en_analyse_ia": "في قيد تحليل الذكاء الاصطناعي",
+          "acceptee": "مقبولة",
+          "rejetee": "مرفوضة",
+          "en_revision": "قيد المراجعة"
+        },
+        "table": {
+          "reference": "المرجع",
+          "object": "الموضوع",
+          "estimatedAmount": "المبلغ المقدر",
+          "status": "الحالة",
+          "submissionDate": "تاريخ التقديم",
+          "iaComplianceScore": "نقاط المطابقة (الذكاء الاصطناعي)",
+          "actions": "إجراءات",
+          "view": "عرض",
+          "loading": "جاري تحميل الطلبات...",
+          "empty": "لم يتم العثور على أي طلب."
+        },
+        "form": {
+          "titleCreate": "معلومات الطلب",
+          "subtitleCreate": "أكمل الحقول ثم أضف المبررات.",
+          "titleResubmit": "تعديل وإعادة تقديم الطلب",
+          "subtitleResubmit": "قم بتحديث المعلومات ثم أعد تقديم الطلب بعد التصحيح.",
+          "reference": "المرجع (تلقائي)",
+          "estimatedAmount": "المبلغ المقدر (دينار جزائري)",
+          "object": "الموضوع",
+          "description": "الوصف",
+          "justificationsTitle": "المبررات",
+          "justificationsSubtitle": "أضف مبررات واضحة ومنظمة لدعم الطلب.",
+          "addedLabel": "مضافة",
+          "addJustification": "إضافة مبرر",
+          "type": "النوع",
+          "order": "الترتيب",
+          "fileOptional": "ملف مرفق (اختياري)",
+          "addBtn": "إضافة",
+          "tableHeaders": {
+            "order": "الترتيب",
+            "type": "النوع",
+            "description": "الوصف",
+            "file": "الملف",
+            "actions": "إجراءات"
+          },
+          "emptyJustifications": "لم يتم إضافة أي مبرر.",
+          "moveUp": "أعلى",
+          "moveDown": "أسفل",
+          "delete": "حذف",
+          "backBtn": "رجوع",
+          "submitBtn": "تقديم الطلب",
+          "submittingBtn": "جاري التقديم...",
+          "resubmitBtn": "تعديل وإعادة التقديم",
+          "resubmittingBtn": "جاري إعادة التقديم...",
+          "errors": {
+            "object": "الموضوع إلزامي.",
+            "description": "الوصف إلزامي.",
+            "amount": "المبلغ المقدر إلزامي.",
+            "justificationDesc": "وصف المبرر إلزامي.",
+            "justificationOrder": "يجب أن يكون الترتيب رقماً أكبر من 0.",
+            "justificationOrderDuplicate": "هذا الترتيب مستخدم بالفعل. اختر ترتيباً فريداً.",
+            "emptyJustifications": "أضف مبرراً واحداً على الأقل.",
+            "submitError": "لا يمكن تقديم الطلب في الوقت الحالي.",
+            "resubmitError": "لا يمكن إعادة تقديم الطلب في الوقت الحالي."
+          },
+          "justificationTypes": {
+            "urgence": "استعجال",
+            "technique": "تقني",
+            "economique": "اقتصادي",
+            "juridique": "قانوني",
+            "autre": "آخر"
+          }
+        },
+        "detail": {
+          "title": "تفاصيل طلب التراضي",
+          "editAndResubmit": "تعديل وإعادة التقديم",
+          "backToList": "رجوع إلى القائمة",
+          "info": {
+            "reference": "المرجع",
+            "object": "الموضوع",
+            "estimatedAmount": "المبلغ المقدر",
+            "submissionDate": "تاريخ التقديم",
+            "iaComplianceScore": "نقاط المطابقة (الذكاء الاصطناعي)",
+            "notAnalyzed": "لم يتم التحليل",
+            "description": "الوصف",
+            "status": "الحالة",
+            "amountCurrency": "د.ج"
+          },
+          "justifications": {
+            "title": "المبررات",
+            "subtitle": "المبررات المقدمة مع الملفات المرفقة.",
+            "noJustifications": "لا توجد مبررات متاحة.",
+            "table": {
+              "order": "الترتيب",
+              "type": "النوع",
+              "description": "الوصف",
+              "file": "الملف"
+            }
+          },
+          "iaAnalysis": {
+            "title": "تحليل الذكاء الاصطناعي",
+            "subtitle": "تقييم المطابقة التلقائي والتوصية.",
+            "scoreCompliance": "نقاط المطابقة",
+            "confidenceLevel": "مستوى الثقة",
+            "recommendation": "توصية الذكاء الاصطناعي",
+            "justification": "تبرير الذكاء الاصطناعي",
+            "analysisDate": "تاريخ التحليل",
+            "noAnalysis": "لا يوجد تحليل ذكاء اصطناعي متاح لهذا الطلب."
+          },
+          "controller": {
+            "title": "قرار المراقب",
+            "subtitle": "القرار النهائي والمطابقة مع توصية الذكاء الاصطناعي.",
+            "finalDecision": "القرار النهائي",
+            "reason": "السبب",
+            "matchesIa": "يتوافق مع توصية الذكاء الاصطناعي",
+            "decisionDate": "تاريخ القرار",
+            "noDecision": "لا يوجد قرار مراقب متاح لهذا الطلب.",
+            "yes": "نعم",
+            "no": "لا"
+          },
+          "recommendations": {
+            "accepter": "قبول",
+            "rejeter": "رفض",
+            "demander_complements": "طلب مكملات"
+          }
+        }
+      },
+      "soumissions": {
+        "landing": {
+          "description": "اطلع على العروض المقدمة من خلال قائمة طلبات العروض. افتح طلب عروض لرؤية تفاصيل العروض وحالتها.",
+          "goToAos": "الانتقال إلى طلبات العروض"
+        },
+        "mesSoumissions": {
+          "title": "عروضي",
+          "subtitle": "تتبع العروض المقدمة والجارية",
+          "newSubmission": "تقديم عرض جديد",
+          "stats": {
+            "total": "الإجمالي",
+            "enCours": "الجارية",
+            "retenues": "المقبولة",
+            "rejetees": "المرفوضة"
+          },
+          "searchPlaceholder": "مرجع، موضوع، هيئة...",
+          "filters": {
+            "all": "الكل",
+            "brouillon": "مسودة",
+            "deposee": "مقدمة",
+            "recue": "مستلمة",
+            "evaluee": "مقيّمة",
+            "retenue": "مقبولة",
+            "rejetee": "مرفوضة"
+          },
+          "table": {
+            "referenceId": "المرجع / المعرف",
+            "objectOrg": "الموضوع والهيئة",
+            "dateDepot": "تاريخ التقديم",
+            "status": "الحالة",
+            "actions": "إجراءات"
+          },
+          "empty": {
+            "title": "لا يوجد عروض",
+            "subtitle": "قم بتعديل البحث أو قدم عرضًا جديدًا"
+          },
+          "errorLoading": "تعذر تحميل العروض. تأكد من توفر واجهة برمجة التطبيقات وخدمة تقديم العروض.",
+          "actions": {
+            "view": "عرض التفاصيل",
+            "continue": "متابعة التقديم",
+            "recours": "تقديم طعن"
+          }
+        },
+        "detail": {
+          "nav": {
+            "dashboard": "لوحة القيادة",
+            "soumissions": "عروضي"
+          },
+          "back": "رجوع",
+          "depositedOn": "قدمت في",
+          "tabs": {
+            "apercu": "لمحة عامة",
+            "documents": "الوثائق",
+            "financier": "العرض المالي",
+            "timeline": "التتبع"
+          },
+          "apercu": {
+            "lots": "الحصص المقدمة",
+            "noLots": "لا توجد حصص مرتبطة.",
+            "proof": "إثبات النزاهة",
+            "serverTime": "توقيت الخادم:",
+            "sha256": "SHA-256 (العرض المالي):",
+            "caution": "الكفالة البنكية",
+            "reference": "المرجع:",
+            "bank": "البنك:",
+            "amount": "المبلغ:",
+            "expiration": "تاريخ الانتهاء:"
+          },
+          "documents": {
+            "desc": "الوثائق المتاحة لهذا العرض.",
+            "labels": {
+              "technique": "العرض التقني",
+              "caution": "الكفالة البنكية",
+              "financiere": "العرض المالي المشفر"
+            },
+            "download": "تحميل",
+            "unavailable": "الوثيقة غير متاحة"
+          },
+          "financier": {
+            "encryptedWarning": "العرض المالي مشفر من النهاية إلى النهاية. لا يمكن رؤية المبالغ إلا بعد فك التشفير الرسمي.",
+            "cols": {
+              "lot": "الحصة",
+              "designation": "التسمية",
+              "montant": "المبلغ دون رسوم"
+            },
+            "noLots": "لا تتوفر حصص.",
+            "total": "الإجمالي دون رسوم",
+            "meta": {
+              "verified": "التوقيع تم التحقق منه:",
+              "decrypted": "تم فك تشفير العرض:",
+              "hash": "تجزئة الملف:",
+              "yes": "نعم",
+              "no": "لا",
+              "noVerified": "لا أو لم يتم التحقق"
+            }
+          },
+          "timeline": {
+            "events": {
+              "creation": {
+                "label": "إنشاء مسودة",
+                "desc": "تم تهيئة العرض وحفظه كمسودة."
+              },
+              "depot": {
+                "label": "إيداع العرض",
+                "desc": "تم إطلاق عملية التقديم النهائي من قبل المتعامل."
+              },
+              "reception": {
+                "label": "الاستلام والتوقيت",
+                "desc": "أكدت المنصة استلام العرض."
+              },
+              "eval": {
+                "label": "التقييم",
+                "desc": "اللجنة تواصل التقييم التقني والمالي."
+              },
+              "retenue": {
+                "label": "المنح المؤقت",
+                "desc": "تم قبول العرض الخاص بك."
+              },
+              "rejetee": {
+                "label": "عرض مرفوض",
+                "desc": "لم يتم قبول العرض الخاص بك."
+              },
+              "pendingResult": {
+                "label": "نتيجة المنح",
+                "desc": "سيتم الإعلان عن النتيجة بعد اختتام التقييم."
+              }
+            },
+            "dates": {
+              "enAttente": "قيد الانتظار",
+              "resultPublished": "تم نشر النتيجة",
+              "toPlan": "للتخطيط"
+            }
+          },
+          "conformite": {
+            "title": "معلومات المطابقة",
+            "legalDelay": "ضمن المهلة القانونية:",
+            "deadlineAo": "الموعد النهائي لطلب العروض:",
+            "yes": "نعم",
+            "no": "لا",
+            "unspecified": "غير محدد"
+          },
+          "notFound": "العرض غير موجود"
+        },
+        "wizard": {
+          "success": {
+            "title": "تم تقديم العرض بنجاح !",
+            "desc1": "عرضكم",
+            "desc2": "تم استلامه، توقيته وتشفيره. سيتم إرسال إشعار استلام إليكم.",
+            "serverTime": "توقيت الخادم :",
+            "viewAction": "عرض عروضي"
+          },
+          "errors": {
+            "noAo": "يرجى اختيار طلب عروض قبل التقديم.",
+            "noLot": "يرجى اختيار حصة صالحة للمتابعة.",
+            "noTechFile": "ملف العرض التقني إلزامي.",
+            "noBpu": "يرجى إدخال العرض المالي للحصة المحددة.",
+            "incompleteCaution": "معلومات الكفالة البنكية غير مكتملة.",
+            "submitFailed": "فشل التقديم. يرجى المحاولة مرة أخرى."
+          },
+          "header": {
+            "title": "تقديم عرض جديد",
+            "step": "الخطوة",
+            "cancel": "إلغاء"
+          },
+          "steps": {
+            "step1": {
+              "title": "اختيار طلب العروض",
+              "subtitle": "اختر طلب العروض الذي ترغب في تقديم عرض له، ثم اختر الحصص المعنية.",
+              "searchPlaceholder": "البحث عن طلب عروض...",
+              "loadingError": "تعذر تحميل طلبات العروض.",
+              "notFound": "لا يوجد طلبات عروض",
+              "selected": "محدد",
+              "limit": "الموعد النهائي",
+              "selectLot": "اختر الحصة المعنية",
+              "lot": "الحصة",
+              "estimatedAmount": "المبلغ التقديري:"
+            },
+            "step3": {
+              "title": "العرض التقني",
+              "subtitle": "قم برفع الملف التقني المطلوب بموجب طلب العروض.",
+              "fileLabel": "الملف التقني",
+              "fileDesc": "ملف بصيغة PDF فقط يحتوي على جميع وثائق عرضك التقني.",
+              "selectFile": "اختر ملفاً",
+              "dragFile": "أو اسحب وأفلت هنا",
+              "maxSize": "ملف PDF بحجم أقصاه 50 ميغابايت",
+              "replace": "استبدال الملف"
+            },
+            "step4": {
+              "title": "العرض المالي (جدول الأسعار الأحادية)",
+              "subtitle": "أدخل الكميات والأسعار الأحادية لكل بند في الحصة المحددة.",
+              "line": "البند",
+              "unit": "الوحدة",
+              "quantity": "الكمية",
+              "unitPrice": "السعر الأحادي دون رسوم",
+              "totalHt": "الإجمالي دون رسوم:",
+              "add": "إضافة سطر",
+              "remove": "حذف"
+            },
+            "step5": {
+              "title": "الكفالة البنكية للتقديم",
+              "subtitle": "أدخل مراجع ضمان البنك وقم برفع النسخة الممسوحة ضوئياً كإثبات.",
+              "reference": "المرجع",
+              "bank": "البنك المصدر",
+              "amount": "المبلغ",
+              "emission": "تاريخ الإصدار",
+              "expiry": "تاريخ الانتهاء",
+              "scan": "نسخة من الكفالة",
+              "scanDesc": "صيغة PDF أو صورة (بحد أقصى 10 ميغابايت)",
+              "scanSelect": "اختر الملف",
+              "scanReplace": "استبدال النسخة"
+            },
+            "review": {
+              "title": "المراجعة والتقديم",
+              "subtitle": "يرجى التحقق من كافة المعلومات قبل تأكيد التقديم النهائي לעرضك.",
+              "alertTitle": "التشفير والختم",
+              "alertDesc": "بمجرد التأكيد، سيتم تشفير عرضك المالي من النهاية إلى النهاية.",
+              "submit": "التأكيد وتقديم العرض"
+            }
+          }
+        }
+      },
+      "recoursClaims": {
+        "list": {
+          "title": "الطعون والشكاوى",
+          "description": "الطعون مرتبطة بكل طلب عروض وعرض. افتح طلب عروض للاطلاع على الطعون المتاحة وتقدمها.",
+          "browseAos": "تصفح طلبات العروض",
+          "statusLabels": {
+            "depose": "مقدم",
+            "en_examen": "قيد المراجعة",
+            "accepte": "مقبول",
+            "rejete": "مرفوض"
+          },
+          "table": {
+            "reference": "المرجع",
+            "operator": "المتعامل",
+            "dateDepot": "تاريخ التقديم",
+            "dateLimite": "آخر أجل للرد",
+            "status": "الحالة",
+            "actions": "الإجراءات",
+            "view": "عرض",
+            "overdue": "تأخير"
+          },
+          "empty": "لا يوجد طعون مقدمة لهذا الطلب.",
+          "loading": "جاري تحميل الطعون...",
+          "error": "تعذر تحميل الطعون."
+        },
+        "detail": {
+          "breadcrumb": "تفاصيل الطعن",
+          "title": "تفاصيل الطعن",
+          "backToList": "العودة إلى قائمة الطعون",
+          "info": {
+            "reference": "المرجع",
+            "operator": "المتعامل",
+            "dateDepot": "تاريخ التقديم",
+            "dateLimite": "آخر أجل للرد",
+            "motif": "السبب",
+            "status": "الحالة"
+          },
+          "attachments": {
+            "title": "المرفقات",
+            "empty": "لا توجد مرفقات."
+          },
+          "decision": {
+            "title": "القرار",
+            "label": "القرار",
+            "date": "تاريخ القرار",
+            "motif": "سبب القرار",
+            "notAvailable": "القرار غير متاح بعد.",
+            "accepted": "مقبول",
+            "rejected": "مرفوض"
+          },
+          "footerNotice": "يمكن للمتعاقد الاطلاع على هذا الطعن. تتم معالجته من قبل اللجنة / المراقب."
+        }
+      },
+      "appelsOffres": {
+        "detail": {
+          "title": "تفاصيل طلب العروض",
+          "back": "رجوع",
+          "gestionAo": "إدارة طلب العروض",
+          "buttons": {
+            "manageCommission": "إدارة اللجنة",
+            "changeStatus": "تغيير الحالة",
+            "pronounceAttribution": "إعلان المنح",
+            "cancelTender": "إلغاء الصفقة"
+          },
+          "help": {
+            "title": "المساعدة والدعم",
+            "description": "راجع دليل الفاعل العمومي لمرحلة فتح الأظرفة والتقييم التقني.",
+            "documentation": "الوثائق",
+            "integrity": "نزاهة اللجنة",
+            "members": "أعضاء اللجنة"
+          },
+          "statusLabels": {
+            "publie": "منشور",
+            "en_cours": "جارية",
+            "evaluation": "تقييم",
+            "attribue": "ممنوح",
+            "annule": "ملغى",
+            "cloture": "مغلق"
+          },
+          "typeLabels": {
+            "ouvert": "طلب عروض مفتوح",
+            "restreint": "طلب عروض محدود",
+            "gre_a_gre": "بالتراضي"
+          },
+          "tabs": {
+            "general": "معلومات عامة",
+            "lots": "الحصص",
+            "documents": "وثائق دفتر الشروط",
+            "soumission": "تعهدي"
+          },
+          "general": {
+            "reference": "المرجع",
+            "object": "الموضوع",
+            "organization": "الهيئة",
+            "wilaya": "الولاية",
+            "sector": "القطاع",
+            "type": "نوع الإجراء",
+            "status": "الحالة",
+            "estimatedAmount": "المبلغ المقدر",
+            "deadline": "تاريخ نهاية الإيداع",
+            "eligibility": "شروط الأهلية",
+            "eligibilityMock": [
+              "سجل تجاري ساري المفعول",
+              "شهادة ضريبية صالحة",
+              "الميزانية العمومية للسنوات الثلاث الماضية",
+              "صحيفة السوابق القضائية للمسير",
+              "شهادة التأهيل التقني"
+            ]
+          },
+          "lots": {
+            "lot": "حصة",
+            "estimatedAmount": "المبلغ المقدر :",
+            "submit": "تقديم تعهد"
+          },
+          "documents": {
+            "desc": "قم بتنزيل وثائق ملف استشارة الشركات.",
+            "download": "تحميل"
+          },
+          "soumission": {
+            "statusLabels": {
+              "brouillon": "مسودة",
+              "deposee": "مقدم",
+              "recue": "تم الاستلام ومؤرخ",
+              "evaluee": "قيد التقييم",
+              "retenue": "تم القبول — منح مؤقت",
+              "rejetee": "مرفوض"
+            },
+            "banner": {
+              "title": "تعهد موجود",
+              "currentStatus": "الحالة الحالية :"
+            },
+            "summary": {
+              "reference": "مرجع الطلب",
+              "lots": "الحصص المتعهد بها",
+              "lotsCount": "حصة(حصص)",
+              "date": "تاريخ الإيداع",
+              "hash": "بصمة SHA-256"
+            },
+            "actions": {
+              "view": "عرض ملفي",
+              "download": "تنزيل إيصال الاستلام"
+            },
+            "notSubmitted": {
+              "expiredTitle": "تجاوز الموعد النهائي",
+              "expiredDesc": "فترة التعهد لهذا الطلب مغلقة.",
+              "noSubTitle": "لا يوجد تعهد مقدم",
+              "noSubDesc": "لم تقم بتقديم عرض لهذا الطلب بعد.",
+              "deadline": "تاريخ الانتهاء :"
+            },
+            "checklist": {
+              "title": "المستندات المطلوبة",
+              "items": [
+                "العرض التقني (دفتر الشروط معبأ)",
+                "جدول أسعار الوحدة",
+                "المستندات الإدارية",
+                "ضمان التعهد البنكي",
+                "البيانات المالية للسنوات الثلاث الماضية"
+              ]
+            },
+            "start": "بدء تعهدي"
+          },
+          "page": {
+            "notFound": "طلب العروض غير موجود",
+            "breadcrumb": {
+              "dashboard": "لوحة القيادة",
+              "aos": "طلبات العروض"
+            },
+            "back": "رجوع",
+            "deadline": "الحد :",
+            "submitCta": "تقديم تعهد",
+            "viewSubmission": "عرض تعهدي"
+          }
+        }
+      }
+    },
+    "operateur": {
+      "profil": {
+        "title": "ملفي الشخصي",
+        "desc": "إدارة معلوماتك الشخصية والمهنية",
+        "securityTitle": "الأمان",
+        "securityDesc": "إدارة أمان حسابك",
+        "tabs": {
+          "profil": "الملف الشخصي",
+          "securite": "الأمان"
+        },
+        "avatar": {
+          "role": "متعامل اقتصادي",
+          "verified": "حساب موثق"
+        },
+        "personal": {
+          "title": "المعلومات الشخصية",
+          "edit": "تعديل",
+          "cancel": "إلغاء",
+          "saving": "جاري الحفظ...",
+          "save": "حفظ",
+          "firstName": "الاسم",
+          "lastName": "اللقب",
+          "email": "البريد الإلكتروني",
+          "phone": "رقم الهاتف",
+          "language": "اللغة المفضلة",
+          "fr": "الفرنسية",
+          "ar": "العربية"
+        },
+        "organization": {
+          "title": "معلومات الشركة",
+          "denomination": "الاسم التجاري",
+          "nif": "الرقم الجبائي (NIF)",
+          "nis": "رقم التعريف الإحصائي (NIS)",
+          "rc": "السجل التجاري",
+          "type": "الشكل القانوني",
+          "address": "العنوان",
+          "wilaya": "الولاية",
+          "status": "حالة التحقق",
+          "verified": "موثق",
+          "notVerified": "غير موثق"
+        },
+        "oe": {
+          "title": "ملف المتعامل الاقتصادي",
+          "eligibility": "الأهلية",
+          "eligible": "مؤهل",
+          "notEligible": "غير مؤهل",
+          "blacklist": "القائمة السوداء",
+          "blacklisted": "محظور",
+          "notBlacklisted": "غير محظور",
+          "qualifications": "المؤهلات",
+          "categories": "الفئات المهنية",
+          "desc": "تتم إدارة هذه المعلومات من قبل مسؤول المنصة. اتصل بالدعم لإجراء أي تعديل."
+        },
+        "security": {
+          "mfa": {
+            "title": "المصادقة الثنائية (MFA)",
+            "enabled": "مفعل",
+            "disabled": "معطل",
+            "enabledDesc": "المصادقة الثنائية مفعلة على حسابك. حسابك محمي.",
+            "disabledDesc": "المصادقة الثنائية معطلة. قم بتفعيلها لتعزيز أمان حسابك.",
+            "btnDisable": "تعطيل",
+            "btnEnable": "تفعيل MFA",
+            "loading": "تنزيل...",
+            "qrDesc": "امسح رمز الاستجابة السريعة هذا عبر تطبيق المصادقة (Google Authenticator، Authy...)",
+            "manualKey": "المفتاح اليدوي :",
+            "btnConfigured": "قمت بتكوين التطبيق →",
+            "verifying": "التحقق...",
+            "confirmDesc": "قم بتأكيد كلمة المرور لتعطيل MFA",
+            "pwPlaceholder": "كلمة المرور الحالية",
+            "pwRequired": "كلمة المرور مطلوبة.",
+            "btnConfirmDisable": "تأكيد التعطيل",
+            "disabling": "جاري التعطيل...",
+            "cancel": "إلغاء"
+          },
+          "sessions": {
+            "title": "الجلسات النشطة",
+            "revokeAll": "إلغاء جميع الجلسات الأخرى",
+            "current": "الجلسة الحالية",
+            "ip": "عنوان IP :",
+            "revokeTitle": "إلغاء الجلسة"
+          },
+          "password": {
+            "title": "تغيير كلمة المرور",
+            "success": "تم تحديث كلمة المرور بنجاح.",
+            "current": "كلمة المرور الحالية",
+            "next": "كلمة المرور الجديدة",
+            "confirm": "تأكيد كلمة المرور",
+            "errorReq": "مطلوب",
+            "errorMin": "8 أحرف على الأقل",
+            "errorMatch": "كلمات المرور غير متطابقة",
+            "updating": "تحديث...",
+            "update": "تحديث كلمة المرور"
+          }
+        }
+      },
+      "dashboard": {
+        "header": {
+          "greeting": "مرحباً",
+          "browseAos": "تصفح طلبات العروض"
+        },
+        "stats": {
+          "activeAos": "طلبات العروض النشطة",
+          "activeAosSub": "مباشرة",
+          "submissionsInProgress": "العروض قيد التقديم",
+          "submissionsInProgressSub": "جارية",
+          "marchesWon": "الصفقات الممنوحة",
+          "marchesWonSub": "تم المنح",
+          "openRecours": "الطعون المفتوحة",
+          "openRecoursSub": "متابعة"
+        },
+        "quickActions": {
+          "title": "إجراءات سريعة",
+          "browseAos": "تصفح طلبات العروض",
+          "mySubmissions": "عروضي",
+          "myRecours": "طعوني",
+          "notifications": "الإشعارات"
+        },
+        "activity": {
+          "title": "النشاط الأخير",
+          "viewAll": "عرض الكل"
+        },
+        "submissions": {
+          "title": "عروضي الأخيرة",
+          "viewAll": "عرض الكل",
+          "cols": {
+            "reference": "المرجع",
+            "object": "الموضوع",
+            "date": "تاريخ الإيداع",
+            "status": "الحالة"
+          },
+          "statusLabels": {
+            "brouillon": "مسودة",
+            "deposee": "تم الإيداع",
+            "recue": "تم الاستلام",
+            "evaluee": "قيد التقييم",
+            "retenue": "مقبولة",
+            "rejetee": "مرفوضة"
+          }
+        },
+      "soumissions": {
+        "mesSoumissions": {
+          "title": "عروضي",
+          "subtitle": "تتبع العروض المقدمة والجارية",
+          "newSubmission": "تقديم عرض جديد",
+          "stats": {
+            "total": "الإجمالي",
+            "enCours": "الجارية",
+            "retenues": "المقبولة",
+            "rejetees": "المرفوضة"
+          },
+          "searchPlaceholder": "مرجع، موضوع، هيئة...",
+          "filters": {
+            "all": "الكل",
+            "brouillon": "مسودة",
+            "deposee": "مقدمة",
+            "recue": "مستلمة",
+            "evaluee": "مقيّمة",
+            "retenue": "مقبولة",
+            "rejetee": "مرفوضة"
+          },
+          "table": {
+            "referenceId": "المرجع / المعرف",
+            "objectOrg": "الموضوع والهيئة",
+            "dateDepot": "تاريخ التقديم",
+            "status": "الحالة",
+            "actions": "إجراءات"
+          },
+          "empty": {
+            "title": "لا يوجد عروض",
+            "subtitle": "قم بتعديل البحث أو قدم عرضًا جديدًا"
+          },
+          "errorLoading": "تعذر تحميل العروض. تأكد من توفر واجهة برمجة التطبيقات وخدمة تقديم العروض.",
+          "actions": {
+            "view": "عرض التفاصيل",
+            "continue": "متابعة التقديم",
+            "recours": "تقديم طعن"
+          }
+        },
+        "detail": {
+          "nav": {
+            "dashboard": "لوحة القيادة",
+            "soumissions": "عروضي"
+          },
+          "back": "رجوع",
+          "depositedOn": "أودعت في",
+          "tabs": {
+            "apercu": "نظرة عامة",
+            "documents": "المستندات",
+            "financier": "العرض المالي",
+            "timeline": "التتبع"
+          },
+          "apercu": {
+            "lots": "الحصص المقدم عليها",
+            "noLots": "لا توجد حصص مرتبطة.",
+            "proof": "دليل النزاهة",
+            "serverTime": "ختم الوقت (الخادم):",
+            "sha256": "SHA-256 (العرض المالي):",
+            "caution": "الكفالة المصرفية",
+            "reference": "المرجع:",
+            "bank": "البنك المصدر:",
+            "amount": "المبلغ:",
+            "expiration": "تاريخ الانتهاء:"
+          },
+          "documents": {
+            "desc": "المستندات المتاحة لهذا العرض.",
+            "labels": {
+              "technique": "العرض التقني",
+              "caution": "الكفالة المصرفية",
+              "financiere": "العرض المالي المسعر"
+            },
+            "download": "تحميل",
+            "unavailable": "المستند غير متاح"
+          },
+          "financier": {
+            "encryptedWarning": "العرض المالي مشفر بالكامل. المبالغ تظهر فقط بعد فك التشفير الرسمي.",
+            "cols": {
+              "lot": "الحصة",
+              "designation": "التعيين",
+              "montant": "المبلغ خ.ر"
+            },
+            "noLots": "لا توجد حصص متاحة.",
+            "total": "الإجمالي خ.ر",
+            "meta": {
+              "verified": "تم التحقق من التوقيع:",
+              "decrypted": "تم فك تشفير العرض:",
+              "hash": "هاش الملف:",
+              "yes": "نعم",
+              "no": "لا",
+              "noVerified": "لا أو لم يتم التحقق"
+            }
+          },
+          "timeline": {
+            "events": {
+              "creation": {
+                "label": "تم إنشاء المسودة",
+                "desc": "تم بدء العرض وحفظه كمسودة."
+              },
+              "depot": {
+                "label": "إيداع العرض",
+                "desc": "قام المشغل بإيداع العرض النهائي."
+              },
+              "reception": {
+                "label": "الاستلام وختم الوقت",
+                "desc": "أكدت المنصة استلام العرض."
+              },
+              "eval": {
+                "label": "التقييم",
+                "desc": "تواصل اللجنة التقييم التقني والمالي."
+              },
+              "retenue": {
+                "label": "مقبول",
+                "desc": "تم قبول العرض من قبل اللجنة."
+              },
+              "rejetee": {
+                "label": "مرفوض",
+                "desc": "لم يتم قبول العرض."
+              }
+            }
+          }
+        },
+        "wizard": {
+          "success": {
+            "title": "تم تقديم العرض بنجاح !",
+            "desc1": "عرضكم",
+            "desc2": "تم استلامه، توقيته وتشفيره. سيتم إرسال إشعار استلام إليكم.",
+            "serverTime": "توقيت الخادم :",
+            "viewAction": "عرض عروضي"
+          },
+          "nav": {
+            "back": "رجوع",
+            "continue": "متابعة",
+            "steps": {
+              "step1": "اختيار طلب العروض",
+              "step2": "العرض التقني",
+              "step3": "العرض المالي",
+              "step4": "الكفالة",
+              "step5": "الملخص"
+            }
+          },
+          "errors": {
+            "noAo": "يرجى اختيار طلب عروض قبل التقديم.",
+            "noLot": "يرجى اختيار حصة صالحة للمتابعة.",
+            "noTechFile": "ملف العرض التقني إلزامي.",
+            "noBpu": "يرجى إدخال العرض المالي للحصة المحددة.",
+            "incompleteCaution": "معلومات الكفالة البنكية غير مكتملة.",
+            "submitFailed": "فشل التقديم. يرجى المحاولة مرة أخرى."
+          },
+          "header": {
+            "title": "تقديم عرض جديد",
+            "step": "الخطوة",
+            "cancel": "إلغاء"
+          },
+          "steps": {
+            "step1": {
+              "title": "اختيار طلب العروض",
+              "subtitle": "اختر طلب العروض الذي ترغب في تقديم عرض له، ثم اختر الحصص المعنية.",
+              "searchPlaceholder": "البحث عن طلب عروض...",
+              "loadingError": "تعذر تحميل طلبات العروض.",
+              "notFound": "لا يوجد طلبات عروض",
+              "selected": "محدد",
+              "limit": "الموعد النهائي",
+              "selectLot": "اختر الحصة المعنية",
+              "lot": "الحصة",
+              "estimatedAmount": "المبلغ التقديري:"
+            },
+            "step3": {
+              "title": "العرض التقني",
+              "subtitle": "قم برفع الملف التقني المطلوب بموجب طلب العروض.",
+              "fileLabel": "الملف التقني",
+              "fileDesc": "ملف بصيغة PDF فقط يحتوي على جميع وثائق عرضك التقني.",
+              "selectFile": "اختر ملفاً",
+              "dragFile": "أو اسحب وأفلت هنا",
+              "maxSize": "ملف PDF بحجم أقصاه 50 ميغابايت",
+              "replace": "استبدال الملف"
+            },
+            "step4": {
+              "title": "العرض المالي (جدول الأسعار الأحادية)",
+              "subtitle": "أدخل الكميات والأسعار الأحادية لكل بند في الحصة المحددة.",
+              "line": "البند",
+              "unit": "الوحدة",
+              "quantity": "الكمية",
+              "unitPrice": "السعر الأحادي دون رسوم",
+              "totalHt": "الإجمالي دون رسوم:",
+              "add": "إضافة سطر",
+              "remove": "حذف"
+            },
+            "step5": {
+              "title": "الكفالة البنكية للتقديم",
+              "subtitle": "أدخل مراجع ضمان البنك وقم برفع النسخة الممسوحة ضوئياً كإثبات.",
+              "reference": "المرجع",
+              "bank": "البنك المصدر",
+              "amount": "المبلغ",
+              "emission": "تاريخ الإصدار",
+              "expiry": "تاريخ الانتهاء",
+              "scan": "نسخة من الكفالة",
+              "scanDesc": "صيغة PDF أو صورة (بحد أقصى 10 ميغابايت)",
+              "scanSelect": "اختر الملف",
+              "scanReplace": "استبدال النسخة"
+            },
+            "review": {
+              "title": "المراجعة والتقديم",
+              "subtitle": "يرجى التحقق من كافة المعلومات قبل تأكيد التقديم النهائي לעرضك.",
+              "alertTitle": "التشفير والختم",
+              "alertDesc": "بمجرد التأكيد، سيتم تشفير عرضك المالي من النهاية إلى النهاية.",
+              "submit": "التأكيد وتقديم العرض"
+            }
+          }
+        }
+      },
+        "deadlines": {
+          "title": "المواعيد القادمة",
+          "fullCalendar": "التقويم الكامل"
+        },
+        "recours": {
+          "title": "الطعون الجارية",
+          "statusExamen": "قيد الدراسة",
+          "viewMyRecours": "عرض طعوني",
+          "mesRecours": {
+            "title": "طعوني",
+            "subtitle": "تتبع الطعون المقدمة وقيد المعالجة",
+            "newRecours": "طعن جديد",
+            "stats": {
+              "total": "الإجمالي",
+              "enExamen": "قيد الدراسة",
+              "acceptes": "مقبولة",
+              "rejetes": "مرفوضة"
+            },
+            "searchPlaceholder": "مرجع، موضوع، مناقصة…",
+            "filters": {
+              "all": "الكل",
+              "depose": "مقدم",
+              "en_examen": "قيد الدراسة",
+              "accepte": "مقبول",
+              "rejete": "مرفوض"
+            },
+            "table": {
+              "reference": "المرجع",
+              "aoObject": "موضوع المناقصة",
+              "dateDepot": "تاريخ التقديم",
+              "dateLimite": "تاريخ الرد",
+              "status": "الحالة"
+            },
+            "empty": {
+              "title": "لا يوجد طعون",
+              "subtitle": "قم بتعديل البحث أو قدم طعنًا جديدًا"
+            },
+            "errorLoading": "تعذر تحميل الطعون.",
+            "actions": {
+              "view": "عرض التفاصيل"
+            },
+            "badges": {
+              "depasse": "منتهي"
+            },
+            "paginationOf": "من"
+          },
+          "create": {
+            "success": {
+              "title": "تم إرسال الطعن بنجاح!",
+              "desc": "تم تسجيل طعنكم. سيتم دراسته من قبل المصلحة المتعاقدة واللجنة المختصة. ستتلقون تحديثات حول تقدم ملفكم.",
+              "viewList": "عرض طعوني",
+              "viewDetail": "الاطلاع على هذا الطعن"
+            },
+            "header": {
+              "title": "تقديم طعن",
+              "subtitle": "النموذج الرسمي لتقديم طعن ما قبل التعاقد"
+            },
+            "context": {
+              "title": "سياق طلب العروض",
+              "ao": "طلب العروض",
+              "emptyAo": "لم يتم اختيار طلب عروض",
+              "winner": "المستفيد المؤقت",
+              "amount": "مبلغ الحصة",
+              "date": "تاريخ المنح"
+            },
+            "info": {
+              "title": "معلومات الإجراء",
+              "aoSelect": "اختيار طلب العروض",
+              "decisionSelect": "اختيار القرار المطعون فيه",
+              "noAo": "لا يوجد طلبات عروض متاحة",
+              "noDecision": "لم يتم العثور على قرار منح لهذا الطلب",
+              "errorLoad": "خطأ أثناء تحميل الخيارات.",
+              "required": "يرجى اختيار طلب العروض والقرار."
+            },
+            "content": {
+              "title": "السبب والمرفقات",
+              "motifLabel": "سبب الطعن بالتفصيل",
+              "motifPholder": "يرجى شرح أسباب اعتراضكم بدقة (50 حرفاً على الأقل)...",
+              "minChars": "مطلوب 50 حرفاً على الأقل",
+              "chars": "حرف",
+              "filesLabel": "الوثائق الثبوتية",
+              "dragText": "اسحب ملفاتك هنا",
+              "or": "أو",
+              "browse": "تصفح",
+              "filesDesc": "صيغ PDF, PNG, JPG (بحد أقصى 10 ميغابايت لكل ملف). أي وثيقة مفيدة لدراسة طعنكم."
+            },
+            "sidebar": {
+              "expiredTitle": "انتهت مهلة الطعن",
+              "expiredDesc": "انتهت المهلة القانونية لتقديم طعن على هذا القرار بتاريخ",
+              "daysText": "يوم",
+              "daysPlural": "",
+              "remainingText": "متبقي",
+              "remainingPlural": "",
+              "deadline": "الموعد النهائي:",
+              "noteTitle": "هام",
+              "note1": "تقديم طعن يوقف مؤقتاً توقيع العقد.",
+              "note2": "تأكد من تقديم عناصر ملموسة لدراسة ملفكم.",
+              "errorCreate": "حدث خطأ أثناء التقديم.",
+              "submitting": "جاري الإرسال...",
+              "submit": "تقديم الطعن النهائي",
+              "cancel": "إلغاء"
+            }
+          }
+        },
+        "support": {
+          "title": "الدعم والدلائل",
+          "guide": "دليل مقدم العروض 2024",
+          "contact": "التواصل مع الدعم التقني",
+          "faq": "الأسئلة الشائعة"
+        },
+        "errorLoading": "تعذر تحميل لوحة تحكم المتعامل.",
+        "settings": {
+          "description": "تجمع هذه الصفحة إعدادات حساب المتعاقد. سيتم إضافة أقسام التكوين هنا.",
+          "status": "الإعدادات قيد الدمج."
+        }
+      },
+      "tendersList": {
+        "title": "طلبات العروض",
+        "loading": "جاري التحميل...",
+        "errors": {
+          "load": "فشل تحميل طلبات العروض.",
+          "changeStatus": "فشل تغيير حالة طلب العروض هذا.",
+          "delete": "فشل حذف طلب العروض هذا."
+        },
+        "searchPlaceholder": "المرجع، الموضوع، الهيئة...",
+        "searchLabel": "البحث",
+        "filterByStatus": "تصفية حسب الحالة",
+        "filtersBtn": "مرشحات",
+        "advancedFilters": "مرشحات متقدمة",
+        "reset": "إعادة تعيين",
+        "filters": {
+          "status": "الحالة",
+          "all": "الكل",
+          "draft": "مسودة",
+          "published": "منشور",
+          "ongoing": "جارٍ",
+          "evaluation": "تقييم",
+          "awarded": "ممنوح",
+          "cancelled": "ملغى",
+          "dateStart": "تاريخ البدء",
+          "dateEnd": "تاريخ الانتهاء",
+          "reset": "إعادة تعيين",
+          "searchLabel": "البحث",
+          "filterByStatus": "تصفية حسب الحالة"
+        },
+        "labels": {
+          "status": "الحالة",
+          "type": "نوع الإجراء",
+          "wilaya": "الولاية",
+          "mySubmission": "عرضي"
+        },
+        "values": {
+          "allStatuses": "جميع الحالات",
+          "allTypes": "جميع الأنواع",
+          "allWilayas": "جميع الولايات",
+          "all": "الكل",
+          "alreadySubmitted": "تم التقديم",
+          "notSubmitted": "لم يتم التقديم"
+        },
+        "statusLabels": {
+          "publie": "منشور",
+          "en_cours": "جاري",
+          "evaluation": "تقييم",
+          "attribue": "تم المنح",
+          "annule": "ملغى",
+          "cloture": "مغلق"
+        },
+        "typeLabels": {
+          "ouvert": "طلب عروض مفتوح",
+          "restreint": "طلب عروض محدود",
+          "gre_a_gre": "تراضي"
+        },
+        "empty": {
+          "title": "لم يتم العثور على أي طلب عروض",
+          "subtitle": "قم بتغيير معايير البحث الخاصة بك"
+        },
+        "card": {
+          "submitted": "تم الإيداع",
+          "reference": "المرجع",
+          "estimatedAmount": "المبلغ التقديري",
+          "deadline": "آخر أجل",
+          "viewDetail": "عرض التفاصيل"
+        },
+        "pagination": {
+          "displaying": "عرض",
+          "of": "من أصل"
         }
       }
     }

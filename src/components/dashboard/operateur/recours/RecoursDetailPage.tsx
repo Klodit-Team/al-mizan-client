@@ -16,7 +16,7 @@ import { STATUS_META, fmt } from "./types";
 // ─── Timeline step ─────────────────────────────────────────────────────────────
 
 function TimelineStep({
-  icon, label, date, sublabel, active, last,
+  icon, label, date, sublabel, active, last, locale, dict
 }: {
   icon: React.ReactNode;
   label: string;
@@ -24,6 +24,8 @@ function TimelineStep({
   sublabel?: string;
   active: boolean;
   last?: boolean;
+  locale: string;
+  dict?: any;
 }) {
   return (
     <div className="flex gap-3">
@@ -48,8 +50,8 @@ function TimelineStep({
           <p className={`text-[10px] ${active ? "text-slate-500" : "text-slate-300"}`}>{sublabel}</p>
         )}
         {date
-          ? <p className={`mt-0.5 text-[11px] ${active ? "text-slate-500" : "text-slate-300"}`}>{fmt(date)}</p>
-          : <p className="mt-0.5 text-[11px] text-slate-300">En attente</p>
+          ? <p className={`mt-0.5 text-[11px] ${active ? "text-slate-500" : "text-slate-300"}`}>{fmt(date, locale)}</p>
+          : <p className="mt-0.5 text-[11px] text-slate-300">{dict?.timeline?.pending || "En attente"}</p>
         }
       </div>
     </div>
@@ -69,10 +71,8 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 
 // ─── Main component ────────────────────────────────────────────────────────────
 
-export default function RecoursDetailPage({ recoursId }: { recoursId: string }) {
-  const params = useParams();
+export default function RecoursDetailPage({ recoursId, dict, locale }: { recoursId: string, dict: any, locale: Locale }) {
   const router = useRouter();
-  const locale = (params?.locale as Locale) || "fr";
   const { data: recours, isLoading, isError } = useOperateurRecoursDetailQuery(recoursId);
   const updateMutation = useUpdateOperateurRecoursMutation();
 
@@ -101,10 +101,10 @@ export default function RecoursDetailPage({ recoursId }: { recoursId: string }) 
     return (
       <div className="flex flex-col items-center justify-center py-24 text-slate-400">
         <Scale className="mb-3 h-12 w-12 opacity-20" />
-        <p className="text-base font-medium text-slate-500">Recours introuvable</p>
+        <p className="text-base font-medium text-slate-500">{dict.notFound}</p>
         <button type="button" onClick={() => router.back()}
           className="mt-4 text-sm font-semibold hover:underline" style={{ color: "#4CAF50" }}>
-          ← Retour à mes recours
+          ← {dict.back}
         </button>
       </div>
     );
@@ -148,7 +148,7 @@ export default function RecoursDetailPage({ recoursId }: { recoursId: string }) 
             </div>
             <p className="mt-0.5 font-mono text-[11px] font-semibold" style={{ color: "#4CAF50" }}>{recours.aoReference}</p>
             <p className="text-xs text-slate-600">{recours.aoObject}</p>
-            <p className="mt-1 text-[11px] text-slate-400">Déposé le {fmt(recours.dateDepot)}</p>
+            <p className="mt-1 text-[11px] text-slate-400">{dict.depositedOn} {fmt(recours.dateDepot, locale)}</p>
           </div>
         </div>
       </div>
@@ -158,22 +158,22 @@ export default function RecoursDetailPage({ recoursId }: { recoursId: string }) 
 
           {/* Recours info */}
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-500">Informations du recours</h2>
+            <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-500">{dict.info.title}</h2>
             <dl>
-              <InfoRow label="Référence recours" value={
+              <InfoRow label={dict.info.reference} value={
                 <span className="font-mono text-[11px] font-bold text-slate-700">{recours.reference}</span>
               } />
-              <InfoRow label="AO concerné" value={
+              <InfoRow label={dict.info.ao} value={
                 <span className="font-mono text-[11px] font-semibold" style={{ color: "#4CAF50" }}>{recours.aoReference}</span>
               } />
-              <InfoRow label="Objet" value={recours.aoObject} />
-              <InfoRow label="Attributaire" value={
+              <InfoRow label={dict.info.object} value={recours.aoObject} />
+              <InfoRow label={dict.info.winner} value={
                 <span className="flex items-center gap-1.5">
                   <Building2 className="h-3 w-3 text-slate-400" />
                   {recours.attribution.winner}
                 </span>
               } />
-              <InfoRow label="Montant attribué" value={
+              <InfoRow label={dict.info.amount} value={
                 <span className="flex items-center gap-1.5">
                   <DollarSign className="h-3 w-3 text-slate-400" />
                   <span className="font-semibold text-slate-700">{recours.attribution.montantAttribue}</span>
@@ -185,14 +185,14 @@ export default function RecoursDetailPage({ recoursId }: { recoursId: string }) 
           {/* Motif */}
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="mb-3 flex items-center justify-between gap-2">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">Motif du recours</h2>
+              <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">{dict.motif.title}</h2>
               {canEditMotif && !isEditingMotif && (
                 <button
                   type="button"
                   onClick={() => setIsEditingMotif(true)}
                   className="rounded-lg border border-slate-200 px-2.5 py-1 text-[10px] font-semibold text-slate-600 hover:border-[#4CAF50] hover:text-[#4CAF50]"
                 >
-                  Modifier
+                  {dict.motif.edit}
                 </button>
               )}
             </div>
@@ -214,7 +214,7 @@ export default function RecoursDetailPage({ recoursId }: { recoursId: string }) 
                     }}
                     className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
                   >
-                    Annuler
+                    {dict.motif.cancel}
                   </button>
                   <button
                     type="button"
@@ -222,7 +222,7 @@ export default function RecoursDetailPage({ recoursId }: { recoursId: string }) 
                     disabled={updateMutation.isPending || motifDraft.trim().length < 10}
                     className="rounded-lg bg-[#4CAF50] px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
                   >
-                    {updateMutation.isPending ? "Enregistrement..." : "Enregistrer"}
+                    {updateMutation.isPending ? dict.motif.saving : dict.motif.save}
                   </button>
                 </div>
               </div>
@@ -235,7 +235,7 @@ export default function RecoursDetailPage({ recoursId }: { recoursId: string }) 
           {recours.piecesJointes.length > 0 && (
             <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-500">
-                Pièces jointes ({recours.piecesJointes.length})
+                {dict.documents.title} ({recours.piecesJointes.length})
               </h2>
               <ul className="space-y-2">
                 {recours.piecesJointes.map((pj) => (
@@ -245,7 +245,7 @@ export default function RecoursDetailPage({ recoursId }: { recoursId: string }) 
                       <p className="truncate text-xs font-semibold text-slate-700">{pj.nom}</p>
                       <p className="text-[10px] text-slate-400">{pj.taille}</p>
                     </div>
-                    <button type="button" title="Télécharger"
+                    <button type="button" title={dict.documents.download}
                       className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:border-[#4CAF50] hover:text-[#4CAF50] transition-colors">
                       <Download className="h-3.5 w-3.5" />
                     </button>
@@ -271,12 +271,12 @@ export default function RecoursDetailPage({ recoursId }: { recoursId: string }) 
                   <h2 className={`text-sm font-bold ${
                     recours.decision.statut === "accepte" ? "text-emerald-800" : "text-rose-800"
                   }`}>
-                    Décision : {recours.decision.statut === "accepte" ? "Recours Accepté" : "Recours Rejeté"}
+                    {recours.decision.statut === "accepte" ? dict.decision.accepted : dict.decision.rejected}
                   </h2>
                   <p className={`text-[10px] ${
                     recours.decision.statut === "accepte" ? "text-emerald-600" : "text-rose-600"
                   }`}>
-                    Rendue le {fmt(recours.decision.date)}
+                    {dict.decision.rendered} {fmt(recours.decision.date, locale)}
                   </p>
                 </div>
               </div>
@@ -294,18 +294,22 @@ export default function RecoursDetailPage({ recoursId }: { recoursId: string }) 
 
           {/* Timeline */}
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="mb-4 text-xs font-bold uppercase tracking-widest text-slate-500">Chronologie</h2>
+            <h2 className="mb-4 text-xs font-bold uppercase tracking-widest text-slate-500">{dict.timeline.title}</h2>
             <TimelineStep
               icon={<Scale className="h-3.5 w-3.5" />}
-              label="Recours déposé"
+              label={dict.timeline.depot}
               date={recours.dateDepot}
               active={true}
+              locale={locale}
+              dict={dict}
             />
             <TimelineStep
               icon={<Clock className="h-3.5 w-3.5" />}
-              label="Date limite de réponse"
+              label={dict.timeline.limite}
               date={recours.dateLimiteReponse}
               active={["en_examen", "accepte", "rejete"].includes(recours.statut)}
+              locale={locale}
+              dict={dict}
             />
             <TimelineStep
               icon={isDecided
@@ -314,35 +318,37 @@ export default function RecoursDetailPage({ recoursId }: { recoursId: string }) 
                   : <XCircle className="h-3.5 w-3.5" />
                 : <Calendar className="h-3.5 w-3.5" />
               }
-              label="Date de décision"
+              label={dict.timeline.decision}
               date={recours.dateDecision}
               active={isDecided}
               last
+              locale={locale}
+              dict={dict}
             />
           </section>
 
           {/* Attribution context */}
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-500">Attribution provisoire</h2>
+            <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-500">{dict.attribution.title}</h2>
             <div className="space-y-3">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Attributaire</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{dict.attribution.winner}</p>
                 <p className="mt-0.5 text-xs font-semibold text-slate-700">{recours.attribution.winner}</p>
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Montant attribué</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{dict.attribution.amount}</p>
                 <p className="mt-0.5 text-xs font-bold text-slate-800">{recours.attribution.montantAttribue}</p>
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Date attribution</p>
-                <p className="mt-0.5 text-xs text-slate-600">{fmt(recours.attribution.dateAttribution)}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{dict.attribution.date}</p>
+                <p className="mt-0.5 text-xs text-slate-600">{fmt(recours.attribution.dateAttribution, locale)}</p>
               </div>
             </div>
           </section>
 
           {/* Statut badge */}
           <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">Statut actuel</p>
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">{dict.status}</p>
             <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-bold ${meta.bg} ${meta.text} ${meta.border}`}>
               {meta.label}
             </span>

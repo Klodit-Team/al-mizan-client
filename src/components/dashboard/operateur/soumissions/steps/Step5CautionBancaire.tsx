@@ -23,9 +23,11 @@ interface Props {
   onChange: (updated: CautionData) => void;
   onBack: () => void;
   onNext: () => void;
+  dict: any;
+  navDict: any;
 }
 
-export default function Step5CautionBancaire({ caution, onChange, onBack, onNext }: Props) {
+export default function Step5CautionBancaire({ caution, onChange, onBack, onNext, dict, navDict }: Props) {
   function set<K extends keyof CautionData>(key: K, value: CautionData[K]) {
     onChange({ ...caution, [key]: value });
   }
@@ -41,8 +43,8 @@ export default function Step5CautionBancaire({ caution, onChange, onBack, onNext
   return (
     <div className="space-y-5">
       <SectionTitle
-        title="Caution de soumission"
-        subtitle="Renseignez les informations de votre caution bancaire et joignez le document signé par votre banque."
+        title={dict.title}
+        subtitle={dict.subtitle}
       />
 
       {/* Info box */}
@@ -56,7 +58,7 @@ export default function Step5CautionBancaire({ caution, onChange, onBack, onNext
 
       {/* Form */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field label="Référence de la caution" required>
+        <Field label={dict.reference} required>
           <Input
             value={caution.reference}
             onChange={(v) => set("reference", v)}
@@ -64,7 +66,7 @@ export default function Step5CautionBancaire({ caution, onChange, onBack, onNext
           />
         </Field>
 
-        <Field label="Banque émettrice" required>
+        <Field label={dict.bank} required>
           <select
             value={caution.banque}
             onChange={(e) => set("banque", e.target.value)}
@@ -75,7 +77,7 @@ export default function Step5CautionBancaire({ caution, onChange, onBack, onNext
           </select>
         </Field>
 
-        <Field label="Montant de la caution (DZD)" required>
+        <Field label={`${dict.amount} (DZD)`} required>
           <div className="relative">
             <Input
               value={caution.montant}
@@ -86,7 +88,7 @@ export default function Step5CautionBancaire({ caution, onChange, onBack, onNext
           </div>
         </Field>
 
-        <Field label="Date d'expiration" required>
+        <Field label={dict.expiry} required>
           <input
             type="date"
             value={caution.expiry}
@@ -95,7 +97,7 @@ export default function Step5CautionBancaire({ caution, onChange, onBack, onNext
           />
         </Field>
 
-        <Field label="Date d'emission" required>
+        <Field label={dict.emission} required>
           <input
             type="date"
             value={caution.emission}
@@ -110,11 +112,11 @@ export default function Step5CautionBancaire({ caution, onChange, onBack, onNext
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
           <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-emerald-600">Récapitulatif caution</p>
           <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-[11px]">
-            <div><span className="text-slate-500">Référence :</span> <span className="font-semibold text-slate-700">{caution.reference}</span></div>
-            <div><span className="text-slate-500">Banque :</span> <span className="font-semibold text-slate-700">{caution.banque}</span></div>
-            <div><span className="text-slate-500">Montant :</span> <span className="font-semibold text-slate-700">{caution.montant} DZD</span></div>
-            <div><span className="text-slate-500">Emission :</span> <span className="font-semibold text-slate-700">{new Date(caution.emission).toLocaleDateString("fr-DZ", { day: "numeric", month: "long", year: "numeric" })}</span></div>
-            <div><span className="text-slate-500">Expiration :</span> <span className="font-semibold text-slate-700">{new Date(caution.expiry).toLocaleDateString("fr-DZ", { day: "numeric", month: "long", year: "numeric" })}</span></div>
+            <div><span className="text-slate-500">{dict.reference} :</span> <span className="font-semibold text-slate-700">{caution.reference}</span></div>
+            <div><span className="text-slate-500">{dict.bank} :</span> <span className="font-semibold text-slate-700">{caution.banque}</span></div>
+            <div><span className="text-slate-500">{dict.amount} :</span> <span className="font-semibold text-slate-700">{caution.montant} DZD</span></div>
+            <div><span className="text-slate-500">{dict.emission} :</span> <span className="font-semibold text-slate-700">{new Date(caution.emission).toLocaleDateString("fr-DZ", { day: "numeric", month: "long", year: "numeric" })}</span></div>
+            <div><span className="text-slate-500">{dict.expiry} :</span> <span className="font-semibold text-slate-700">{new Date(caution.expiry).toLocaleDateString("fr-DZ", { day: "numeric", month: "long", year: "numeric" })}</span></div>
           </div>
         </div>
       )}
@@ -122,11 +124,11 @@ export default function Step5CautionBancaire({ caution, onChange, onBack, onNext
       {/* Scan upload */}
       <div>
         <p className="mb-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-500">
-          Scan de la caution bancaire <span className="text-rose-500">*</span>
+          {dict.scan} <span className="text-rose-500">*</span>
         </p>
         <FileDropzone
-          label="Joindre le document de caution (PDF)"
-          sublabel="Scan de la lettre de caution signée par la banque — PDF, max 10 Mo"
+          label={dict.scanSelect}
+          sublabel={dict.scanDesc}
           file={caution.file}
           onFile={(f) => set("file", f)}
           accept=".pdf,.jpg,.png"
@@ -139,7 +141,7 @@ export default function Step5CautionBancaire({ caution, onChange, onBack, onNext
         Le document de caution est transmis chiffré et sera vérifié lors de l&apos;ouverture des plis.
       </div>
 
-      <NavButtons onBack={onBack} onNext={onNext} disabled={!canProceed} />
+      <NavButtons onBack={onBack} onNext={onNext} disabled={!canProceed} dict={navDict} />
     </div>
   );
 }

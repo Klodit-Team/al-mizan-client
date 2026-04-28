@@ -21,6 +21,8 @@ interface TendersFiltersDict {
   dateStart?: string;
   dateEnd?: string;
   reset?: string;
+  searchLabel?: string;
+  filterByStatus?: string;
 }
 
 interface TendersTableDict {
@@ -54,6 +56,15 @@ interface TendersListDict {
   actions: TendersActionsDict;
   empty: string;
   types: TendersTypeDict;
+  pagination: {
+    showing: string;
+    to: string;
+    of: string;
+    entries: string;
+    previous: string;
+    next: string;
+  };
+  confirmDelete: string;
 }
 
 interface AoListPageProps {
@@ -135,7 +146,7 @@ export default function AoListPage({
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm("Supprimer cet appel d'offres ?")) {
+    if (window.confirm(dict.confirmDelete || "Supprimer cet appel d'offres ?")) {
       onDelete(id);
     }
   };
@@ -191,9 +202,11 @@ export default function AoListPage({
           )}
         >
           <p>
-            Showing {(page - 1) * itemsPerPage + 1} to{" "}
-            {Math.min(page * itemsPerPage, filteredData.length)} of{" "}
-            {filteredData.length} entries
+            {dict.pagination?.showing || "Showing"} {(page - 1) * itemsPerPage + 1}{" "}
+            {dict.pagination?.to || "to"}{" "}
+            {Math.min(page * itemsPerPage, filteredData.length)}{" "}
+            {dict.pagination?.of || "of"} {filteredData.length}{" "}
+            {dict.pagination?.entries || "entries"}
           </p>
 
           <div
@@ -208,7 +221,7 @@ export default function AoListPage({
               onClick={() => setPage((current) => Math.max(1, current - 1))}
               className="h-7 rounded border border-slate-200 px-2 text-[11px] font-medium text-slate-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Previous
+              {dict.pagination?.previous || "Previous"}
             </button>
 
             <span className="rounded border border-[#4CAF50] bg-[#4CAF50] px-2 py-1 text-[11px] font-semibold text-white">
@@ -223,7 +236,7 @@ export default function AoListPage({
               }
               className="h-7 rounded border border-slate-200 px-2 text-[11px] font-medium text-slate-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Next
+              {dict.pagination?.next || "Next"}
             </button>
           </div>
         </div>

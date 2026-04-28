@@ -24,7 +24,7 @@ export default function Navbar({ isLoggedIn = false, userInitial = "R", userName
         const nextLocale = locale === "fr" ? "ar" : "fr";
         const segments = pathname.split("/");
         segments[1] = nextLocale;
-        router.push(segments.join("/"));
+        window.location.href = segments.join("/");
     };
 
     const navLinks = [
@@ -62,6 +62,12 @@ export default function Navbar({ isLoggedIn = false, userInitial = "R", userName
 
             
                 <div className="flex items-center gap-4">
+                    <button
+                        onClick={toggleLang}
+                        className="text-sm text-gray-300 hover:text-white border border-gray-600 rounded-lg px-3 py-1.5 transition-colors hover:border-gray-400"
+                    >
+                        {locale === "fr" ? "FR / AR" : "AR / FR"}
+                    </button>
                 
                     <button 
                         
