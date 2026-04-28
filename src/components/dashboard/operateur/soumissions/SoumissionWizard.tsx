@@ -41,29 +41,32 @@ function SuccessScreen({
   reference,
   horodatage,
   onDone,
+  dict,
+  locale,
 }: {
   reference: string;
   horodatage?: string;
   onDone: () => void;
+  dict: any;
+  locale: Locale;
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-14 text-center">
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
         <CheckCircle2 className="h-9 w-9 text-[#4CAF50]" />
       </div>
-      <h2 className="text-lg font-bold text-slate-900">Soumission déposée avec succès&nbsp;!</h2>
+      <h2 className="text-lg font-bold text-slate-900">{dict.success.title}</h2>
       <p className="mt-2 max-w-sm text-xs text-slate-500">
-        Votre offre <span className="font-semibold">{reference}</span> a été reçue, horodatée et chiffrée.
-        Un accusé de réception vous sera envoyé par notification.
+        {dict.success.desc1} <span className="font-semibold">{reference}</span> {dict.success.desc2}
       </p>
       {horodatage && (
         <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-[11px] text-emerald-700">
-          Horodatage serveur : {new Date(horodatage).toLocaleString("fr-DZ")}
+          {dict.success.serverTime} {new Date(horodatage).toLocaleString(locale === "ar" ? "ar-DZ" : "fr-DZ")}
         </div>
       )}
       <button type="button" onClick={onDone}
         className="mt-6 inline-flex items-center gap-2 rounded-xl border border-[#4CAF50] px-5 py-2.5 text-sm font-semibold text-[#4CAF50] hover:bg-[#4CAF50] hover:text-white transition-colors">
-        Voir mes soumissions
+        {dict.success.viewAction}
       </button>
     </div>
   );
@@ -71,11 +74,9 @@ function SuccessScreen({
 
 // ─── Wizard ───────────────────────────────────────────────────────────────────
 
-export default function SoumissionWizard() {
-  const params = useParams();
+export default function SoumissionWizard({ dict, locale }: { dict: any; locale: Locale }) {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const locale = (params?.locale as Locale) || "fr";
   const { data: aoItems = [], isLoading: isLoadingAos, isError: isErrorAos } = useOperateurAppelsOffresQuery();
   const submitMutation = useSubmitOperateurSoumissionWorkflowMutation();
 
@@ -183,24 +184,24 @@ export default function SoumissionWizard() {
     setSubmitError(null);
 
     if (!selectedAo) {
-      setSubmitError("Selectionnez un appel d'offres avant de deposer.");
+      setSubmitError(dict.errors.noAo);
       return;
     }
 
     const selectedLot = selectedAo.lots.find((lot) => lot.id === state.selectedLotId);
     if (!selectedLot) {
-      setSubmitError("Selectionnez un lot valide pour continuer.");
+      setSubmitError(dict.errors.noLot);
       return;
     }
 
     if (!state.offreTechFile) {
-      setSubmitError("Le fichier de l'offre technique est obligatoire.");
+      setSubmitError(dict.errors.noTechFile);
       return;
     }
 
     const selectedBpu = state.lotBpus.find((entry) => entry.lotId === selectedLot.id);
     if (!selectedBpu || !selectedBpu.lines.length) {
-      setSubmitError("Renseignez l'offre financiere pour le lot selectionne.");
+      setSubmitError(dict.errors.noBpu);
       return;
     }
 
@@ -212,7 +213,7 @@ export default function SoumissionWizard() {
       || !state.caution.emission
       || !state.caution.expiry
     ) {
-      setSubmitError("Les informations de caution bancaire sont incompletes.");
+      setSubmitError(dict.errors.incompleteCaution);
       return;
     }
 
@@ -247,7 +248,7 @@ export default function SoumissionWizard() {
         horodatage: result.horodatageServeur,
       });
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "Le depot a echoue. Veuillez reessayer.");
+      setSubmitError(error instanceof Error ? error.message : dict.errors.submitFailed);
     }
   }, [selectedAo, state, submitMutation]);
 
@@ -259,6 +260,8 @@ export default function SoumissionWizard() {
             reference={done.reference}
             horodatage={done.horodatage}
             onDone={() => router.push(`/${locale}/dashboard/operateur/soumissions`)}
+            dict={dict}
+            locale={locale}
           />
         </div>
       </div>
@@ -272,18 +275,18 @@ export default function SoumissionWizard() {
       <header className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="mb-3 flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-bold uppercase tracking-[0.03em] text-slate-900">Nouvelle Soumission</h1>
+            <h1 className="text-lg font-bold uppercase tracking-[0.03em] text-slate-900">{dict.header.title}</h1>
             <p className="mt-0.5 text-xs text-slate-500">
-              étape {step}/5{selectedAo ? ` — ${selectedAo.reference}` : ""}
+              {dict.header.step} {step}/5{selectedAo ? ` — ${selectedAo.reference}` : ""}
             </p>
           </div>
           <button type="button"
             onClick={() => router.push(`/${locale}/dashboard/operateur/soumissions`)}
             className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-rose-500 transition-colors">
-            <X className="h-3.5 w-3.5" />Annuler
+            <X className="h-3.5 w-3.5" />{dict.header.cancel}
           </button>
         </div>
-        <StepIndicator step={step} />
+        <StepIndicator step={step} dict={dict.nav.steps} />
       </header>
 
       {/* Step content */}
@@ -298,6 +301,8 @@ export default function SoumissionWizard() {
             onSelectAo={handleSelectAo}
             onSelectLot={handleSelectLot}
             onNext={() => go(2)}
+            dict={dict.steps.step1}
+            navDict={dict.nav}
           />
         )}
         {step === 2 && (
@@ -308,6 +313,8 @@ export default function SoumissionWizard() {
             onFileChange={setTechFile}
             onBack={() => go(1)}
             onNext={() => go(3)}
+            dict={dict.steps.step3}
+            navDict={dict.nav}
           />
         )}
         {step === 3 && (
@@ -318,6 +325,8 @@ export default function SoumissionWizard() {
             onChange={setBpus}
             onBack={() => go(2)}
             onNext={() => go(4)}
+            dict={dict.steps.step4}
+            navDict={dict.nav}
           />
         )}
         {step === 4 && (
@@ -326,6 +335,8 @@ export default function SoumissionWizard() {
             onChange={setCaution}
             onBack={() => go(3)}
             onNext={() => go(5)}
+            dict={dict.steps.step5}
+            navDict={dict.nav}
           />
         )}
         {step === 5 && (
@@ -339,6 +350,8 @@ export default function SoumissionWizard() {
             submitError={submitError}
             onBack={() => go(4)}
             onSubmit={handleSubmit}
+            dict={dict.steps.review}
+            navDict={dict.nav}
           />
         )}
       </div>

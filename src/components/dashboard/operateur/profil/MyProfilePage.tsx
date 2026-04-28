@@ -135,7 +135,7 @@ function Avatar({ prenom, nom }: { prenom: string; nom: string }) {
 
 // ─── Main component ────────────────────────────────────────────────────────────
 
-export default function MyProfilePage() {
+export default function MyProfilePage({ dict }: { dict?: any }) {
   // Personal
   const [personal, setPersonal]     = useState<PersonalInfo>(MOCK_PERSONAL);
   const [pDraft, setPDraft]         = useState<PersonalInfo>(MOCK_PERSONAL);

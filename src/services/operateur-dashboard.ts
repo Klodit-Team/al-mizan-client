@@ -1,8 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// services/operateur-dashboard.ts
-// Data layer for the Opérateur Économique dashboard.
-// Replace mock responses with real API calls when the backend is ready.
-// ─────────────────────────────────────────────────────────────────────────────
 
 export type OeAoStatus =
   | "publie"

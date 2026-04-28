@@ -6,29 +6,31 @@ import type { GreAGreRequestStatus } from "@/services/greAGre";
 interface GreAGreFiltersProps {
   status: "all" | GreAGreRequestStatus;
   onStatusChange: (value: "all" | GreAGreRequestStatus) => void;
+  dict?: any;
 }
-
-const statusItems: Array<{
-  value: "all" | GreAGreRequestStatus;
-  label: string;
-}> = [
-  { value: "all", label: "Tous" },
-  { value: "brouillon", label: "Brouillon" },
-  { value: "soumise", label: "Soumise" },
-  { value: "en_analyse_ia", label: "En analyse IA" },
-  { value: "acceptee", label: "Acceptee" },
-  { value: "rejetee", label: "Rejetee" },
-  { value: "en_revision", label: "En revision" },
-];
 
 export default function GreAGreFilters({
   status,
   onStatusChange,
+  dict,
 }: GreAGreFiltersProps) {
+  const statusItems: Array<{
+    value: "all" | GreAGreRequestStatus;
+    label: string;
+  }> = [
+    { value: "all", label: dict?.all || "Tous" },
+    { value: "brouillon", label: dict?.brouillon || "Brouillon" },
+    { value: "soumise", label: dict?.soumise || "Soumise" },
+    { value: "en_analyse_ia", label: dict?.en_analyse_ia || "En analyse IA" },
+    { value: "acceptee", label: dict?.acceptee || "Acceptee" },
+    { value: "rejetee", label: dict?.rejetee || "Rejetee" },
+    { value: "en_revision", label: dict?.en_revision || "En revision" },
+  ];
+
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
-        Filtrer par statut
+        {dict?.title || "Filtrer par statut"}
       </p>
 
       <div className="flex flex-wrap gap-2">

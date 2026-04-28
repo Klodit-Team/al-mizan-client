@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { type Organisation, type User } from "./types";
 
 const dummyOrg: Organisation = {
@@ -48,6 +48,8 @@ interface OrganisationDetailPageProps {
 
 export default function OrganisationDetailPage({ locale, orgId }: OrganisationDetailPageProps) {
     const router = useRouter();
+    const params = useParams();
+    const adminId = params?.adminId || "admin";
     const [org, setOrg] = useState<Organisation>(dummyOrg);
     const [users, setUsers] = useState<User[]>(dummyUsers);
     const [isLoading, setIsLoading] = useState(true);
@@ -71,7 +73,7 @@ export default function OrganisationDetailPage({ locale, orgId }: OrganisationDe
         try {
             // await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/organisations/${orgId}/reject`, { method: "PATCH" });
             await new Promise((r) => setTimeout(r, 800));
-            router.push(`/${locale}/dashboard/admin/organisations`);
+            router.push(`/${locale}/dashboard/admin/${adminId}/organisations`);
         } catch {}
         finally { setRejecting(false); }
     };

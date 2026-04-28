@@ -321,7 +321,7 @@ function PasswordSection() {
 
 // ─── Main component ────────────────────────────────────────────────────────────
 
-export default function SecuritySettingsPage() {
+export default function SecuritySettingsPage({ dict, locale }: { dict?: any; locale?: string }) {
   return (
     <div className="space-y-4">
       <div>

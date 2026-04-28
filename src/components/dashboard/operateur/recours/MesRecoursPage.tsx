@@ -39,35 +39,32 @@ function StatCard({ label, value, icon, colorClass, bgClass }: {
   );
 }
 
-function DeadlineBadge({ dateLimite, statut }: { dateLimite: string; statut: RecoursStatus }) {
+function DeadlineBadge({ dateLimite, statut, dict, locale }: { dateLimite: string; statut: RecoursStatus; dict: any; locale: Locale }) {
   if (statut === "accepte" || statut === "rejete") {
-    return <span className="text-xs text-slate-400">{fmt(dateLimite)}</span>;
+    return <span className="text-xs text-slate-400">{fmt(dateLimite, locale)}</span>;
   }
   const past   = isDeadlinePast(dateLimite);
   const urgent = isDeadlineUrgent(dateLimite);
   if (past) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-700">
-        <AlertTriangle className="h-3 w-3" /> Dépassé
+        <AlertTriangle className="h-3 w-3" /> {dict.badges.depasse}
       </span>
     );
   }
   if (urgent) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
-        <Clock className="h-3 w-3" /> {fmt(dateLimite)}
+        <Clock className="h-3 w-3" /> {fmt(dateLimite, locale)}
       </span>
     );
   }
-  return <span className="text-xs text-slate-600">{fmt(dateLimite)}</span>;
+  return <span className="text-xs text-slate-600">{fmt(dateLimite, locale)}</span>;
 }
 
-export default function MesRecoursPage() {
-    const { data = [], isLoading, isError } = useOperateurRecoursQuery();
-
-  const params = useParams();
+export default function MesRecoursPage({ dict, locale }: { dict: any; locale: Locale }) {
+  const { data = [], isLoading, isError } = useOperateurRecoursQuery();
   const router = useRouter();
-  const locale = (params?.locale as Locale) || "fr";
 
   const [keyword, setKeyword]     = useState("");
   const [statusFilter, setStatus] = useState<RecoursStatus | "all">("all");
@@ -102,8 +99,8 @@ export default function MesRecoursPage() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">Mes Recours</h1>
-          <p className="mt-0.5 text-sm text-slate-500">Suivi de vos procédures de contestation</p>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900">{dict.title}</h1>
+          <p className="mt-0.5 text-sm text-slate-500">{dict.subtitle}</p>
         </div>
         <button
           type="button"
@@ -112,16 +109,16 @@ export default function MesRecoursPage() {
           style={{ backgroundColor: "#4CAF50" }}
         >
           <Plus className="h-4 w-4" />
-          Déposer un recours
+          {dict.newRecours}
         </button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="Total recours" value={counts.total}    icon={<Scale className="h-5 w-5" />}      colorClass="text-slate-700"    bgClass="bg-slate-100" />
-        <StatCard label="En examen"     value={counts.enExamen} icon={<Hourglass className="h-5 w-5" />}  colorClass="text-orange-600"   bgClass="bg-orange-100" />
-        <StatCard label="Acceptés"      value={counts.acceptes} icon={<FileCheck className="h-5 w-5" />}  colorClass="text-emerald-600"  bgClass="bg-emerald-100" />
-        <StatCard label="Rejetés"       value={counts.rejetes}  icon={<XCircle className="h-5 w-5" />}    colorClass="text-rose-600"     bgClass="bg-rose-100" />
+        <StatCard label={dict.stats.total} value={counts.total}    icon={<Scale className="h-5 w-5" />}      colorClass="text-slate-700"    bgClass="bg-slate-100" />
+        <StatCard label={dict.stats.enExamen}     value={counts.enExamen} icon={<Hourglass className="h-5 w-5" />}  colorClass="text-orange-600"   bgClass="bg-orange-100" />
+        <StatCard label={dict.stats.acceptes}      value={counts.acceptes} icon={<FileCheck className="h-5 w-5" />}  colorClass="text-emerald-600"  bgClass="bg-emerald-100" />
+        <StatCard label={dict.stats.rejetes}       value={counts.rejetes}  icon={<XCircle className="h-5 w-5" />}    colorClass="text-rose-600"     bgClass="bg-rose-100" />
       </div>
 
       {/* Filters */}
@@ -132,7 +129,7 @@ export default function MesRecoursPage() {
             type="text"
             value={keyword}
             onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
-            placeholder="Référence, AO, objet…"
+            placeholder={dict.searchPlaceholder}
             className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs text-slate-800 outline-none placeholder:text-slate-400 focus:border-[#4CAF50] focus:bg-white transition-colors"
           />
         </div>
@@ -148,7 +145,7 @@ export default function MesRecoursPage() {
                   : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
               }`}
             >
-              {f.label}
+              {f.value === "all" ? dict.filters.all : dict.filters[f.value] || f.label}
             </button>
           ))}
         </div>
@@ -157,8 +154,8 @@ export default function MesRecoursPage() {
       {/* Table */}
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="hidden sm:grid sm:grid-cols-[150px_1fr_130px_160px_110px_48px] border-b border-slate-100 bg-slate-50 px-4 py-2.5">
-          {["Référence recours", "AO / Objet", "Date dépôt", "Date limite réponse", "Statut", ""].map((h) => (
-            <span key={h} className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{h}</span>
+          {[dict.table.reference, dict.table.aoObject, dict.table.dateDepot, dict.table.dateLimite, dict.table.status, ""].map((h, i) => (
+            <span key={i} className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{h}</span>
           ))}
         </div>
 
@@ -171,8 +168,8 @@ export default function MesRecoursPage() {
         ) : paginated.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-slate-400">
             <Scale className="mb-3 h-10 w-10 opacity-20" />
-            <p className="text-sm font-medium">Aucun recours trouvé</p>
-            <p className="mt-1 text-xs">Modifiez vos filtres ou déposez un nouveau recours</p>
+            <p className="text-sm font-medium">{dict.empty.title}</p>
+            <p className="mt-1 text-xs">{dict.empty.subtitle}</p>
           </div>
         ) : (
           <ul className="divide-y divide-slate-100">
@@ -190,19 +187,19 @@ export default function MesRecoursPage() {
                     <span className="font-mono text-[10px] font-semibold" style={{ color: "#4CAF50" }}>{rec.aoReference}</span>
                     <p className="truncate text-xs font-medium text-slate-800">{rec.aoObject}</p>
                   </div>
-                  <div className="text-xs text-slate-500">{fmt(rec.dateDepot)}</div>
+                  <div className="text-xs text-slate-500">{fmt(rec.dateDepot, locale)}</div>
                   <div>
-                    <DeadlineBadge dateLimite={rec.dateLimiteReponse} statut={rec.statut} />
+                    <DeadlineBadge dateLimite={rec.dateLimiteReponse} statut={rec.statut} dict={dict} locale={locale} />
                   </div>
                   <div>
                     <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${meta.bg} ${meta.text} ${meta.border}`}>
-                      {meta.label}
+                      {dict.filters[rec.statut] || meta.label}
                     </span>
                   </div>
                   <div className="flex justify-end">
                     <button
                       type="button"
-                      title="Voir le détail"
+                      title={dict.actions.view}
                       onClick={() => router.push(`/${locale}/dashboard/operateur/recours/${rec.id}`)}
                       className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition-colors hover:border-[#4CAF50] hover:bg-emerald-50 hover:text-[#4CAF50]"
                     >
@@ -218,7 +215,7 @@ export default function MesRecoursPage() {
 
       {isError && (
         <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700">
-          Impossible de charger les recours. Vérifiez la disponibilité de la passerelle API et du recours-service.
+          {dict.errorLoading}
         </div>
       )}
 
@@ -226,7 +223,7 @@ export default function MesRecoursPage() {
       {filtered.length > ITEMS_PER_PAGE && (
         <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
           <p className="text-xs text-slate-500">
-            {(page - 1) * ITEMS_PER_PAGE + 1}–{Math.min(page * ITEMS_PER_PAGE, filtered.length)} sur {filtered.length}
+            {(page - 1) * ITEMS_PER_PAGE + 1}–{Math.min(page * ITEMS_PER_PAGE, filtered.length)} {dict.paginationOf} {filtered.length}
           </p>
           <div className="flex items-center gap-1.5">
             <button type="button" disabled={page === 1} onClick={() => setPage((p) => p - 1)}

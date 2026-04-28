@@ -17,10 +17,14 @@ interface TendersFiltersDict {
   dateStart?: string;
   dateEnd?: string;
   reset?: string;
+  searchLabel?: string;
+  filterByStatus?: string;
 }
 
 interface TendersListDict {
   searchPlaceholder: string;
+  searchLabel?: string;
+  filterByStatus?: string;
   filters: TendersFiltersDict;
 }
 
@@ -59,7 +63,7 @@ export default function AoFilters({
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div>
           <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
-            Search
+            {dict.filters?.searchLabel || dict.searchLabel || (isRtl ? "البحث" : "Recherche")}
           </label>
           <div className="relative">
             <Input
@@ -111,7 +115,7 @@ export default function AoFilters({
 
       <div className="mt-4">
         <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
-          Filter by status
+          {dict.filters?.filterByStatus || dict.filterByStatus || (isRtl ? "تصفية حسب الحالة" : "Filtrer par statut")}
         </p>
         <div className="flex flex-wrap gap-2">
           {statusItems.map((item) => {

@@ -21,10 +21,11 @@ export default function middleware(request: NextRequest) {
     const userType = request.cookies.get("user_type")?.value;
     const isProtected = pathname.includes("/dashboard");
 
-    if (isProtected && !token) {
-        const locale = pathname.split("/")[1] || defaultLocale;
-        return NextResponse.redirect(new URL(`/${locale}/auth/login`, request.url));
-    }
+
+    // if (isProtected && !token) {
+    //     const locale = pathname.split("/")[1] || defaultLocale;
+    //     return NextResponse.redirect(new URL(`/${locale}/auth/login`, request.url));
+    // }
 
     if (isProtected && userType) {
         const locale = pathname.split("/")[1] || defaultLocale;

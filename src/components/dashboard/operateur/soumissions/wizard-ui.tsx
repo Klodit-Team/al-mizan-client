@@ -5,18 +5,18 @@ import { Search, ClipboardList, FileText, Landmark } from "lucide-react";
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
 
-const STEPS = [
-  { n: 1, label: "Sélection AO",          icon: <Search        className="h-3.5 w-3.5" /> },
-  { n: 2, label: "Offre technique",         icon: <ClipboardList className="h-3.5 w-3.5" /> },
-  { n: 3, label: "Offre financière",       icon: <FileText      className="h-3.5 w-3.5" /> },
-  { n: 4, label: "Caution",                 icon: <Landmark      className="h-3.5 w-3.5" /> },
-  { n: 5, label: "Récapitulatif",          icon: <Send          className="h-3.5 w-3.5" /> },
-] as const;
+export function StepIndicator({ step, dict }: { step: 1 | 2 | 3 | 4 | 5; dict: any }) {
+  const steps = [
+    { n: 1, label: dict.step1, icon: <Search        className="h-3.5 w-3.5" /> },
+    { n: 2, label: dict.step2, icon: <ClipboardList className="h-3.5 w-3.5" /> },
+    { n: 3, label: dict.step3, icon: <FileText      className="h-3.5 w-3.5" /> },
+    { n: 4, label: dict.step4, icon: <Landmark      className="h-3.5 w-3.5" /> },
+    { n: 5, label: dict.step5, icon: <Send          className="h-3.5 w-3.5" /> },
+  ];
 
-export function StepIndicator({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
   return (
     <div className="flex flex-wrap items-center gap-1">
-      {STEPS.map((s, i) => (
+      {steps.map((s, i) => (
         <div key={s.n} className="flex items-center">
           <div className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold transition-colors ${
             s.n === step
@@ -32,7 +32,7 @@ export function StepIndicator({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
             </span>
             <span className="hidden md:inline">{s.label}</span>
           </div>
-          {i < STEPS.length - 1 && (
+          {i < steps.length - 1 && (
             <div className={`h-px w-4 mx-0.5 ${s.n < step ? "bg-emerald-300" : "bg-slate-200"}`} />
           )}
         </div>
@@ -46,13 +46,15 @@ export function StepIndicator({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
 export function NavButtons({
   onBack,
   onNext,
-  nextLabel = "Continuer",
+  dict,
+  nextLabel,
   nextIcon,
   disabled = false,
   isLast = false,
 }: {
   onBack?: () => void;
   onNext: () => void;
+  dict: any;
   nextLabel?: string;
   nextIcon?: React.ReactNode;
   disabled?: boolean;
@@ -63,7 +65,7 @@ export function NavButtons({
       {onBack ? (
         <button type="button" onClick={onBack}
           className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
-          <ArrowLeft className="h-3.5 w-3.5" />Retour
+          <ArrowLeft className="h-3.5 w-3.5" />{dict.back}
         </button>
       ) : <span />}
       <button
@@ -76,7 +78,7 @@ export function NavButtons({
         style={!isLast ? { backgroundColor: "#4CAF50" } : undefined}
       >
         {nextIcon ?? (isLast ? <Send className="h-4 w-4" /> : null)}
-        {nextLabel}
+        {nextLabel || dict.continue}
         {!isLast && !nextIcon && <ChevronRight className="h-4 w-4" />}
       </button>
     </div>

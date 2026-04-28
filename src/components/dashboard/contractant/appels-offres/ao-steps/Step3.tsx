@@ -14,21 +14,7 @@ export default function Step3({ props }: { props: WizardStepProps }) {
     dict,
     stepTitles,
     getSwitchThumbClass,
-    form,
-    updateField,
-    errors,
-    lots,
-    setLots,
-    lotForm,
-    setLotForm,
-    showLotForm,
-    setShowLotForm,
-    editingLotId,
-    setEditingLotId,
-    saveLot,
-    editLot,
-    deleteLot,
-    lotErrors,
+   
     cdcForm,
     setCdcForm,
     updateCdcField,
@@ -99,17 +85,16 @@ export default function Step3({ props }: { props: WizardStepProps }) {
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-slate-800">
-              Generer avec l&apos;Assistant IA Al-Mizan
+              {dict.step3.aiTitle}
             </p>
             <p className="mt-0.5 text-xs text-slate-600">
-              L&apos;intelligence artificielle peut vous aider a structurer vos
-              specifications techniques selon les standards en vigueur.
+              {dict.step3.aiDescription}
             </p>
             <button
               type="button"
               className="mt-2 inline-flex h-8 items-center justify-center rounded-md bg-[#4CAF50] px-3 text-xs font-semibold text-white hover:opacity-95"
             >
-              Assistant Redaction
+              {dict.step3.aiButton}
             </button>
           </div>
         </div>
@@ -117,12 +102,12 @@ export default function Step3({ props }: { props: WizardStepProps }) {
       <div className="mt-4 grid grid-cols-1 gap-4">
         <div>
           <label className="mb-1.5 block text-[11px] font-semibold text-slate-600">
-            Titre du Cahier des Charges <span className="text-red-500">*</span>
+            {dict.step3.cdcTitleLabel} <span className="text-red-500">*</span>
           </label>
           <input
             value={cdcForm.title}
             onChange={(event) => updateCdcField("title", event.target.value)}
-            placeholder="ex: CDC - Construction de l'unite de stockage Sud"
+            placeholder=""
             className={cn(
               "h-10 w-full rounded-md border px-3 text-sm outline-none focus:border-[#4CAF50]",
               cdcErrors.title
@@ -136,7 +121,7 @@ export default function Step3({ props }: { props: WizardStepProps }) {
         </div>
         <div>
           <label className="mb-1.5 block text-[11px] font-semibold text-slate-600">
-            Fichier CDC (Format PDF recommande)
+            {dict.step3.cdcFileLabel}
           </label>
           <label
             htmlFor="cdc-upload"
@@ -151,9 +136,9 @@ export default function Step3({ props }: { props: WizardStepProps }) {
               <Upload className="h-5 w-5" />
             </span>
             <p className="mt-2 text-sm font-semibold text-slate-700">
-              Cliquer pour telecharger ou glisser-deposer
+              {dict.step3.uploadDropLabel}
             </p>
-            <p className="mt-1 text-[11px] text-slate-500">PDF jusqu'a 25MB</p>
+            <p className="mt-1 text-[11px] text-slate-500">{dict.step3.uploadHint}</p>
           </label>
           <input
             id="cdc-upload"
@@ -173,7 +158,7 @@ export default function Step3({ props }: { props: WizardStepProps }) {
                 <p className="text-[11px] text-slate-500">
                   {cdcFile
                     ? formatFileSize(cdcFile.size)
-                    : "Fichier deja enregistre"}
+                    : dict.step3.fileAlreadySaved}
                 </p>
               </div>
               <button
@@ -193,7 +178,7 @@ export default function Step3({ props }: { props: WizardStepProps }) {
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div>
             <label className="mb-1.5 block text-[11px] font-semibold text-slate-600">
-              Numero de Version
+              {dict.step3.versionLabel}
             </label>
             <input
               value={cdcForm.version}
@@ -216,7 +201,7 @@ export default function Step3({ props }: { props: WizardStepProps }) {
           </div>
           <div>
             <label className="mb-1.5 block text-[11px] font-semibold text-slate-600">
-              Prix de Retrait (DZD)
+              {dict.step3.withdrawalPriceLabel}
             </label>
             <div className="flex h-10 overflow-hidden rounded-md border border-slate-200">
               <input
@@ -244,7 +229,7 @@ export default function Step3({ props }: { props: WizardStepProps }) {
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold text-slate-700">Statut CDC</p>
+              <p className="text-xs font-semibold text-slate-700">{dict.step3.cdcStatusLabel}</p>
               <p className="text-[11px] text-slate-500">
                 {cdcForm.isPublished
                   ? dict.review.statusPublished

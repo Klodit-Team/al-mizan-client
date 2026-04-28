@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Download } from "lucide-react";
+import { getDictionary } from "@/i18n/get-dictionaries";
+import { type Locale } from "@/i18n/config";
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -27,16 +29,16 @@ function formatDate(dateValue: string, locale: string) {
   }).format(parsedDate);
 }
 
-function getStatusLabel(status: TenderRecoursStatus) {
+function getStatusLabel(status: TenderRecoursStatus, dict: any) {
   switch (status) {
     case "depose":
-      return "Depose";
+      return dict.list?.statusLabels?.depose || "Déposé";
     case "en_examen":
-      return "En examen";
+      return dict.list?.statusLabels?.en_examen || "En examen";
     case "accepte":
-      return "Accepte";
+      return dict.list?.statusLabels?.accepte || "Accepté";
     case "rejete":
-      return "Rejete";
+      return dict.list?.statusLabels?.rejete || "Rejeté";
     default:
       return status;
   }
@@ -57,8 +59,8 @@ function getStatusClass(status: TenderRecoursStatus) {
   }
 }
 
-function getDecisionLabel(decision: TenderRecoursDecision) {
-  return decision === "accepte" ? "Accepte" : "Rejete";
+function getDecisionLabel(decision: TenderRecoursDecision, dict: any) {
+  return decision === "accepte" ? (dict.decision?.accepted || "Accepté") : (dict.decision?.rejected || "Rejeté");
 }
 
 function getDecisionClass(decision: TenderRecoursDecision) {
@@ -71,6 +73,9 @@ export default async function TenderRecoursDetailPage({
   params,
 }: TenderRecoursDetailPageProps) {
   const { locale, id, recoursId } = await params;
+  const dictFull = await getDictionary(locale as Locale);
+  const contractantDict = (dictFull as any).dashboard?.contractant || {};
+  const dict = contractantDict.recoursClaims || {};
 
   const recours = await getServiceContractantTenderRecoursById(id, recoursId);
 
@@ -84,14 +89,14 @@ export default async function TenderRecoursDetailPage({
     <main className="space-y-5 overflow-auto p-6">
       <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <p className="text-[11px] text-slate-500">
-          Tableau de bord <span className="mx-1">/</span> Appels d'offres{" "}
-          <span className="mx-1">/</span> Detail recours
+          {contractantDict.aoCreation?.header?.breadcrumbDashboard || "Tableau de bord"} <span className="mx-1">/</span> {contractantDict.aoCreation?.header?.breadcrumbAo || "Appels d'offres"}{" "}
+          <span className="mx-1">/</span> {dict.detail?.breadcrumb || "Détail recours"}
         </p>
 
         <header className="mb-4 mt-1 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">
-              Detail recours
+              {dict.detail?.title || "Détail recours"}
             </h1>
             <p className="mt-1 text-sm font-medium text-[#4CAF50]">
               AO {id} - {recours.reference}
@@ -102,14 +107,14 @@ export default async function TenderRecoursDetailPage({
             href={backHref}
             className="inline-flex h-9 items-center rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
           >
-            Retour a la liste des recours
+            {dict.detail?.backToList || "Retour à la liste des recours"}
           </Link>
         </header>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              Reference
+              {dict.detail?.info?.reference || "Référence"}
             </p>
             <p className="mt-1 font-semibold text-slate-800">
               {recours.reference}
@@ -118,14 +123,14 @@ export default async function TenderRecoursDetailPage({
 
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              Operateur
+              {dict.detail?.info?.operator || "Opérateur"}
             </p>
             <p className="mt-1 text-slate-800">{recours.operatorName}</p>
           </div>
 
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              Date depot
+              {dict.detail?.info?.dateDepot || "Date dépôt"}
             </p>
             <p className="mt-1 text-slate-800">
               {formatDate(recours.submittedAt, locale)}
@@ -134,7 +139,7 @@ export default async function TenderRecoursDetailPage({
 
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              Date limite reponse
+              {dict.detail?.info?.dateLimite || "Date limite réponse"}
             </p>
             <p className="mt-1 text-slate-800">
               {formatDate(recours.responseDeadlineAt, locale)}
@@ -143,7 +148,7 @@ export default async function TenderRecoursDetailPage({
 
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs md:col-span-2">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              Motif
+              {dict.detail?.info?.motif || "Motif"}
             </p>
             <p className="mt-1 whitespace-pre-wrap text-slate-800">
               {recours.reason}
@@ -152,7 +157,7 @@ export default async function TenderRecoursDetailPage({
 
           <div className="rounded-lg border border-slate-200 bg-white p-3 text-xs md:col-span-2">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              Statut
+              {dict.detail?.info?.status || "Statut"}
             </p>
             <Badge
               variant="outline"
@@ -161,7 +166,7 @@ export default async function TenderRecoursDetailPage({
                 getStatusClass(recours.status),
               )}
             >
-              {getStatusLabel(recours.status)}
+              {getStatusLabel(recours.status, dict)}
             </Badge>
           </div>
         </div>
@@ -170,7 +175,7 @@ export default async function TenderRecoursDetailPage({
       <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <header className="mb-3">
           <h2 className="text-lg font-semibold text-slate-900">
-            Pieces jointes
+            {dict.detail?.attachments?.title || "Pièces jointes"}
           </h2>
         </header>
 
@@ -189,21 +194,23 @@ export default async function TenderRecoursDetailPage({
           </div>
         ) : (
           <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-            Aucune piece jointe.
+            {dict.detail?.attachments?.empty || "Aucune pièce jointe."}
           </p>
         )}
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <header className="mb-3">
-          <h2 className="text-lg font-semibold text-slate-900">Decision</h2>
+          <h2 className="text-lg font-semibold text-slate-900">
+            {dict.detail?.decision?.title || "Décision"}
+          </h2>
         </header>
 
         {recours.decision ? (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs">
               <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                Decision
+                {dict.detail?.decision?.label || "Décision"}
               </p>
               <Badge
                 variant="outline"
@@ -212,13 +219,13 @@ export default async function TenderRecoursDetailPage({
                   getDecisionClass(recours.decision),
                 )}
               >
-                {getDecisionLabel(recours.decision)}
+                {getDecisionLabel(recours.decision, dict.detail)}
               </Badge>
             </div>
 
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs">
               <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                Date decision
+                {dict.detail?.decision?.date || "Date décision"}
               </p>
               <p className="mt-1 text-slate-800">
                 {recours.decisionDate
@@ -229,7 +236,7 @@ export default async function TenderRecoursDetailPage({
 
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs md:col-span-2">
               <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                Motif decision
+                {dict.detail?.decision?.motif || "Motif décision"}
               </p>
               <p className="mt-1 whitespace-pre-wrap text-slate-800">
                 {recours.decisionReason || "-"}
@@ -238,13 +245,12 @@ export default async function TenderRecoursDetailPage({
           </div>
         ) : (
           <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-            Decision non encore disponible.
+            {dict.detail?.decision?.notAvailable || "Décision non encore disponible."}
           </p>
         )}
 
         <p className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-          SC peut consulter ce recours. Son traitement est effectue par la
-          Commission/Controleur.
+          {dict.detail?.footerNotice || "SC peut consulter ce recours. Son traitement est effectué par la Commission/Contrôleur."}
         </p>
       </section>
     </main>

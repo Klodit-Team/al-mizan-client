@@ -22,6 +22,7 @@ import {
 
 interface RecoursListTabProps {
   locale: string;
+  dict: any;
   aoId: string;
   isRtl: boolean;
 }
@@ -48,16 +49,16 @@ function isOverdue(responseDeadlineAt: string) {
   return Date.now() > deadline.getTime();
 }
 
-function getStatusLabel(status: TenderRecoursStatus) {
+function getStatusLabel(status: TenderRecoursStatus, dict: any) {
   switch (status) {
     case "depose":
-      return "Depose";
+      return dict.statusLabels?.depose || "Déposé";
     case "en_examen":
-      return "En examen";
+      return dict.statusLabels?.en_examen || "En examen";
     case "accepte":
-      return "Accepte";
+      return dict.statusLabels?.accepte || "Accepté";
     case "rejete":
-      return "Rejete";
+      return dict.statusLabels?.rejete || "Rejeté";
     default:
       return status;
   }
@@ -80,6 +81,7 @@ function getStatusClass(status: TenderRecoursStatus) {
 
 export default function RecoursListTab({
   locale,
+  dict,
   aoId,
   isRtl,
 }: RecoursListTabProps) {
@@ -97,7 +99,7 @@ export default function RecoursListTab({
       const response = await listServiceContractantTenderRecours(aoId);
       setRows(response);
     } catch {
-      setError("Impossible de charger les recours.");
+      setError(dict.error || "Impossible de charger les recours.");
     } finally {
       setIsLoading(false);
     }
@@ -110,7 +112,7 @@ export default function RecoursListTab({
   if (isLoading) {
     return (
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600">
-        Chargement des recours...
+        {dict.loading || "Chargement des recours..."}
       </div>
     );
   }
@@ -125,7 +127,7 @@ export default function RecoursListTab({
 
       {rows.length === 0 ? (
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-5 text-center text-xs text-slate-600">
-          Aucun recours depose pour cet AO.
+          {dict.empty || "Aucun recours déposé pour cet AO."}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-slate-200">
@@ -133,19 +135,19 @@ export default function RecoursListTab({
             <TableHeader>
               <TableRow className="bg-slate-50 hover:bg-slate-50">
                 <TableHead className="h-10 whitespace-nowrap px-3 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
-                  Reference
+                  {dict.table?.reference || "Référence"}
                 </TableHead>
                 <TableHead className="h-10 whitespace-nowrap px-3 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
-                  Operateur
+                  {dict.table?.operator || "Opérateur"}
                 </TableHead>
                 <TableHead className="h-10 whitespace-nowrap px-3 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
-                  Date depot
+                  {dict.table?.dateDepot || "Date dépôt"}
                 </TableHead>
                 <TableHead className="h-10 whitespace-nowrap px-3 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
-                  Date limite reponse
+                  {dict.table?.dateLimite || "Date limite réponse"}
                 </TableHead>
                 <TableHead className="h-10 whitespace-nowrap px-3 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
-                  Statut
+                  {dict.table?.status || "Statut"}
                 </TableHead>
                 <TableHead
                   className={cn(
@@ -153,7 +155,7 @@ export default function RecoursListTab({
                     isRtl ? "text-left" : "text-right",
                   )}
                 >
-                  Actions
+                  {dict.table?.actions || "Actions"}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -185,7 +187,7 @@ export default function RecoursListTab({
                         {overdue && (
                           <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
                             <AlertTriangle className="h-3 w-3" />
-                            Retard
+                            {dict.table?.overdue || "Retard"}
                           </span>
                         )}
                       </div>
@@ -198,7 +200,7 @@ export default function RecoursListTab({
                           getStatusClass(row.status),
                         )}
                       >
-                        {getStatusLabel(row.status)}
+                        {getStatusLabel(row.status, dict)}
                       </Badge>
                     </TableCell>
                     <TableCell
@@ -212,7 +214,7 @@ export default function RecoursListTab({
                         className="inline-flex h-7 items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
                       >
                         <Eye className="h-3 w-3" />
-                        Voir
+                        {dict.table?.view || "Voir"}
                       </Link>
                     </TableCell>
                   </TableRow>
