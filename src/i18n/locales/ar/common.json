@@ -208,6 +208,40 @@
           "pending": "قيد الانتظار"
         }
       },
+      "organisationDetailPage": {
+        "backButton": "العودة إلى المنظمات",
+        "verifiedLabel": "✓ تم التحقق",
+        "pendingLabel": "⏳ بانتظار التحقق",
+        "verifiedBadge": "تم التحقق من المنظمة",
+        "actionReject": "رفض",
+        "actionVerify": "التحقق من المنظمة",
+        "confirmVerifyTitle": "تأكيد التحقق",
+        "confirmRejectTitle": "تأكيد الرفض",
+        "confirmVerifyText": "أنت على وشك التحقق من \"{denomination}\". سيؤكد هذا الأهلية على المنصة.",
+        "confirmRejectText": "أنت على وشك رفض \"{denomination}\". سيتم إشعار هذه المنظمة.",
+        "cancelButton": "إلغاء",
+        "verifyButton": "تحقق",
+        "rejectButton": "رفض",
+        "legalInfo": "المعلومات القانونية",
+        "contactInfo": "بيانات الاتصال",
+        "labelNIF": "رقم التعريف الجبائي",
+        "labelNIS": "رقم التعريف الاجتماعي",
+        "labelRegister": "السجل التجاري",
+        "labelType": "النوع",
+        "labelEmail": "البريد الإلكتروني",
+        "labelTelephone": "الهاتف",
+        "labelAddress": "العنوان",
+        "labelLocation": "الولاية / البلدية",
+        "usersTitle": "المستخدمون",
+        "nameHeader": "الاسم",
+        "emailHeader": "البريد الإلكتروني",
+        "roleHeader": "الدور",
+        "statusHeader": "الحالة",
+        "createdAtHeader": "تاريخ الإنشاء",
+        "statusActive": "نشط",
+        "statusInactive": "غير نشط",
+        "registeredMeta": "تم التسجيل في {createdAt} · آخر تحديث في {updatedAt}"
+      },
       "commissionsPage": {
         "title": "لجان الصفقات",
         "subtitle": "إدارة وإنشاء اللجان الوطنية والقطاعية والولائية والبلدية.",
@@ -344,6 +378,8 @@
           "id": "المعرّف",
           "severity": "الخطورة",
           "date": "التاريخ",
+          "title": "العنوان",
+          "message": "الرسالة",
           "description": "الوصف",
           "status": "الحالة",
           "assignedTo": "مُعيّن لـ",
@@ -352,9 +388,13 @@
         "severity": {
           "HIGH": "عالية",
           "MEDIUM": "متوسطة",
-          "LOW": "منخفضة"
+          "LOW": "منخفضة",
+          "WARNING": "تحذير",
+          "ERROR": "خطأ",
+          "CRITICAL": "حرجة"
         },
         "status": {
+          "EMISE": "مُصدرة",
           "OPEN": "مفتوح",
           "IN_PROGRESS": "قيد المعالجة",
           "RESOLVED": "تم الحل"

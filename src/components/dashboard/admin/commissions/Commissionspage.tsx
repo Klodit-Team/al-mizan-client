@@ -2,6 +2,11 @@
 import { useState, useEffect } from "react";
 import type { Commission, CommissionType, CommissionNiveau, CommissionStatut } from "./types";
 import type { getDictionary } from "@/i18n/get-dictionaries";
+import {
+  getAdminCommissions,
+  createAdminCommission,
+  type CreateCommissionInput,
+} from "@/services/admin/commissions";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
 
@@ -27,26 +32,21 @@ export default function CommissionsPage({ locale, dict }: CommissionsPageProps) 
     const fetchCommissions = async () => {
         setIsLoading(true);
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/commissions`);
-            if (res.ok) {
-                const data = await res.json();
-                setSearchCommissions(data);
-            } else {
-                // mocked fallback
-                setSearchCommissions([
-                    {
-                        id: "mock-1",
-                        designation: "Commission Nationale d'Évaluation #120",
-                        type: "EVALUATION",
-                        niveau: "NATIONALE",
-                        statut: "CONSTITUEE",
-                        date_constitution: new Date().toISOString(),
-                        created_at: new Date().toISOString()
-                    }
-                ]);
-            }
+            const data = await getAdminCommissions();
+            setSearchCommissions(Array.isArray(data) ? data : []);
         } catch (err) {
-            setSearchCommissions([]);
+            console.error("Error fetching commissions:", err);
+            setSearchCommissions([
+                {
+                    id: "mock-1",
+                    designation: "Commission Nationale d'Évaluation #120",
+                    type: "EVALUATION",
+                    niveau: "NATIONALE",
+                    statut: "CONSTITUEE",
+                    date_constitution: new Date().toISOString(),
+                    created_at: new Date().toISOString(),
+                },
+            ]);
         } finally {
             setIsLoading(false);
         }
@@ -58,38 +58,30 @@ export default function CommissionsPage({ locale, dict }: CommissionsPageProps) 
 
     const handleCreateSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
+        const payload: CreateCommissionInput = {
+            designation: formData.designation,
+            type: formData.type,
+            niveau: formData.niveau,
+            appel_offre_id: formData.appel_offre_id || undefined,
+        };
+
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/commissions`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    designation: formData.designation,
-                    type: formData.type,
-                    niveau: formData.niveau,
-                    appel_offre_id: formData.appel_offre_id || undefined,
-                })
-            });
-            
-            if (res.ok) {
-                const newC = await res.json();
-                setSearchCommissions([newC, ...commissions]);
-            } else {
-                // optimistic fallback creation
-                const mockC: Commission = {
-                    id: Math.random().toString(36).substr(2, 9),
-                    designation: formData.designation,
-                    type: formData.type,
-                    niveau: formData.niveau,
-                    statut: "CONSTITUEE",
-                    date_constitution: new Date().toISOString(),
-                    created_at: new Date().toISOString(),
-                    appel_offre_id: formData.appel_offre_id || undefined
-                };
-                setSearchCommissions([mockC, ...commissions]);
-            }
+            const newC = await createAdminCommission(payload);
+            setSearchCommissions([newC, ...commissions]);
         } catch (error) {
             console.error(error);
+            const mockC: Commission = {
+                id: Math.random().toString(36).substr(2, 9),
+                designation: formData.designation,
+                type: formData.type,
+                niveau: formData.niveau,
+                statut: "CONSTITUEE",
+                date_constitution: new Date().toISOString(),
+                created_at: new Date().toISOString(),
+                appel_offre_id: formData.appel_offre_id || undefined,
+            };
+            setSearchCommissions([mockC, ...commissions]);
         } finally {
             setModalOpen(false);
             setFormData({ designation: "", type: "EVALUATION", niveau: "NATIONALE", appel_offre_id: "" });

@@ -89,8 +89,14 @@ export function getCurrentUser(): Promise<MeResponse> {
   });
 }
 
+export function logout(): Promise<void> {
+  return apiClient<void>(`${AUTH_BASE_PATH}/logout`, {
+    method: 'POST',
+  });
+}
+
 export function listCurrentUserRoles(userId: string): Promise<UserRoleAssignment[]> {
-  return apiClient<UserRoleAssignment[]>(`/api/v1/users/user-roles/${userId}`, {
+  return apiClient<UserRoleAssignment[]>(`${AUTH_BASE_PATH}/users/user-roles/${userId}`, {
     method: 'GET',
   });
 }

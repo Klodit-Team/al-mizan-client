@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import OrganisationCard from "./Organisationcard";
 import { type Organisation, type OrgType } from "./types";
+import { getAdminOrganisations } from "@/services/admin/organisations";
 
 const dummyOrgs: Organisation[] = [
     { id: "1", denomination: "Ministère de l'Énergie et des Mines", nif: "123456789012345", nis: "12345678901234", registre_commerce: "RC-2020-001", adresse: "Rue Didouche Mourad", wilaya: "Alger", commune: "Hussein Dey", telephone: "+213 21 000 001", email: "contact@energie.gov.dz", type: "MINISTERE", is_verified: true, created_at: "2023-01-15T10:00:00Z", updated_at: "2024-01-01T00:00:00Z" },
@@ -41,15 +42,11 @@ export default function OrganisationsPage({ locale, dict }: OrganisationsPagePro
     const fetchOrganisations = async () => {
         try {
             setIsLoading(true);
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/organisations`);
-            if (res.ok) {
-                const data = await res.json();
-                setOrganisations(data);
-            } else {
-                console.error("Failed to fetch organisations");
-            }
+            const data = await getAdminOrganisations();
+            setOrganisations(Array.isArray(data) ? data : dummyOrgs);
         } catch (error) {
             console.error("Error fetching organisations:", error);
+            setOrganisations(dummyOrgs);
         } finally {
             setIsLoading(false);
         }

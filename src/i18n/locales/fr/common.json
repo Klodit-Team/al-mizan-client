@@ -208,6 +208,40 @@
           "pending": "En attente"
         }
       },
+      "organisationDetailPage": {
+        "backButton": "Retour aux organisations",
+        "verifiedLabel": "✓ Vérifié",
+        "pendingLabel": "⏳ En attente de vérification",
+        "verifiedBadge": "Organisation vérifiée",
+        "actionReject": "Rejeter",
+        "actionVerify": "Vérifier l'organisation",
+        "confirmVerifyTitle": "Confirmer la vérification",
+        "confirmRejectTitle": "Confirmer le rejet",
+        "confirmVerifyText": "Vous êtes sur le point de vérifier \"{denomination}\". Cette action confirmera son éligibilité sur la plateforme.",
+        "confirmRejectText": "Vous êtes sur le point de rejeter \"{denomination}\". Cette organisation sera notifiée.",
+        "cancelButton": "Annuler",
+        "verifyButton": "Vérifier",
+        "rejectButton": "Rejeter",
+        "legalInfo": "Informations légales",
+        "contactInfo": "Coordonnées",
+        "labelNIF": "NIF",
+        "labelNIS": "NIS",
+        "labelRegister": "Registre de commerce",
+        "labelType": "Type",
+        "labelEmail": "Email",
+        "labelTelephone": "Téléphone",
+        "labelAddress": "Adresse",
+        "labelLocation": "Wilaya / Commune",
+        "usersTitle": "Utilisateurs",
+        "nameHeader": "Nom",
+        "emailHeader": "Email",
+        "roleHeader": "Rôle",
+        "statusHeader": "Statut",
+        "createdAtHeader": "Créé le",
+        "statusActive": "Actif",
+        "statusInactive": "Inactif",
+        "registeredMeta": "Enregistré le {createdAt} · Dernière mise à jour le {updatedAt}"
+      },
       "commissionsPage": {
         "title": "Commissions des Marchés",
         "subtitle": "Gérez et créez les commissions nationales, sectorielles, de wilaya et communales.",
@@ -344,6 +378,8 @@
           "id": "Identifiant",
           "severity": "Gravité",
           "date": "Date",
+          "title": "Titre",
+          "message": "Message",
           "description": "Description",
           "status": "Statut",
           "assignedTo": "Assigné à",
@@ -352,9 +388,13 @@
         "severity": {
           "HIGH": "Élevée",
           "MEDIUM": "Moyenne",
-          "LOW": "Faible"
+          "LOW": "Faible",
+          "WARNING": "Avertissement",
+          "ERROR": "Erreur",
+          "CRITICAL": "Critique"
         },
         "status": {
+          "EMISE": "Émise",
           "OPEN": "Ouvert",
           "IN_PROGRESS": "En cours",
           "RESOLVED": "Résolu"
