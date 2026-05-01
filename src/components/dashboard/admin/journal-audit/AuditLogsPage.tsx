@@ -1,26 +1,32 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
 import type { getDictionary } from "@/i18n/get-dictionaries";
+import { getAdminAuditLogs, verifyAdminAuditIntegrity } from "@/services/admin/audit";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
 
 interface AuditLog {
-    id: string;
-    user: string;
-    role: string;
+    user_id: string;
     action: string;
-    target: string;
-    ipAddress: string;
-    date: string;
+    entity: string;
+    entity_id: string;
+    ip_address: string;
+    hash_sha256: string;
+    hash_precedent: string;
+    // Optional enriched fields
+    user?: string;
+    role?: string;
+    target?: string;
+    date?: string;
 }
 
 const dummyLogs: AuditLog[] = [
-    { id: "LOG-001", user: "Ahmed Mansour", role: "ADMIN", action: "LOGIN", target: "System", ipAddress: "192.168.1.10", date: "2024-03-10T08:30:00Z" },
-    { id: "LOG-002", user: "Karim Ziani", role: "SERVICE_CONTRACTANT", action: "UPDATE_AO", target: "AO #2023-045", ipAddress: "192.168.1.15", date: "2024-03-10T09:15:00Z" },
-    { id: "LOG-003", user: "Ahmed Mansour", role: "ADMIN", action: "CREATE_USER", target: "Nouveau membre", ipAddress: "192.168.1.10", date: "2024-03-10T10:05:00Z" },
-    { id: "LOG-004", user: "Fatima Benali", role: "CONTROLEUR", action: "VIEW_REPORT", target: "Rapport Mensuel", ipAddress: "192.168.1.22", date: "2024-03-11T11:20:00Z" },
-    { id: "LOG-005", user: "Ahmed Mansour", role: "ADMIN", action: "UPDATE_SETTINGS", target: "Configuration Email", ipAddress: "192.168.1.10", date: "2024-03-11T14:45:00Z" },
-    { id: "LOG-006", user: "Tarek Yahia", role: "MEMBRE_COMMISSION", action: "LOGIN", target: "System", ipAddress: "192.168.1.34", date: "2024-03-12T08:00:00Z" }
+    { user_id: "user-001", action: "LOGIN", entity: "system", entity_id: "system", ip_address: "192.168.1.10", hash_sha256: "abc123", hash_precedent: "def456", user: "Ahmed Mansour", role: "ADMIN", target: "System", date: "2024-03-10T08:30:00Z" },
+    { user_id: "user-002", action: "UPDATE_AO", entity: "appel_offre", entity_id: "AO-2023-045", ip_address: "192.168.1.15", hash_sha256: "ghi789", hash_precedent: "jkl012", user: "Karim Ziani", role: "SERVICE_CONTRACTANT", target: "AO #2023-045", date: "2024-03-10T09:15:00Z" },
+    { user_id: "user-003", action: "CREATE_USER", entity: "user", entity_id: "user-new", ip_address: "192.168.1.10", hash_sha256: "mno345", hash_precedent: "pqr678", user: "Ahmed Mansour", role: "ADMIN", target: "Nouveau membre", date: "2024-03-10T10:05:00Z" },
+    { user_id: "user-004", action: "VIEW_REPORT", entity: "report", entity_id: "report-monthly", ip_address: "192.168.1.22", hash_sha256: "stu901", hash_precedent: "vwx234", user: "Fatima Benali", role: "CONTROLEUR", target: "Rapport Mensuel", date: "2024-03-11T11:20:00Z" },
+    { user_id: "user-005", action: "UPDATE_SETTINGS", entity: "settings", entity_id: "email-config", ip_address: "192.168.1.10", hash_sha256: "yza567", hash_precedent: "bcd890", user: "Ahmed Mansour", role: "ADMIN", target: "Configuration Email", date: "2024-03-11T14:45:00Z" },
+    { user_id: "user-006", action: "LOGIN", entity: "system", entity_id: "system", ip_address: "192.168.1.34", hash_sha256: "efg123", hash_precedent: "hij456", user: "Tarek Yahia", role: "MEMBRE_COMMISSION", target: "System", date: "2024-03-12T08:00:00Z" }
 ];
 
 interface AuditLogsPageProps {
@@ -51,18 +57,10 @@ export default function AuditLogsPage({ locale, dict }: AuditLogsPageProps) {
     const fetchLogs = async () => {
         try {
             setIsLoading(true);
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/audit-logs`);
-            if (res.ok) {
-                const data = await res.json();
-                setLogs(data);
-            } else {
-                console.error("Failed to fetch audit logs");
-                // Fallback to dummy data in case API is not implemented yet
-                setLogs(dummyLogs);
-            }
+            const data = await getAdminAuditLogs();
+            setLogs(Array.isArray(data) ? data : dummyLogs);
         } catch (error) {
             console.error("Error fetching audit logs:", error);
-            // Fallback to dummy data
             setLogs(dummyLogs);
         } finally {
             setIsLoading(false);
@@ -72,10 +70,16 @@ export default function AuditLogsPage({ locale, dict }: AuditLogsPageProps) {
     const handleVerifyIntegrity = async () => {
         setIsVerifyingIntegrity(true);
         setIntegrityValid(null);
-        // Simulate checking the hash chain
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        setIntegrityValid(true); // Assuming valid as per instructions
-        setIsVerifyingIntegrity(false);
+
+        try {
+            const data = await verifyAdminAuditIntegrity();
+            setIntegrityValid(Boolean(data.valid));
+        } catch (error) {
+            console.error("Error verifying audit integrity:", error);
+            setIntegrityValid(false);
+        } finally {
+            setIsVerifyingIntegrity(false);
+        }
     };
 
     useEffect(() => {
@@ -84,11 +88,12 @@ export default function AuditLogsPage({ locale, dict }: AuditLogsPageProps) {
 
     const filteredLogs = useMemo(() => {
         return logs.filter((log) => {
-            const matchUser = log.user.toLowerCase().includes(searchUser.toLowerCase());
+            const matchUser = log.user?.toLowerCase().includes(searchUser.toLowerCase()) ||
+                             log.user_id?.toLowerCase().includes(searchUser.toLowerCase()) || false;
             const matchAction = searchAction === "" || log.action === searchAction;
             
             // Basic date check (if dateFilter is yyyy-mm-dd)
-            const matchDate = dateFilter === "" || log.date.startsWith(dateFilter);
+            const matchDate = dateFilter === "" || (log.date && log.date.startsWith(dateFilter));
 
             return matchUser && matchAction && matchDate;
         });
@@ -195,7 +200,7 @@ export default function AuditLogsPage({ locale, dict }: AuditLogsPageProps) {
                             <tr>
                                 <th className="px-6 py-4">{dict.columns.user}</th>
                                 <th className="px-6 py-4">{dict.columns.action}</th>
-                                <th className="px-6 py-4">{dict.columns.target}</th>
+                                <th className="px-6 py-4">Entité</th>
                                 <th className="px-6 py-4">{dict.columns.ipAddress}</th>
                                 <th className="px-6 py-4">{dict.columns.date}</th>
                             </tr>
@@ -220,22 +225,25 @@ export default function AuditLogsPage({ locale, dict }: AuditLogsPageProps) {
                                 </tr>
                             ) : (
                                 filteredLogs.map((log) => (
-                                    <tr key={log.id} className="hover:bg-gray-50 transition-colors">
+                                    <tr key={log.user_id + log.action + log.entity_id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
-                                            <div className="font-medium text-gray-900">{log.user}</div>
-                                            <div className="text-xs text-gray-400">{log.role}</div>
+                                            <div className="font-medium text-gray-900">{log.user || log.user_id}</div>
+                                            {log.role && <div className="text-xs text-gray-400">{log.role}</div>}
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
                                                 {getActionLabel(log.action)}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4">{log.target}</td>
                                         <td className="px-6 py-4">
-                                            <span className="font-mono text-xs">{log.ipAddress}</span>
+                                            <div className="text-sm">{log.entity}</div>
+                                            <div className="text-xs text-gray-400">{log.entity_id}</div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            {new Date(log.date).toLocaleString(locale)}
+                                            <span className="font-mono text-xs">{log.ip_address}</span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {log.date ? new Date(log.date).toLocaleString(locale) : 'N/A'}
                                         </td>
                                     </tr>
                                 ))

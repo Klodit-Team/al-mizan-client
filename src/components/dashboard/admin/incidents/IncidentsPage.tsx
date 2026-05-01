@@ -1,22 +1,14 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
 import type { getDictionary } from "@/i18n/get-dictionaries";
+import { getAdminIncidents, resolveAdminIncident, type AIIncident } from "@/services/admin/incidents";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
 
-interface AIIncident {
-    id: string;
-    severity: "HIGH" | "MEDIUM" | "LOW";
-    date: string;
-    description: string;
-    status: "OPEN" | "IN_PROGRESS" | "RESOLVED";
-    assignedTo?: string;
-}
-
 const defaultIncidents: AIIncident[] = [
-    { id: "INC-2024-001", severity: "HIGH", date: "2024-03-10T10:30:00Z", description: "Anomalie détectée dans les prix unitaires de l'offre #LOT-3.", status: "OPEN" },
-    { id: "INC-2024-002", severity: "MEDIUM", date: "2024-03-11T14:15:00Z", description: "Comportement suspect lors de la soumission de l'opérateur X.", status: "IN_PROGRESS", assignedTo: "Karim Ziani" },
-    { id: "INC-2024-003", severity: "LOW", date: "2024-03-09T09:00:00Z", description: "Écart mineur dans les délais de soumission.", status: "RESOLVED", assignedTo: "Ahmed Mansour" },
+    { incidentId: "INC-2024-001", utilisateursCibles: ["user-1", "user-2"], titre: "Anomalie détectée", message: "Anomalie détectée dans les prix unitaires de l'offre #LOT-3.", niveauUrgence: "CRITICAL", typeAlerte: "DIVERGENCE_GRE_A_GRE", donneesContexte: { lotId: "LOT-3" }, statut: "EMISE", created_at: "2024-03-10T10:30:00Z" },
+    { incidentId: "INC-2024-002", utilisateursCibles: ["user-3"], titre: "Comportement suspect", message: "Comportement suspect lors de la soumission de l'opérateur X.", niveauUrgence: "WARNING", typeAlerte: "DIVERGENCE_GRE_A_GRE", donneesContexte: { operateurId: "X" }, statut: "EMISE", created_at: "2024-03-11T14:15:00Z" },
+    { incidentId: "INC-2024-003", utilisateursCibles: ["user-4"], titre: "Écart mineur", message: "Écart mineur dans les délais de soumission.", niveauUrgence: "INFO", typeAlerte: "DIVERGENCE_GRE_A_GRE", donneesContexte: { delai: "2h" }, statut: "EMISE", created_at: "2024-03-09T09:00:00Z" },
 ];
 
 interface IncidentsPageProps {
@@ -33,20 +25,14 @@ export default function IncidentsPage({ locale, dict }: IncidentsPageProps) {
     // Modal states
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedIncident, setSelectedIncident] = useState<AIIncident | null>(null);
-    const [assignedTo, setAssignedTo] = useState("");
     const [resolutionNotes, setResolutionNotes] = useState("");
-    const [newStatus, setNewStatus] = useState<"OPEN" | "IN_PROGRESS" | "RESOLVED">("RESOLVED");
+    const [newStatus, setNewStatus] = useState<string>("RESOLVED");
 
     const fetchIncidents = async () => {
         try {
             setIsLoading(true);
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/incidents`);
-            if (res.ok) {
-                const data = await res.json();
-                setIncidents(data);
-            } else {
-                setIncidents(defaultIncidents);
-            }
+            const data = await getAdminIncidents();
+            setIncidents(Array.isArray(data) ? data : defaultIncidents);
         } catch (error) {
             console.error("Error fetching incidents:", error);
             setIncidents(defaultIncidents);
@@ -61,46 +47,55 @@ export default function IncidentsPage({ locale, dict }: IncidentsPageProps) {
 
     const filteredIncidents = useMemo(() => {
         return incidents.filter((inc) => {
-            const matchSearch = inc.description.toLowerCase().includes(search.toLowerCase()) || 
-                                inc.id.toLowerCase().includes(search.toLowerCase());
-            const matchStatus = statusFilter === "" || inc.status === statusFilter;
+            const matchSearch = inc.titre.toLowerCase().includes(search.toLowerCase()) || 
+                                inc.message.toLowerCase().includes(search.toLowerCase()) ||
+                                inc.incidentId.toLowerCase().includes(search.toLowerCase());
+            const matchStatus = statusFilter === "" || inc.statut === statusFilter;
             return matchSearch && matchStatus;
         });
     }, [incidents, search, statusFilter]);
 
-    const getSeverityStyles = (severity: string) => {
-        switch (severity) {
-            case "HIGH": return "bg-red-50 text-red-700 border-red-200";
-            case "MEDIUM": return "bg-yellow-50 text-yellow-700 border-yellow-200";
-            case "LOW": return "bg-blue-50 text-blue-700 border-blue-200";
+    const getSeverityStyles = (niveauUrgence: string) => {
+        switch (niveauUrgence) {
+            case "CRITICAL": return "bg-red-50 text-red-700 border-red-200";
+            case "ERROR": return "bg-red-50 text-red-700 border-red-200";
+            case "WARNING": return "bg-yellow-50 text-yellow-700 border-yellow-200";
+            case "INFO": return "bg-blue-50 text-blue-700 border-blue-200";
             default: return "bg-gray-50 text-gray-700 border-gray-200";
         }
     };
 
-    const getStatusStyles = (status: string) => {
-        switch (status) {
-            case "OPEN": return "bg-red-100 text-red-800";
-            case "IN_PROGRESS": return "bg-blue-100 text-blue-800";
-            case "RESOLVED": return "bg-green-100 text-green-800";
+    const getStatusStyles = (statut: string) => {
+        switch (statut) {
+            case "EMISE": return "bg-blue-100 text-blue-800";
             default: return "bg-gray-100 text-gray-800";
         }
     };
 
     const openResolveModal = (incident: AIIncident) => {
         setSelectedIncident(incident);
-        setAssignedTo(incident.assignedTo || "");
         setResolutionNotes("");
-        setNewStatus(incident.status === "RESOLVED" ? "RESOLVED" : "IN_PROGRESS");
+        setNewStatus("RESOLVED");
         setIsModalOpen(true);
     };
 
     const handleSaveResolve = async () => {
         if (!selectedIncident) return;
-        
-        // Simulating API call to update the incident
-        const updatedIncidents = incidents.map(inc => {
-            if (inc.id === selectedIncident.id) {
-                return { ...inc, assignedTo, status: newStatus };
+
+        const payload = {
+            statut: newStatus,
+            resolutionNotes,
+        };
+
+        try {
+            await resolveAdminIncident(selectedIncident.incidentId, payload);
+        } catch (error) {
+            console.error("Error resolving incident:", error);
+        }
+
+        const updatedIncidents = incidents.map((inc) => {
+            if (inc.incidentId === selectedIncident.incidentId) {
+                return { ...inc, statut: newStatus };
             }
             return inc;
         });
@@ -142,9 +137,7 @@ export default function IncidentsPage({ locale, dict }: IncidentsPageProps) {
                         className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-green-100 focus:border-[#4CAF50] bg-white text-gray-700"
                     >
                         <option value="">{dict.statusFilterPlaceholder}</option>
-                        <option value="OPEN">{dict.status.OPEN}</option>
-                        <option value="IN_PROGRESS">{dict.status.IN_PROGRESS}</option>
-                        <option value="RESOLVED">{dict.status.RESOLVED}</option>
+                        <option value="EMISE">{dict.status.EMISE}</option>
                     </select>
                 </div>
             </div>
@@ -158,9 +151,9 @@ export default function IncidentsPage({ locale, dict }: IncidentsPageProps) {
                                 <th className="px-6 py-4">{dict.columns.id}</th>
                                 <th className="px-6 py-4">{dict.columns.severity}</th>
                                 <th className="px-6 py-4">{dict.columns.date}</th>
-                                <th className="px-6 py-4">{dict.columns.description}</th>
+                                <th className="px-6 py-4">{dict.columns.title}</th>
+                                <th className="px-6 py-4">{dict.columns.message}</th>
                                 <th className="px-6 py-4">{dict.columns.status}</th>
-                                <th className="px-6 py-4">{dict.columns.assignedTo}</th>
                                 <th className="px-6 py-4">{dict.columns.actions}</th>
                             </tr>
                         </thead>
@@ -171,21 +164,21 @@ export default function IncidentsPage({ locale, dict }: IncidentsPageProps) {
                                 <tr><td colSpan={7} className="px-6 py-8 text-center text-gray-400">Aucun incident trouvé.</td></tr>
                             ) : (
                                 filteredIncidents.map((inc) => (
-                                    <tr key={inc.id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4 font-mono text-xs">{inc.id}</td>
+                                    <tr key={inc.incidentId} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-6 py-4 font-mono text-xs">{inc.incidentId}</td>
                                         <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${getSeverityStyles(inc.severity)}`}>
-                                                {dict.severity[inc.severity as keyof typeof dict.severity]}
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${getSeverityStyles(inc.niveauUrgence)}`}>
+                                                {dict.severity[inc.niveauUrgence as keyof typeof dict.severity] || inc.niveauUrgence}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4">{new Date(inc.date).toLocaleString(locale)}</td>
-                                        <td className="px-6 py-4 truncate max-w-[300px]" title={inc.description}>{inc.description}</td>
+                                        <td className="px-6 py-4">{inc.created_at ? new Date(inc.created_at).toLocaleString(locale) : 'N/A'}</td>
+                                        <td className="px-6 py-4 truncate max-w-[200px]" title={inc.titre}>{inc.titre}</td>
+                                        <td className="px-6 py-4 truncate max-w-[300px]" title={inc.message}>{inc.message}</td>
                                         <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusStyles(inc.status)}`}>
-                                                {dict.status[inc.status as keyof typeof dict.status]}
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusStyles(inc.statut)}`}>
+                                                {dict.status[inc.statut as keyof typeof dict.status] || inc.statut}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4">{inc.assignedTo || "-"}</td>
                                         <td className="px-6 py-4">
                                             <button 
                                                 onClick={() => openResolveModal(inc)}
@@ -210,26 +203,14 @@ export default function IncidentsPage({ locale, dict }: IncidentsPageProps) {
                         
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">{dict.modal.assignedTo}</label>
-                                <input
-                                    type="text"
-                                    value={assignedTo}
-                                    placeholder={dict.modal.assignedToPlaceholder}
-                                    onChange={(e) => setAssignedTo(e.target.value)}
-                                    className="w-full px-3 py-2 rounded-lg border border-gray-200 outline-none focus:border-[#4CAF50]"
-                                />
-                            </div>
-                            
-                            <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">{dict.modal.status}</label>
                                 <select
                                     value={newStatus}
-                                    onChange={(e) => setNewStatus(e.target.value as "OPEN" | "IN_PROGRESS" | "RESOLVED")}
+                                    onChange={(e) => setNewStatus(e.target.value)}
                                     className="w-full px-3 py-2 rounded-lg border border-gray-200 outline-none focus:border-[#4CAF50] bg-white"
                                 >
-                                    <option value="OPEN">{dict.status.OPEN}</option>
-                                    <option value="IN_PROGRESS">{dict.status.IN_PROGRESS}</option>
-                                    <option value="RESOLVED">{dict.status.RESOLVED}</option>
+                                    <option value="EMISE">{dict.status.EMISE}</option>
+                                    <option value="RESOLVED">Résolu</option>
                                 </select>
                             </div>
 
