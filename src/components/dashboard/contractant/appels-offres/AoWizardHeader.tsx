@@ -1,9 +1,9 @@
 import { memo } from "react";
 import { Check } from "lucide-react";
-
 import { cn } from "@/lib/utils";
-
+import { AoCreationDict } from "./AoCreationWizard";
 interface AoWizardHeaderProps {
+  dict: AoCreationDict;
   step: number;
   stepPrefix: string;
   stepOn: string;
@@ -14,6 +14,7 @@ interface AoWizardHeaderProps {
 }
 
 function AoWizardHeaderComponent({
+  dict,
   step,
   stepPrefix,
   stepOn,
@@ -27,7 +28,7 @@ function AoWizardHeaderComponent({
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <p className="text-[11px] text-slate-500">
-        Tableau de bord <span className="mx-1">/</span> Appels d&apos;offres{" "}
+        {dict.header.breadcrumbDashboard} <span className="mx-1">/</span> {dict.header.breadcrumbAo}{" "}
         <span className="mx-1">/</span> {stepPrefix} {step}: {currentStepTitle}
       </p>
 
@@ -36,7 +37,7 @@ function AoWizardHeaderComponent({
           <h1 className="text-3xl font-bold text-slate-900">{pageTitle}</h1>
           {isEditMode && (
             <p className="mt-1 text-xs font-medium text-slate-500">
-              Edition du brouillon AO en cours.
+              {dict.header.editModeLabel}
             </p>
           )}
           <p className="mt-1 text-sm font-medium text-[#4CAF50]">
@@ -46,7 +47,7 @@ function AoWizardHeaderComponent({
 
         <div className="w-full max-w-90">
           <div className="mb-2 flex items-center justify-between text-[11px] text-slate-500">
-            <span>Progression</span>
+            <span>{dict.header.progression}</span>
             <span>{Math.round(progressPercent)}%</span>
           </div>
           <div className="h-2 rounded-full bg-slate-200">

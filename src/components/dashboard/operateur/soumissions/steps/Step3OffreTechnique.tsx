@@ -11,18 +11,20 @@ interface Props {
   onFileChange: (f: File) => void;
   onBack: () => void;
   onNext: () => void;
+  dict: any;
+  navDict: any;
 }
 
 export default function Step3OffreTechnique({
-  selectedAo, selectedLotId, offreTechFile, onFileChange, onBack, onNext,
+  selectedAo, selectedLotId, offreTechFile, onFileChange, onBack, onNext, dict, navDict,
 }: Props) {
   const selectedLots: AoLot[] = selectedAo?.lots.filter((lot) => lot.id === selectedLotId) ?? [];
 
   return (
     <div className="space-y-5">
       <SectionTitle
-        title="Offre technique"
-        subtitle="Deposez votre offre technique : le cahier des charges dument rempli, signe et cachete pour le lot selectionne."
+        title={dict.title}
+        subtitle={dict.subtitle}
       />
 
       {selectedAo && (
@@ -65,11 +67,11 @@ export default function Step3OffreTechnique({
 
       <div>
         <p className="mb-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-500">
-          Fichier de l'offre technique <span className="text-rose-500">*</span>
+          {dict.fileLabel} <span className="text-rose-500">*</span>
         </p>
         <FileDropzone
-          label="Deposer le dossier technique (PDF)"
-          sublabel="Document unique regroupant toutes les pieces techniques - PDF, max 50 Mo"
+          label={dict.selectFile}
+          sublabel={dict.fileDesc}
           file={offreTechFile}
           onFile={onFileChange}
           accept=".pdf"
@@ -88,7 +90,7 @@ export default function Step3OffreTechnique({
         </div>
       )}
 
-      <NavButtons onBack={onBack} onNext={onNext} disabled={!offreTechFile} />
+      <NavButtons onBack={onBack} onNext={onNext} disabled={!offreTechFile} dict={navDict} />
     </div>
   );
 }

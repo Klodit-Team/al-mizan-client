@@ -13,8 +13,11 @@ export default async function ContractantTendersPage({
   const { locale } = await params;
   const dict = await getDictionary(locale as Locale);
   const tendersListDict =
-    (dict as { tendersList?: typeof defaultTendersListDict }).tendersList ||
-    defaultTendersListDict;
+    (
+      dict as unknown as {
+        dashboard: { contractant: { tendersList: typeof defaultTendersListDict } };
+      }
+    ).dashboard.contractant.tendersList || defaultTendersListDict;
 
   return (
     <main className="p-6 space-y-5 overflow-auto">

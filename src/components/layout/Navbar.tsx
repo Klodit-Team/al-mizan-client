@@ -1,9 +1,10 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useParams } from "next/navigation";
 import { type Locale } from "@/i18n/config";
 import type { getDictionary } from "@/i18n/get-dictionaries";
+import { logout } from "@/services/auth/api";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
 
@@ -13,18 +14,23 @@ interface NavbarProps {
     userName?: string;
     userCompany?: string;
     userRole?: string;
+    adminId?: string;
     dict: CommonDict["navbar"];
     locale: Locale;
 }
 
-export default function Navbar({ isLoggedIn = false, userInitial = "R", userName = "Ahmed Mansour", userCompany = "MANSOUR Administrateur", userRole = "ADMIN", dict, locale }: NavbarProps) {    const router = useRouter();
+export default function Navbar({ isLoggedIn = false, userInitial = "R", userName = "Ahmed Mansour", userCompany = "MANSOUR Administrateur", userRole = "ADMIN", adminId, dict, locale }: NavbarProps) {
+    const router = useRouter();
     const pathname = usePathname();
+    const params = useParams<{ adminId?: string | string[] }>();
+    const routeAdminId = Array.isArray(params.adminId) ? params.adminId[0] : params.adminId;
+    const currentAdminId = adminId || routeAdminId || "admin";
 
     const toggleLang = () => {
         const nextLocale = locale === "fr" ? "ar" : "fr";
         const segments = pathname.split("/");
         segments[1] = nextLocale;
-        router.push(segments.join("/"));
+        window.location.href = segments.join("/");
     };
 
     const navLinks = [
@@ -62,13 +68,20 @@ export default function Navbar({ isLoggedIn = false, userInitial = "R", userName
 
             
                 <div className="flex items-center gap-4">
+                    <button
+                        onClick={toggleLang}
+                        className="text-sm text-gray-300 hover:text-white border border-gray-600 rounded-lg px-3 py-1.5 transition-colors hover:border-gray-400"
+                    >
+                        {locale === "fr" ? "FR / AR" : "AR / FR"}
+                    </button>
                 
                     <button 
                         
                         title="notifications"
                         className="relative text-gray-400 hover:text-white transition-colors" onClick={()=>{
                             if(userRole === "ADMIN"){
-                                router.push(`/${locale}/dashboard/admin/notif`)
+                                router.push(`/${locale}/dashboard/admin/${currentAdminId}/notif`);
+
                             }else{
                                 router.push(`/${locale}/dashboard/operateur/notifications`)
                             }
@@ -86,10 +99,7 @@ export default function Navbar({ isLoggedIn = false, userInitial = "R", userName
                         className="relative text-gray-400 hover:text-white transition-colors"
                         onClick={async () => {
                             try {
-                                await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, { 
-                                    method: "POST", 
-                                    credentials: "include" 
-                                });
+                                await logout();
                             } catch {}
                             document.cookie = "user_type=; Path=/; Max-Age=0; SameSite=Lax";
                             router.push(`/${locale}`);
@@ -105,8 +115,9 @@ export default function Navbar({ isLoggedIn = false, userInitial = "R", userName
 
                     <div className="flex items-center gap-3 cursor-pointer group" onClick={() => {
                         switch(userRole){
-                            case "ADMIN": router.push('/dashboard/admin/profile'); break;
-                            case "OPERATEUR": router.push('/dashboard/operateur/profil'); break;
+                            case "ADMIN": router.push(`/${locale}/dashboard/admin/${currentAdminId}/profile`); break;
+                            case "OPERATEUR": router.push(`/${locale}/dashboard/operateur/profil`); break;
+                            case  "COMMISSION": router.push(`/${locale}/dashboard/commission/profil`); break;
                         }
                     }}>
                         <div className="text-right">

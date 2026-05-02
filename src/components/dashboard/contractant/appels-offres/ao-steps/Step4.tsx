@@ -14,73 +14,23 @@ export default function Step4({ props }: { props: WizardStepProps }) {
     dict,
     stepTitles,
     getSwitchThumbClass,
-    form,
-    updateField,
-    errors,
-    lots,
-    setLots,
-    lotForm,
-    setLotForm,
-    showLotForm,
-    setShowLotForm,
-    editingLotId,
-    setEditingLotId,
-    saveLot,
-    editLot,
-    deleteLot,
-    lotErrors,
-    cdcForm,
-    setCdcForm,
-    updateCdcField,
-    cdcFile,
-    handleCdcFileChange,
-    existingCdcFileName,
-    setExistingCdcFileName,
-    triggerCdcFileInput,
-    removeCdcFile,
-    cdcErrors,
+  
     criteria,
-    setCriteria,
+   
     showCriterionForm,
-    setShowCriterionForm,
+    
     criterionForm,
-    setCriterionForm,
+    
     editingCriterionId,
-    setEditingCriterionId,
+   
     saveCriterion,
-    editCriterion,
     deleteCriterion,
-    moveCriterionUp,
-    moveCriterionDown,
+    
     criterionErrors,
-    evaluationCriteria,
-    setEvaluationCriteria,
-    showEvaluationForm,
-    setShowEvaluationForm,
-    evaluationForm,
-    setEvaluationForm,
-    editingEvaluationId,
-    setEditingEvaluationId,
-    evaluationTab,
-    setEvaluationTab,
-    evaluationErrors,
-    saveEvaluationCriterion,
-    editEvaluationCriterion,
-    deleteEvaluationCriterion,
-    moveEvaluationCriterionUp,
-    moveEvaluationCriterionDown,
-    evaluationStepError,
+    
     goBack,
     goNextAfterValidation,
-    isSubmittingAction,
-    saveReviewDraft,
-    reviewActionError,
-    reviewActionMessage,
-    generatedAvisRef,
-    step,
-    isRtl,
-    fileInputRef,
-    setEvaluationStepError,
+   
     openCreateCriterionForm,
     moveCriterion,
     toggleCriterionEliminatory,
@@ -98,10 +48,10 @@ export default function Step4({ props }: { props: WizardStepProps }) {
       <div className="flex flex-col gap-3 border-b border-slate-100 pb-3 md:flex-row md:items-start md:justify-between">
         <div>
           <h3 className="text-lg font-semibold text-slate-900">
-            Criteres d&apos;Eligibilite
+            {dict.step4.title}
           </h3>
           <p className="text-xs text-slate-500">
-            Definissez les conditions obligatoires de participation
+            {dict.step4.subtitle}
           </p>
         </div>
         <button
@@ -110,25 +60,25 @@ export default function Step4({ props }: { props: WizardStepProps }) {
           className="inline-flex h-9 items-center justify-center gap-1 rounded-md bg-[#4CAF50] px-3 text-xs font-semibold text-white hover:opacity-95"
         >
           <Plus className="h-3.5 w-3.5" />
-          Ajouter critere
+          {dict.step4.addCriterionBtn}
         </button>
       </div>
       <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[780px] border-collapse">
           <thead>
             <tr className="border-b border-slate-200 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              <th className="px-2 py-2">Ordre</th>
-              <th className="px-2 py-2">Designation</th>
-              <th className="px-2 py-2">Description</th>
-              <th className="px-2 py-2">Eliminatoire</th>
-              <th className="px-2 py-2 text-right">Actions</th>
+              <th className="px-2 py-2">{dict.step4.columns.order}</th>
+              <th className="px-2 py-2">{dict.step4.columns.designation}</th>
+              <th className="px-2 py-2">{dict.step4.columns.description}</th>
+              <th className="px-2 py-2">{dict.step4.columns.eliminatory}</th>
+              <th className="px-2 py-2 text-right">{dict.step4.columns.actions}</th>
             </tr>
           </thead>
           <tbody>
             {criteria.length === 0 ? (
               <tr className="text-xs text-slate-500">
                 <td colSpan={5} className="px-2 py-6 text-center">
-                  Aucun critere defini pour le moment.
+                  {dict.step4.emptyMessage}
                 </td>
               </tr>
             ) : (
@@ -218,20 +168,20 @@ export default function Step4({ props }: { props: WizardStepProps }) {
         <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
           <h3 className="mb-3 text-sm font-semibold text-slate-800">
             {editingCriterionId
-              ? "Modifier le critere"
-              : "Nouveau critere d&apos;eligibilite"}
+              ? dict.step4.editCriterionTitle
+              : dict.step4.newCriterionTitle}
           </h3>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div>
               <label className="mb-1 block text-[11px] font-semibold text-slate-600">
-                Designation
+                {dict.step4.designationLabel}
               </label>
               <input
                 value={criterionForm.designation}
                 onChange={(event) =>
                   updateCriterionField("designation", event.target.value)
                 }
-                placeholder="Ex. Capacite financiere"
+                placeholder={dict.step4.designationPlaceholder}
                 className={cn(
                   "h-9 w-full rounded-md border px-3 text-xs outline-none focus:border-[#4CAF50]",
                   criterionErrors.designation
@@ -250,7 +200,7 @@ export default function Step4({ props }: { props: WizardStepProps }) {
                 <div className="w-full rounded-md border border-slate-200 bg-white px-3 py-2">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[11px] font-semibold text-slate-600">
-                      Eliminatoire
+                      {dict.step4.eliminatoryLabel}
                     </span>
                     <button
                       type="button"
@@ -281,7 +231,7 @@ export default function Step4({ props }: { props: WizardStepProps }) {
             </div>
             <div className="md:col-span-2">
               <label className="mb-1 block text-[11px] font-semibold text-slate-600">
-                Description
+                {dict.step4.descriptionLabel}
               </label>
               <textarea
                 rows={3}
@@ -289,7 +239,7 @@ export default function Step4({ props }: { props: WizardStepProps }) {
                 onChange={(event) =>
                   updateCriterionField("description", event.target.value)
                 }
-                placeholder="Decrire le critere et les exigences attendues..."
+                placeholder={dict.step4.descriptionPlaceholder}
                 className={cn(
                   "w-full rounded-md border px-3 py-2 text-xs outline-none focus:border-[#4CAF50]",
                   criterionErrors.description
@@ -310,21 +260,21 @@ export default function Step4({ props }: { props: WizardStepProps }) {
               onClick={cancelCriterionEdit}
               className="inline-flex h-9 items-center justify-center rounded-md border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100"
             >
-              Annuler
+              {dict.buttons.cancel}
             </button>
             <button
               type="button"
               onClick={saveCriterion}
               className="inline-flex h-9 items-center justify-center rounded-md bg-[#4CAF50] px-3 text-xs font-semibold text-white hover:opacity-95"
             >
-              Enregistrer
+              {dict.step4.saveBtn}
             </button>
           </div>
         </div>
       )}
       {criteria.length === 0 && (
         <p className="mt-2 text-[11px] font-medium text-red-600">
-          Ajoutez au moins un critere pour passer a l&apos;etape suivante.
+          {dict.step4.minCriterionWarning}
         </p>
       )}
       <div className="mt-4 flex flex-col-reverse gap-2 border-t border-slate-100 pt-3 sm:flex-row sm:items-center sm:justify-between">

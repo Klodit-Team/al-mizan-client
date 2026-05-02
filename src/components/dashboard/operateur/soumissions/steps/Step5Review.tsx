@@ -42,6 +42,8 @@ interface Props {
   submitError: string | null;
   onBack: () => void;
   onSubmit: () => void;
+  dict: any;
+  navDict: any;
 }
 
 export default function Step5Review({
@@ -54,6 +56,8 @@ export default function Step5Review({
   submitError,
   onBack,
   onSubmit,
+  dict,
+  navDict,
 }: Props) {
   const selectedLot = selectedAo?.lots.find((lot) => lot.id === selectedLotId) || null;
   const selectedBpu = lotBpus.find((entry) => entry.lotId === selectedLotId) || null;
@@ -75,8 +79,8 @@ export default function Step5Review({
   return (
     <div className="space-y-5">
       <SectionTitle
-        title="Verification finale"
-        subtitle="Controlez votre dossier. Au clic sur Deposer, le workflow service est execute: creation brouillon, upload technique, upload financiere chiffree, caution, puis validation."
+        title={dict.title}
+        subtitle={dict.subtitle}
       />
 
       {!canSubmit && (
@@ -137,9 +141,9 @@ export default function Step5Review({
         <div className="flex items-start gap-2">
           <Lock className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
           <div>
-            <p className="text-xs font-semibold text-blue-700">Securite de l'offre financiere</p>
+            <p className="text-xs font-semibold text-blue-700">{dict.alertTitle}</p>
             <p className="mt-0.5 text-[11px] text-blue-700">
-              Le frontend chiffre le fichier financier et signe le hash avant envoi, conformement au contrat du service soumission.
+              {dict.alertDesc}
             </p>
           </div>
         </div>
@@ -155,10 +159,11 @@ export default function Step5Review({
       <NavButtons
         onBack={onBack}
         onNext={onSubmit}
-        nextLabel={isSubmitting ? "Depot en cours..." : "Deposer la soumission"}
+        nextLabel={isSubmitting ? "..." : dict.submit}
         nextIcon={<Send className="h-4 w-4" />}
         isLast
         disabled={!canSubmit || isSubmitting}
+        dict={navDict}
       />
     </div>
   );

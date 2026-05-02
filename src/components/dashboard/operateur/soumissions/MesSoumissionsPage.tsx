@@ -36,9 +36,9 @@ const STATUS_FILTERS: Array<{ value: OeSoumissionStatus | "all"; label: string }
 
 const ITEMS_PER_PAGE = 6;
 
-function fmt(iso: string) {
+function fmt(iso: string, locale: Locale) {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("fr-DZ", { day: "numeric", month: "short", year: "numeric" });
+  return new Date(iso).toLocaleDateString(locale === "ar" ? "ar-DZ" : "fr-DZ", { day: "numeric", month: "short", year: "numeric" });
 }
 
 // ─── Stat card ────────────────────────────────────────────────────────────────
@@ -61,10 +61,8 @@ function StatCard({ label, value, colorClass, iconBg, icon }: {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function MesSoumissionsPage() {
-  const params = useParams();
+export default function MesSoumissionsPage({ dict, locale }: { dict: any; locale: Locale }) {
   const router = useRouter();
-  const locale = (params?.locale as Locale) || "fr";
   const { data = [], isLoading, isError } = useOperateurSoumissionsQuery();
 
   const [keyword, setKeyword]     = useState("");
@@ -113,8 +111,8 @@ export default function MesSoumissionsPage() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">Mes Soumissions</h1>
-          <p className="mt-0.5 text-sm text-slate-500">Suivi de vos offres déposées et en cours</p>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900">{dict.title}</h1>
+          <p className="mt-0.5 text-sm text-slate-500">{dict.subtitle}</p>
         </div>
         <button
           type="button"
@@ -123,16 +121,16 @@ export default function MesSoumissionsPage() {
           style={{ backgroundColor: "#4CAF50" }}
         >
           <Send className="h-4 w-4" />
-          Nouvelle soumission
+          {dict.newSubmission}
         </button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="Total"      value={counts.total}    colorClass="text-slate-700"   iconBg="bg-slate-100"   icon={<FileText className="h-5 w-5" />} />
-        <StatCard label="En cours"   value={counts.enCours}  colorClass="text-blue-700"    iconBg="bg-blue-100"    icon={<Clock className="h-5 w-5" />} />
-        <StatCard label="Retenues"   value={counts.retenues} colorClass="text-emerald-700" iconBg="bg-emerald-100" icon={<CheckCircle2 className="h-5 w-5" />} />
-        <StatCard label="Rejetées"   value={counts.rejetees} colorClass="text-rose-700"    iconBg="bg-rose-100"    icon={<XCircle className="h-5 w-5" />} />
+        <StatCard label={dict.stats.total}      value={counts.total}    colorClass="text-slate-700"   iconBg="bg-slate-100"   icon={<FileText className="h-5 w-5" />} />
+        <StatCard label={dict.stats.enCours}   value={counts.enCours}  colorClass="text-blue-700"    iconBg="bg-blue-100"    icon={<Clock className="h-5 w-5" />} />
+        <StatCard label={dict.stats.retenues}   value={counts.retenues} colorClass="text-emerald-700" iconBg="bg-emerald-100" icon={<CheckCircle2 className="h-5 w-5" />} />
+        <StatCard label={dict.stats.rejetees}   value={counts.rejetees} colorClass="text-rose-700"    iconBg="bg-rose-100"    icon={<XCircle className="h-5 w-5" />} />
       </div>
 
       {/* Filters */}
@@ -143,7 +141,7 @@ export default function MesSoumissionsPage() {
             type="text"
             value={keyword}
             onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
-            placeholder="Référence, objet, organisme…"
+            placeholder={dict.searchPlaceholder}
             className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs text-slate-800 outline-none placeholder:text-slate-400 focus:border-[#4CAF50] focus:bg-white transition-colors"
           />
         </div>
@@ -159,7 +157,7 @@ export default function MesSoumissionsPage() {
                   : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
               }`}
             >
-              {f.label}
+              {f.value === "all" ? dict.filters.all : dict.filters[f.value] || f.label}
             </button>
           ))}
         </div>
@@ -169,7 +167,7 @@ export default function MesSoumissionsPage() {
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         {/* Header */}
         <div className="hidden sm:grid sm:grid-cols-[180px_1fr_120px_110px_90px] border-b border-slate-100 bg-slate-50 px-4 py-2.5">
-          {["Référence / ID", "Objet & Organisme", "Date dépôt", "Statut", "Actions"].map((h) => (
+          {[dict.table.referenceId, dict.table.objectOrg, dict.table.dateDepot, dict.table.status, dict.table.actions].map((h) => (
             <span key={h} className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{h}</span>
           ))}
         </div>
@@ -183,8 +181,8 @@ export default function MesSoumissionsPage() {
         ) : paginated.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-slate-400">
             <FileText className="mb-3 h-10 w-10 opacity-20" />
-            <p className="text-sm font-medium">Aucune soumission trouvée</p>
-            <p className="mt-1 text-xs">Modifiez vos filtres ou déposez une nouvelle soumission</p>
+            <p className="text-sm font-medium">{dict.empty.title}</p>
+            <p className="mt-1 text-xs">{dict.empty.subtitle}</p>
           </div>
         ) : (
           <ul className="divide-y divide-slate-100">
@@ -214,13 +212,13 @@ export default function MesSoumissionsPage() {
                   </div>
 
                   {/* Date */}
-                  <div className="text-xs text-slate-500">{fmt(sub.submittedAt)}</div>
+                  <div className="text-xs text-slate-500">{fmt(sub.submittedAt, locale)}</div>
 
                   {/* Status */}
                   <div>
                     <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${meta.bg} ${meta.text}`}>
                       {meta.icon}
-                      {meta.label}
+                      {dict.filters[sub.status] || meta.label}
                     </span>
                   </div>
 
@@ -228,7 +226,7 @@ export default function MesSoumissionsPage() {
                   <div className="flex items-center gap-1.5">
                     <button
                       type="button"
-                      title="Voir le détail"
+                      title={dict.actions.view}
                       onClick={() => router.push(`/${locale}/dashboard/operateur/soumissions/${sub.id}`)}
                       className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition-colors hover:border-[#4CAF50] hover:bg-emerald-50 hover:text-[#4CAF50]"
                     >
@@ -238,7 +236,7 @@ export default function MesSoumissionsPage() {
                     {sub.status === "brouillon" && (
                       <button
                         type="button"
-                        title="Continuer la soumission"
+                        title={dict.actions.continue}
                         onClick={() => router.push(getResumeDraftUrl(sub))}
                         className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[#4CAF50] text-[#4CAF50] transition-colors hover:bg-[#4CAF50] hover:text-white"
                       >
@@ -249,7 +247,7 @@ export default function MesSoumissionsPage() {
                     {sub.eligibleRecours && (
                       <button
                         type="button"
-                        title="Déposer un recours"
+                        title={dict.actions.recours}
                         onClick={() => {
                           const query = new URLSearchParams();
                           query.set("ao", sub.aoReference);
@@ -272,7 +270,7 @@ export default function MesSoumissionsPage() {
 
       {isError && (
         <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700">
-          Impossible de charger les soumissions. Vérifiez la disponibilité de la passerelle API et du service soumission.
+          {dict.errorLoading}
         </div>
       )}
 

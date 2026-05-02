@@ -1,22 +1,19 @@
 "use client"
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import NotificationCard from "@/components/dashboard/admin/NotificationCard";
 import type { getDictionary } from "@/i18n/get-dictionaries";
+import {
+  getAdminNotifications,
+  markAdminNotificationRead,
+  markAllAdminNotificationsRead,
+  type NotificationCategory,
+} from "@/services/admin/notifications";
 
-export type NotificationCategory =
-    | "all"
-    | "publication_ao"
-    | "depot_confirme"
-    | "ouverture_plis"
-    | "evaluation_resultat"
-    | "attribution_provisoire"
-    | "attribution_definitive"
-    | "recours_update"
-    | "systeme";
+export type FilterCategory = NotificationCategory | "all";
 
 export interface Notification {
     id: string;
-    category: Exclude<NotificationCategory, "all">;
+    category: NotificationCategory;
     title: string;
     description: string;
     time: string;
@@ -30,72 +27,49 @@ interface NotificationsPageProps {
 }
 
 export default function NotificationsPageClient({ dict }: NotificationsPageProps) {
-    
-    // We can also translate the dummy data titles statically, or just leave dummy data as is
-    const [notifications, setNotifications] = useState<Notification[]>([
-        {
-            id: "1",
-            category: "publication_ao",
-            title: "Nouveau Appel d'Offres : Modernisation IT",
-            description: "Un nouvel appel d'offres correspondant à votre secteur a été publié par le Ministère de l'Énergie.",
-            time: "Il y a 2h",
-            read: false,
-        },
-        {
-            id: "2",
-            category: "depot_confirme",
-            title: "Dépôt confirmé : Réf #AO-2024-089",
-            description: "Votre dossier pour le projet de maintenance des infrastructures a été reçu avec succès.",
-            time: "Hier, 14:20",
-            read: false,
-        },
-        {
-            id: "3",
-            category: "ouverture_plis",
-            title: "Ouverture des plis imminente",
-            description: "La séance d'ouverture des plis pour le marché public n°45/2023 débutera dans 30 minutes.",
-            time: "Hier, 09:15",
-            read: false,
-        },
-        {
-            id: "4",
-            category: "attribution_provisoire",
-            title: "Attribution Provisoire Publiée",
-            description: "Les résultats de l'attribution provisoire pour le projet 'Smart City' sont désormais disponibles.",
-            time: "3 oct. 2024",
-            read: true,
-        },
-        {
-            id: "5",
-            category: "recours_update",
-            title: "Mise à jour Recours",
-            description: "Un recours a été déposé concernant l'AO #990-B. Consultez les détails de la procédure.",
-            time: "2 oct. 2024",
-            read: true,
-        },
-        {
-            id: "6",
-            category: "systeme",
-            title: "Maintenance du Système",
-            description: "Le portail Al-Mizan sera indisponible ce dimanche de 02h à 04h pour une mise à jour technique.",
-            time: "30 sept. 2024",
-            read: true,
-        },
-    ]);
-
-    const [activeCategory, setActiveCategory] = useState<NotificationCategory>("all");
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [fetchError, setFetchError] = useState<string | null>(null);
+    const [activeCategory, setActiveCategory] = useState<FilterCategory>("all");
     const [unreadOnly, setUnreadOnly] = useState(false);
 
-    // ── API HANDLERS (wire up when backend is ready) ──────────────────
+    useEffect(() => {
+        const loadNotifications = async () => {
+            setIsLoading(true);
+            setFetchError(null);
 
-    const handleMarkRead = (id: string) => {
+            try {
+                const data = await getAdminNotifications();
+                setNotifications(Array.isArray(data) ? data : []);
+            } catch (error) {
+                console.error("Error fetching notifications:", error);
+                setFetchError("Impossible de charger les notifications.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadNotifications();
+    }, []);
+
+    const handleMarkRead = async (id: string) => {
         setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications/${id}/read`, { method: "PATCH" }).catch(() => {});
+
+        try {
+            await markAdminNotificationRead(id);
+        } catch (error) {
+            console.error("Error marking notification read:", error);
+        }
     };
 
-    const handleMarkAllRead = () => {
+    const handleMarkAllRead = async () => {
         setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications/read-all`, { method: "PATCH" }).catch(() => {});
+
+        try {
+            await markAllAdminNotificationsRead();
+        } catch (error) {
+            console.error("Error marking all notifications read:", error);
+        }
     };
 
     // ── FILTERS ───────────────────────────────────────────────────────
@@ -108,7 +82,7 @@ export default function NotificationsPageClient({ dict }: NotificationsPageProps
 
     const unreadCount = notifications.filter((n) => !n.read).length;
 
-    const categoriesList: { key: NotificationCategory; label: string }[] = [
+    const categoriesList: { key: FilterCategory; label: string }[] = [
         { key: "all", label: dict.categories.all },
         { key: "publication_ao", label: dict.categories.publication_ao },
         { key: "depot_confirme", label: dict.categories.depot_confirme },

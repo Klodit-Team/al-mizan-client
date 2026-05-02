@@ -100,36 +100,36 @@ function toTimelineStatus(
   return "pending";
 }
 
-function buildTimeline(sub: OeSoumissionDetailItem): TimelineEvent[] {
+function buildTimeline(sub: OeSoumissionDetailItem, dict: any): TimelineEvent[] {
   const submittedAt = sub.submittedAt || sub.createdAt;
 
   const base: TimelineEvent[] = [
     {
       id: "t-creation",
       date: fmtDateTime(sub.createdAt),
-      label: "Brouillon cree",
-      description: "La soumission a ete initialisee et enregistree en brouillon.",
+      label: dict.timeline.events.creation.label,
+      description: dict.timeline.events.creation.desc,
       status: toTimelineStatus(sub.status, "brouillon"),
     },
     {
       id: "t-depot",
       date: fmtDateTime(submittedAt),
-      label: "Depot de la soumission",
-      description: "Le depot final a ete declenche par l'operateur.",
+      label: dict.timeline.events.depot.label,
+      description: dict.timeline.events.depot.desc,
       status: toTimelineStatus(sub.status, "deposee"),
     },
     {
       id: "t-reception",
       date: fmtDateTime(sub.horodatageServeur || submittedAt),
-      label: "Reception et horodatage",
-      description: "La plateforme a confirme la reception de l'offre.",
+      label: dict.timeline.events.reception.label,
+      description: dict.timeline.events.reception.desc,
       status: toTimelineStatus(sub.status, "recue"),
     },
     {
       id: "t-eval",
-      date: "En attente",
-      label: "Evaluation",
-      description: "La commission poursuit l'evaluation technique et financiere.",
+      date: dict.timeline.dates.enAttente,
+      label: dict.timeline.events.eval.label,
+      description: dict.timeline.events.eval.desc,
       status: toTimelineStatus(sub.status, "evaluee"),
     },
   ];
@@ -137,25 +137,25 @@ function buildTimeline(sub: OeSoumissionDetailItem): TimelineEvent[] {
   if (sub.status === "retenue") {
     base.push({
       id: "t-result",
-      date: "Resultat publie",
-      label: "Attribution provisoire",
-      description: "Votre soumission est retenue.",
+      date: dict.timeline.dates.resultPublished,
+      label: dict.timeline.events.retenue.label,
+      description: dict.timeline.events.retenue.desc,
       status: "current",
     });
   } else if (sub.status === "rejetee") {
     base.push({
       id: "t-result",
-      date: "Resultat publie",
-      label: "Soumission rejetee",
-      description: "Votre soumission n'a pas ete retenue.",
+      date: dict.timeline.dates.resultPublished,
+      label: dict.timeline.events.rejetee.label,
+      description: dict.timeline.events.rejetee.desc,
       status: "current",
     });
   } else {
     base.push({
       id: "t-result",
-      date: "A planifier",
-      label: "Resultat d'attribution",
-      description: "Le resultat sera communique apres cloture de l'evaluation.",
+      date: dict.timeline.dates.toPlan,
+      label: dict.timeline.events.pendingResult.label,
+      description: dict.timeline.events.pendingResult.desc,
       status: "pending",
     });
   }
@@ -181,15 +181,13 @@ function openFile(url?: string) {
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
-export default function SoumissionDetailPage({ subId }: { subId: string }) {
-  const params = useParams();
+export default function SoumissionDetailPage({ subId, dict, locale }: { subId: string; dict: any; locale: Locale }) {
   const router = useRouter();
-  const locale = (params?.locale as Locale) || "fr";
 
   const [tab, setTab] = useState<DetailTab>("apercu");
   const { data: sub, isLoading, isError } = useOperateurSoumissionDetailQuery(subId);
 
-  const timeline = useMemo(() => (sub ? buildTimeline(sub) : []), [sub]);
+  const timeline = useMemo(() => (sub ? buildTimeline(sub, dict) : []), [sub, dict]);
 
   if (isLoading) {
     return (
@@ -205,17 +203,17 @@ export default function SoumissionDetailPage({ subId }: { subId: string }) {
     return (
       <div className="flex flex-col items-center justify-center rounded-xl border border-rose-200 bg-rose-50 py-16 text-rose-600">
         <AlertCircle className="mb-3 h-10 w-10 opacity-40" />
-        <p className="text-sm font-medium">Soumission introuvable</p>
+        <p className="text-sm font-medium">{dict.notFound}</p>
       </div>
     );
   }
 
   const meta = STATUS_META[sub.status];
   const tabs: Array<{ key: DetailTab; label: string }> = [
-    { key: "apercu", label: "Apercu" },
-    { key: "documents", label: "Documents" },
-    { key: "financier", label: "Offre financiere" },
-    { key: "timeline", label: "Suivi" },
+    { key: "apercu", label: dict.tabs.apercu },
+    { key: "documents", label: dict.tabs.documents },
+    { key: "financier", label: dict.tabs.financier },
+    { key: "timeline", label: dict.tabs.timeline },
   ];
 
   return (
@@ -226,7 +224,7 @@ export default function SoumissionDetailPage({ subId }: { subId: string }) {
           onClick={() => router.push(`/${locale}/dashboard/operateur/tableau-de-bord`)}
           className="hover:text-slate-800 transition-colors"
         >
-          Tableau de bord
+          {dict.nav.dashboard}
         </button>
         <ChevronRight className="h-3 w-3 text-slate-300" />
         <button
@@ -234,7 +232,7 @@ export default function SoumissionDetailPage({ subId }: { subId: string }) {
           onClick={() => router.push(`/${locale}/dashboard/operateur/soumissions`)}
           className="hover:text-slate-800 transition-colors"
         >
-          Mes soumissions
+          {dict.nav.soumissions}
         </button>
         <ChevronRight className="h-3 w-3 text-slate-300" />
         <span className="font-mono font-semibold text-slate-700">{sub.reference}</span>
@@ -247,7 +245,7 @@ export default function SoumissionDetailPage({ subId }: { subId: string }) {
             onClick={() => router.back()}
             className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-[#4CAF50] transition-colors"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />Retour
+            <ArrowLeft className="h-3.5 w-3.5" />{dict.back}
           </button>
         </div>
 
@@ -265,7 +263,7 @@ export default function SoumissionDetailPage({ subId }: { subId: string }) {
             <p className="mt-0.5 text-[11px] text-slate-500">{sub.organizationName} · {sub.wilaya}</p>
           </div>
           <div className="shrink-0 text-right text-[11px] text-slate-500">
-            <p>Deposee le</p>
+            <p>{dict.depositedOn}</p>
             <p className="font-semibold text-slate-700">{fmtDate(sub.submittedAt)}</p>
           </div>
         </div>
@@ -291,11 +289,11 @@ export default function SoumissionDetailPage({ subId }: { subId: string }) {
           {tab === "apercu" && (
             <div className="space-y-4">
               <div>
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">Lots soumissionnes</p>
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">{dict.apercu.lots}</p>
                 <div className="space-y-2">
                   {sub.lots.length === 0 ? (
                     <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs text-slate-500">
-                      Aucun lot associe.
+                      {dict.apercu.noLots}
                     </div>
                   ) : (
                     sub.lots.map((lot) => (
@@ -314,25 +312,25 @@ export default function SoumissionDetailPage({ subId }: { subId: string }) {
               </div>
 
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-500">Preuve d'integrite</p>
+                <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-500">{dict.apercu.proof}</p>
                 <p className="text-[10px] text-slate-500">
-                  Horodatage serveur : <span className="font-semibold text-slate-700">{fmtDateTime(sub.horodatageServeur || sub.submittedAt)}</span>
+                  {dict.apercu.serverTime} <span className="font-semibold text-slate-700">{fmtDateTime(sub.horodatageServeur || sub.submittedAt)}</span>
                 </p>
                 <p className="mt-1 break-all font-mono text-[9px] text-slate-400">
-                  SHA-256 (offre financiere) : {sub.offreFinanciere?.hashFichier || "-"}
+                  {dict.apercu.sha256} {sub.offreFinanciere?.hashFichier || "-"}
                 </p>
               </div>
 
               <div className="rounded-xl border border-slate-200 bg-white p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Landmark className="h-4 w-4 text-slate-400" />
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Caution bancaire</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{dict.apercu.caution}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
-                  <div><span className="text-slate-500">Reference :</span> <span className="font-semibold text-slate-700">{sub.caution?.reference || "-"}</span></div>
-                  <div><span className="text-slate-500">Banque :</span> <span className="font-semibold text-slate-700">{sub.caution?.banque || "-"}</span></div>
-                  <div><span className="text-slate-500">Montant :</span> <span className="font-semibold text-slate-700">{sub.caution?.montant || "-"}</span></div>
-                  <div><span className="text-slate-500">Expiration :</span> <span className="font-semibold text-slate-700">{fmtDate(sub.caution?.dateExpiration)}</span></div>
+                  <div><span className="text-slate-500">{dict.apercu.reference}</span> <span className="font-semibold text-slate-700">{sub.caution?.reference || "-"}</span></div>
+                  <div><span className="text-slate-500">{dict.apercu.bank}</span> <span className="font-semibold text-slate-700">{sub.caution?.banque || "-"}</span></div>
+                  <div><span className="text-slate-500">{dict.apercu.amount}</span> <span className="font-semibold text-slate-700">{sub.caution?.montant || "-"}</span></div>
+                  <div><span className="text-slate-500">{dict.apercu.expiration}</span> <span className="font-semibold text-slate-700">{fmtDate(sub.caution?.dateExpiration)}</span></div>
                 </div>
               </div>
             </div>
@@ -340,26 +338,26 @@ export default function SoumissionDetailPage({ subId }: { subId: string }) {
 
           {tab === "documents" && (
             <div className="space-y-3">
-              <p className="text-xs text-slate-500">Documents disponibles pour cette soumission.</p>
+              <p className="text-xs text-slate-500">{dict.documents.desc}</p>
               {[
                 {
                   icon: <FileText className="h-4 w-4" />,
-                  label: "Offre technique",
-                  file: fileNameFromUrl(sub.offreTechnique?.fichierUrl),
+                  label: dict.documents.labels.technique,
+                  file: fileNameFromUrl(sub.offreTechnique?.fichierUrl) || dict.documents.unavailable,
                   url: sub.offreTechnique?.fichierUrl,
                   color: "text-blue-600 bg-blue-50",
                 },
                 {
                   icon: <Landmark className="h-4 w-4" />,
-                  label: "Caution bancaire",
-                  file: fileNameFromUrl(sub.caution?.fichierUrl),
+                  label: dict.documents.labels.caution,
+                  file: fileNameFromUrl(sub.caution?.fichierUrl) || dict.documents.unavailable,
                   url: sub.caution?.fichierUrl,
                   color: "text-amber-600 bg-amber-50",
                 },
                 {
                   icon: <Lock className="h-4 w-4" />,
-                  label: "Offre financiere chiffree",
-                  file: fileNameFromUrl(sub.offreFinanciere?.fichierChiffreUrl),
+                  label: dict.documents.labels.financiere,
+                  file: fileNameFromUrl(sub.offreFinanciere?.fichierChiffreUrl) || dict.documents.unavailable,
                   url: sub.offreFinanciere?.fichierChiffreUrl,
                   color: "text-violet-600 bg-violet-50",
                 },
@@ -376,7 +374,7 @@ export default function SoumissionDetailPage({ subId }: { subId: string }) {
                     disabled={!doc.url}
                     className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-[10px] font-medium text-slate-600 hover:border-[#4CAF50] hover:text-[#4CAF50] transition-colors disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    <Download className="h-3 w-3" />Telecharger
+                    <Download className="h-3 w-3" />{dict.documents.download}
                   </button>
                 </div>
               ))}
@@ -388,16 +386,16 @@ export default function SoumissionDetailPage({ subId }: { subId: string }) {
               <div className="flex items-start gap-3 rounded-xl border border-violet-100 bg-violet-50 p-3">
                 <Lock className="h-4 w-4 shrink-0 text-violet-500 mt-0.5" />
                 <p className="text-[11px] text-violet-700">
-                  L'offre financiere est chiffree de bout en bout. Les montants ne sont visibles qu'apres dechiffrement officiel.
+                  {dict.financier.encryptedWarning}
                 </p>
               </div>
 
               <div className="rounded-xl border border-slate-200 overflow-hidden">
                 <div className="grid grid-cols-[auto_1fr_auto] gap-3 bg-slate-50 px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100">
-                  <span>Lot</span><span>Designation</span><span className="text-right">Montant HT</span>
+                  <span>{dict.financier.cols.lot}</span><span>{dict.financier.cols.designation}</span><span className="text-right">{dict.financier.cols.montant}</span>
                 </div>
                 {sub.lots.length === 0 ? (
-                  <div className="px-4 py-3 text-xs text-slate-500">Aucun lot disponible.</div>
+                  <div className="px-4 py-3 text-xs text-slate-500">{dict.financier.noLots}</div>
                 ) : (
                   sub.lots.map((lot) => (
                     <div key={lot.lotId} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-3 border-b border-slate-50 last:border-0">
@@ -410,15 +408,15 @@ export default function SoumissionDetailPage({ subId }: { subId: string }) {
                   ))
                 )}
                 <div className="flex items-center justify-between bg-slate-50 px-4 py-2.5 border-t border-slate-200">
-                  <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Total HT</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{dict.financier.total}</span>
                   <span className="text-xs font-bold text-[#364150]">{sub.financialTotalHt || "-"}</span>
                 </div>
               </div>
 
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-600">
-                <p><span className="font-semibold">Signature verifiee :</span> {sub.offreFinanciere?.signatureVerifiee ? "Oui" : "Non ou non verifiee"}</p>
-                <p><span className="font-semibold">Offre dechiffree :</span> {sub.offreFinanciere?.isDechiffree ? "Oui" : "Non"}</p>
-                <p><span className="font-semibold">Hash fichier :</span> {sub.offreFinanciere?.hashFichier || "-"}</p>
+                <p><span className="font-semibold">{dict.financier.meta.verified}</span> {sub.offreFinanciere?.signatureVerifiee ? dict.financier.meta.yes : dict.financier.meta.noVerified}</p>
+                <p><span className="font-semibold">{dict.financier.meta.decrypted}</span> {sub.offreFinanciere?.isDechiffree ? dict.financier.meta.yes : dict.financier.meta.no}</p>
+                <p><span className="font-semibold">{dict.financier.meta.hash}</span> {sub.offreFinanciere?.hashFichier || "-"}</p>
               </div>
             </div>
           )}
@@ -456,10 +454,10 @@ export default function SoumissionDetailPage({ subId }: { subId: string }) {
       <div className="rounded-xl border border-slate-200 bg-white p-3 text-[11px] text-slate-600">
         <div className="flex items-center gap-2 mb-1.5">
           <ShieldCheck className="h-4 w-4 text-slate-400" />
-          <span className="font-semibold text-slate-700">Infos de conformite</span>
+          <span className="font-semibold text-slate-700">{dict.conformite.title}</span>
         </div>
-        <p>Dans delai legal : {sub.isDansDelai ? "Oui" : sub.isDansDelai === false ? "Non" : "Non precise"}</p>
-        <p>Date limite AO : {fmtDate(sub.aoDeadline)}</p>
+        <p>{dict.conformite.legalDelay} {sub.isDansDelai ? dict.conformite.yes : sub.isDansDelai === false ? dict.conformite.no : dict.conformite.unspecified}</p>
+        <p>{dict.conformite.deadlineAo} {fmtDate(sub.aoDeadline)}</p>
       </div>
     </div>
   );

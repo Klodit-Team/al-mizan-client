@@ -24,6 +24,8 @@ interface TendersFiltersDict {
   dateStart?: string;
   dateEnd?: string;
   reset?: string;
+  searchLabel?: string;
+  filterByStatus?: string;
 }
 
 interface TendersTableDict {
@@ -57,6 +59,20 @@ interface TendersListDict {
   actions: TendersActionsDict;
   empty: string;
   types: TendersTypeDict;
+  errors?: {
+    load: string;
+    changeStatus: string;
+    delete: string;
+  };
+  pagination: {
+    showing: string;
+    to: string;
+    of: string;
+    entries: string;
+    previous: string;
+    next: string;
+  };
+  confirmDelete: string;
 }
 
 interface AoListContainerProps {
@@ -80,11 +96,11 @@ export default function AoListContainer({
       const response = await getServiceContractantTenders();
       setData(response);
     } catch {
-      setError("Impossible de charger les appels d'offres.");
+      setError(dict.errors?.load || "Impossible de charger les appels d'offres.");
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [dict.errors?.load]);
 
   useEffect(() => {
     void loadTenders();
@@ -99,18 +115,18 @@ export default function AoListContainer({
         ),
       );
     } catch {
-      setError("Impossible de changer le statut de cet appel d'offres.");
+      setError(dict.errors?.changeStatus || "Impossible de changer le statut de cet appel d'offres.");
     }
-  }, []);
+  }, [dict.errors?.changeStatus]);
 
   const handleDelete = useCallback(async (id: string) => {
     try {
       await deleteServiceContractantTender(id);
       setData((current) => current.filter((item) => item.id !== id));
     } catch {
-      setError("Impossible de supprimer cet appel d'offres.");
+      setError(dict.errors?.delete || "Impossible de supprimer cet appel d'offres.");
     }
-  }, []);
+  }, [dict.errors?.delete]);
 
   return (
     <div className="space-y-3">

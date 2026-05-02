@@ -14,10 +14,9 @@ export default async function ContractantRecoursPage({
 
   return (
     <main className="p-6 space-y-4 overflow-auto">
-      <h1 className="text-2xl font-semibold text-gray-900">{dict.sidebar.recoursClaims}</h1>
+      <h1 className="text-2xl font-semibold text-gray-900">{dict.sidebar?.recoursClaims || "Recours & Réclamations"}</h1>
       <p className="text-sm text-gray-600 max-w-3xl">
-        Les recours sont rattaches a chaque appel d&apos;offres et soumission. Ouvrez un AO pour consulter les recours
-        disponibles et leur avancement.
+        {(dict as any).dashboard?.contractant?.recoursClaims?.list?.description || "Les recours sont rattachés à chaque appel d'offres et soumission. Ouvrez un AO pour consulter les recours disponibles et leur avancement."}
       </p>
 
       <div className="rounded-xl border border-gray-200 bg-white p-4">
@@ -25,7 +24,7 @@ export default async function ContractantRecoursPage({
           href={`/${locale}/dashboard/contractant/appels-offres`}
           className="inline-flex items-center rounded-lg bg-[#4CAF50] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
         >
-          Parcourir les appels d&apos;offres
+          {(dict as any).dashboard?.contractant?.recoursClaims?.list?.browseAos || "Parcourir les appels d'offres"}
         </Link>
       </div>
     </main>

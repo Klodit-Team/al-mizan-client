@@ -27,10 +27,12 @@ function LotBpuTable({
   lot,
   bpu,
   onChange,
+  dict,
 }: {
   lot: AoLot;
   bpu: LotBpu;
   onChange: (updated: LotBpu) => void;
+  dict: any;
 }) {
   function updateLine(lineId: string, field: keyof BpuLine, value: string) {
     onChange({
@@ -84,11 +86,11 @@ function LotBpuTable({
       </div>
 
       <div className="grid grid-cols-[2fr_80px_80px_130px_130px_32px] gap-2 bg-slate-50 px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100">
-        <span>Designation</span>
-        <span>Unite</span>
-        <span>Qte</span>
-        <span>Prix unit. HT</span>
-        <span className="text-right">Montant HT</span>
+        <span>{dict.line}</span>
+        <span>{dict.unit}</span>
+        <span>{dict.quantity}</span>
+        <span>{dict.unitPrice}</span>
+        <span className="text-right">{dict.totalHt}</span>
         <span />
       </div>
 
@@ -99,7 +101,7 @@ function LotBpuTable({
               type="text"
               value={line.designation}
               onChange={(event) => updateLine(line.id, "designation", event.target.value)}
-              placeholder={`Prestation ${index + 1}`}
+              placeholder={`${dict.line} ${index + 1}`}
               className="h-8 w-full rounded border border-slate-200 px-2 text-xs text-slate-800 outline-none focus:border-[#4CAF50] transition-colors"
             />
             <input
@@ -147,10 +149,10 @@ function LotBpuTable({
           onClick={addLine}
           className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#4CAF50] hover:underline"
         >
-          <Plus className="h-3 w-3" />Ajouter une ligne
+          <Plus className="h-3 w-3" />{dict.add}
         </button>
         <div className="text-right">
-          <span className="text-[10px] font-semibold text-slate-500">TOTAL HT LOT {lot.lotNumber} :</span>{" "}
+          <span className="text-[10px] font-semibold text-slate-500">{dict.totalHt} LOT {lot.lotNumber} :</span>{" "}
           <span className="text-xs font-bold text-[#364150]">{fmtDZD(total)}</span>
         </div>
       </div>
@@ -165,6 +167,8 @@ interface Props {
   onChange: (updated: LotBpu[]) => void;
   onBack: () => void;
   onNext: () => void;
+  dict: any;
+  navDict: any;
 }
 
 export default function Step4OffreFinanciere({
@@ -174,6 +178,8 @@ export default function Step4OffreFinanciere({
   onChange,
   onBack,
   onNext,
+  dict,
+  navDict,
 }: Props) {
   const selectedLots: AoLot[] = selectedAo?.lots.filter((lot) => lot.id === selectedLotId) ?? [];
 
@@ -187,8 +193,8 @@ export default function Step4OffreFinanciere({
   return (
     <div className="space-y-5">
       <SectionTitle
-        title="Offre financiere (BPU)"
-        subtitle="Saisissez votre bordereau des prix unitaires pour le lot choisi. Les montants seront chiffres avant transmission."
+        title={dict.title}
+        subtitle={dict.subtitle}
       />
 
       <div className="flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50 p-3">
@@ -203,7 +209,7 @@ export default function Step4OffreFinanciere({
           const bpu = lotBpus.find((entry) => entry.lotId === lot.id);
           if (!bpu) return null;
 
-          return <LotBpuTable key={lot.id} lot={lot} bpu={bpu} onChange={updateBpu} />;
+          return <LotBpuTable key={lot.id} lot={lot} bpu={bpu} onChange={updateBpu} dict={dict} />;
         })}
       </div>
 
@@ -221,7 +227,7 @@ export default function Step4OffreFinanciere({
         Les montants sont prepares localement puis chiffres au moment du depot final.
       </div>
 
-      <NavButtons onBack={onBack} onNext={onNext} disabled={!allFilled || lotBpus.length === 0} />
+      <NavButtons onBack={onBack} onNext={onNext} disabled={!allFilled || lotBpus.length === 0} dict={navDict} />
     </div>
   );
 }

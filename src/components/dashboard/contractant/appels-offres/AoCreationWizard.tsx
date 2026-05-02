@@ -108,6 +108,7 @@ export interface AoCreationDict {
     uploadFile: string;
     replaceFile: string;
     downloadCdc: string;
+    cancel: string;
   };
   review: {
     title: string;
@@ -121,6 +122,216 @@ export interface AoCreationDict {
     draftSaved: string;
     publishBlockedPrefix: string;
     publishSuccessPrefix: string;
+  };
+  header: {
+    breadcrumbDashboard: string;
+    breadcrumbAo: string;
+    editModeLabel: string;
+    progression: string;
+  };
+  validation: {
+    required: string;
+    offerDeadlineAfterDce: string;
+    openingDateAfterOffer: string;
+    weightingInvalid: string;
+    eliminationScoreRange: string;
+    fileTooLarge: string;
+    pdfOnly: string;
+    cdcFileRequired: string;
+    addEvaluationCriterion: string;
+    totalWeightMustBe100: string;
+  };
+  errors: {
+    draftSaveFailed: string;
+    publishFailed: string;
+    loadDraftFailed: string;
+  };
+  step1: {
+    referenceLabel: string;
+    objectLabel: string;
+    objectPlaceholder: string;
+    descriptionLabel: string;
+    descriptionPlaceholder: string;
+    marketTypeLabel: string;
+    marketTypePlaceholder: string;
+    marketTypes: {
+      fournitures: string;
+      services: string;
+      travaux: string;
+    };
+    procedureTypeLabel: string;
+    procedureTypePlaceholder: string;
+    procedureTypes: {
+      ouvert: string;
+      restreint: string;
+      greAgre: string;
+    };
+    estimatedAmountLabel: string;
+    wilayaLabel: string;
+    wilayaPlaceholder: string;
+    executionDelayLabel: string;
+    executionDelayPlaceholder: string;
+    submissionBondTitle: string;
+    submissionBondAmountLabel: string;
+    submissionBondPlaceholder: string;
+    deadlinesTitle: string;
+    dceDeadlineLabel: string;
+    offerDeadlineLabel: string;
+    openingDateLabel: string;
+  };
+  step2: {
+    title: string;
+    subtitle: string;
+    addLotBtn: string;
+    columns: {
+      number: string;
+      designation: string;
+      description: string;
+      estimatedAmount: string;
+      delay: string;
+      actions: string;
+    };
+    emptyMessage: string;
+    editLotTitle: string;
+    newLotTitle: string;
+    lotNumberLabel: string;
+    designationLabel: string;
+    designationPlaceholder: string;
+    delayLabel: string;
+    delayPlaceholder: string;
+    descriptionLabel: string;
+    descriptionPlaceholder: string;
+    estimatedAmountLabel: string;
+    saveLotBtn: string;
+    daysUnit: string;
+  };
+  step3: {
+    aiTitle: string;
+    aiDescription: string;
+    aiButton: string;
+    cdcTitleLabel: string;
+    cdcFileLabel: string;
+    uploadDropLabel: string;
+    uploadHint: string;
+    versionLabel: string;
+    withdrawalPriceLabel: string;
+    cdcStatusLabel: string;
+    fileAlreadySaved: string;
+  };
+  step4: {
+    title: string;
+    subtitle: string;
+    addCriterionBtn: string;
+    columns: {
+      order: string;
+      designation: string;
+      description: string;
+      eliminatory: string;
+      actions: string;
+    };
+    emptyMessage: string;
+    editCriterionTitle: string;
+    newCriterionTitle: string;
+    designationLabel: string;
+    designationPlaceholder: string;
+    eliminatoryLabel: string;
+    descriptionLabel: string;
+    descriptionPlaceholder: string;
+    saveBtn: string;
+    minCriterionWarning: string;
+  };
+  step5: {
+    tabTechnical: string;
+    tabFinancial: string;
+    criteriaListTitle: string;
+    addCriterionBtn: string;
+    columns: {
+      order: string;
+      designation: string;
+      type: string;
+      lot: string;
+      weighting: string;
+      eliminationScore: string;
+      actions: string;
+    };
+    emptyMessage: string;
+    editCriterionTitle: string;
+    newCriterionTitle: string;
+    designationLabel: string;
+    designationPlaceholder: string;
+    typeLabel: string;
+    typeOptions: {
+      technique: string;
+      financier: string;
+    };
+    weightingLabel: string;
+    weightingPlaceholder: string;
+    eliminationScoreLabel: string;
+    eliminationScorePlaceholder: string;
+    lotLabel: string;
+    lotPlaceholder: string;
+    saveBtn: string;
+    totalWeightTitle: string;
+    totalWeightDescription: string;
+    validated: string;
+    overflow: string;
+    remaining: string;
+    activeTabWeight: string;
+    requirementTitle: string;
+    requirementDescription: string;
+    quickStatsTitle: string;
+    technicalGroups: string;
+    financialGroups: string;
+    assignedLots: string;
+  };
+  step6: {
+    editBtn: string;
+    reviewLabels: {
+      aoName: string;
+      category: string;
+      duration: string;
+      estimatedValue: string;
+    };
+    lotsTitle: string;
+    lotsColumns: {
+      lotId: string;
+      description: string;
+      quantityDelay: string;
+    };
+    lotsEmpty: string;
+    scoringTitle: string;
+    scoringEmpty: string;
+    totalWeighting: string;
+    eligibilityTitle: string;
+    eligibilityCriteria: string;
+    eliminatoryRules: string;
+    checks: {
+      generalInfoTitle: string;
+      generalInfoDesc: string;
+      lotsTitle: string;
+      lotsDesc: string;
+      cdcTitle: string;
+      cdcDesc: string;
+      weightTitle: string;
+      weightDesc: string;
+      datesTitle: string;
+      datesDesc: string;
+      eligibilityTitle: string;
+      eligibilityDesc: string;
+    };
+    cdcDocTitle: string;
+    cdcNoFile: string;
+    versionLabel: string;
+    avisGenerated: string;
+  };
+  footer: string;
+  blockingReasons: {
+    generalInfoIncomplete: string;
+    noLots: string;
+    cdcNotUploaded: string;
+    weightInvalid: string;
+    noEligibility: string;
+    datesIncoherent: string;
   };
 }
 
@@ -297,38 +508,38 @@ export default function AoCreationWizard({
   const [criteria, setCriteria] = useState<EligibilityCriterion[]>(() =>
     initialDraft?.eligibilityCriteria?.length
       ? initialDraft.eligibilityCriteria.map((item, index) => ({
-          id: `criterion-${index + 1}`,
-          order: item.order || index + 1,
-          designation: item.designation,
-          description: item.description,
-          eliminatory: item.eliminatory,
-        }))
+        id: `criterion-${index + 1}`,
+        order: item.order || index + 1,
+        designation: item.designation,
+        description: item.description,
+        eliminatory: item.eliminatory,
+      }))
       : [
-          {
-            id: "criterion-1",
-            order: 1,
-            designation: "Capacite Financiere",
-            description:
-              "Chiffre d'affaires annuel minimum de 1M MAD sur les 3 dernieres annees.",
-            eliminatory: true,
-          },
-          {
-            id: "criterion-2",
-            order: 2,
-            designation: "Experience Similaire",
-            description:
-              "Realisation d'au moins 3 projets de nature et d'envergure similaires.",
-            eliminatory: true,
-          },
-          {
-            id: "criterion-3",
-            order: 3,
-            designation: "Certifications ISO",
-            description:
-              "Possession d'une certification ISO 9001:2015 en cours de validite.",
-            eliminatory: false,
-          },
-        ],
+        {
+          id: "criterion-1",
+          order: 1,
+          designation: "Capacite Financiere",
+          description:
+            "Chiffre d'affaires annuel minimum de 1M MAD sur les 3 dernieres annees.",
+          eliminatory: true,
+        },
+        {
+          id: "criterion-2",
+          order: 2,
+          designation: "Experience Similaire",
+          description:
+            "Realisation d'au moins 3 projets de nature et d'envergure similaires.",
+          eliminatory: true,
+        },
+        {
+          id: "criterion-3",
+          order: 3,
+          designation: "Certifications ISO",
+          description:
+            "Possession d'une certification ISO 9001:2015 en cours de validite.",
+          eliminatory: false,
+        },
+      ],
   );
 
   const [criterionForm, setCriterionForm] = useState<CriterionForm>({
@@ -342,43 +553,43 @@ export default function AoCreationWizard({
   >(() =>
     initialDraft?.evaluationCriteria?.length
       ? initialDraft.evaluationCriteria.map((item, index) => ({
-          id: `evaluation-${index + 1}`,
-          order: item.order || index + 1,
-          designation: item.designation,
-          type: item.type,
-          weighting: item.weighting,
-          eliminationScore: item.eliminationScore,
-          lotAssignment: item.lotAssignment,
-        }))
+        id: `evaluation-${index + 1}`,
+        order: item.order || index + 1,
+        designation: item.designation,
+        type: item.type,
+        weighting: item.weighting,
+        eliminationScore: item.eliminationScore,
+        lotAssignment: item.lotAssignment,
+      }))
       : [
-          {
-            id: "evaluation-1",
-            order: 1,
-            designation: "Technical Capacity & Experience",
-            type: "technique",
-            weighting: "40",
-            eliminationScore: "25",
-            lotAssignment: "Lot 01",
-          },
-          {
-            id: "evaluation-2",
-            order: 2,
-            designation: "Methodology & Work Plan",
-            type: "technique",
-            weighting: "30",
-            eliminationScore: "20",
-            lotAssignment: "All Lots",
-          },
-          {
-            id: "evaluation-3",
-            order: 3,
-            designation: "Key Personnel Qualifications",
-            type: "technique",
-            weighting: "30",
-            eliminationScore: "",
-            lotAssignment: "Lot 01",
-          },
-        ],
+        {
+          id: "evaluation-1",
+          order: 1,
+          designation: "Technical Capacity & Experience",
+          type: "technique",
+          weighting: "40",
+          eliminationScore: "25",
+          lotAssignment: "Lot 01",
+        },
+        {
+          id: "evaluation-2",
+          order: 2,
+          designation: "Methodology & Work Plan",
+          type: "technique",
+          weighting: "30",
+          eliminationScore: "20",
+          lotAssignment: "All Lots",
+        },
+        {
+          id: "evaluation-3",
+          order: 3,
+          designation: "Key Personnel Qualifications",
+          type: "technique",
+          weighting: "30",
+          eliminationScore: "",
+          lotAssignment: "Lot 01",
+        },
+      ],
   );
 
   const [evaluationForm, setEvaluationForm] = useState<EvaluationCriterionForm>(
@@ -551,22 +762,22 @@ export default function AoCreationWizard({
     const reasons: string[] = [];
 
     if (!reviewChecks.generalInfoComplete) {
-      reasons.push("Informations generales incompletes");
+      reasons.push(dict.step6.checks.generalInfoTitle);
     }
     if (!reviewChecks.hasLots) {
-      reasons.push("Aucun lot ajoute");
+      reasons.push(dict.step6.checks.lotsTitle);
     }
     if (!reviewChecks.cdcUploaded) {
-      reasons.push("CDC non telecharge");
+      reasons.push(dict.step6.checks.cdcTitle);
     }
     if (!reviewChecks.criteriaWeightValid) {
-      reasons.push("Ponderation totale differente de 100% (etape 5)");
+      reasons.push(dict.step6.checks.weightTitle);
     }
     if (!reviewChecks.eligibilityComplete) {
-      reasons.push("Aucun critere d'eligibilite");
+      reasons.push(dict.step6.checks.eligibilityTitle);
     }
     if (!reviewChecks.datesCoherent) {
-      reasons.push("Dates non coherentes");
+      reasons.push(dict.step6.checks.datesTitle);
     }
 
     return reasons;
@@ -690,47 +901,47 @@ export default function AoCreationWizard({
     const nextErrors: Partial<Record<keyof GeneralInfoForm, string>> = {};
 
     if (!form.object.trim()) {
-      nextErrors.object = "Champ obligatoire";
+      nextErrors.object = dict.validation.required;
     }
 
     if (!form.description.trim()) {
-      nextErrors.description = "Champ obligatoire";
+      nextErrors.description = dict.validation.required;
     }
 
     if (!form.marketType) {
-      nextErrors.marketType = "Champ obligatoire";
+      nextErrors.marketType = dict.validation.required;
     }
 
     if (!form.procedureType) {
-      nextErrors.procedureType = "Champ obligatoire";
+      nextErrors.procedureType = dict.validation.required;
     }
 
     if (!form.estimatedAmount.trim()) {
-      nextErrors.estimatedAmount = "Champ obligatoire";
+      nextErrors.estimatedAmount = dict.validation.required;
     }
 
     if (!form.executionWilaya.trim()) {
-      nextErrors.executionWilaya = "Champ obligatoire";
+      nextErrors.executionWilaya = dict.validation.required;
     }
 
     if (!form.executionDelayDays.trim()) {
-      nextErrors.executionDelayDays = "Champ obligatoire";
+      nextErrors.executionDelayDays = dict.validation.required;
     }
 
     if (form.submissionBondRequired && !form.submissionBondAmount.trim()) {
-      nextErrors.submissionBondAmount = "Champ obligatoire";
+      nextErrors.submissionBondAmount = dict.validation.required;
     }
 
     if (!form.dceDeadline) {
-      nextErrors.dceDeadline = "Champ obligatoire";
+      nextErrors.dceDeadline = dict.validation.required;
     }
 
     if (!form.offerDeadline) {
-      nextErrors.offerDeadline = "Champ obligatoire";
+      nextErrors.offerDeadline = dict.validation.required;
     }
 
     if (!form.openingDate) {
-      nextErrors.openingDate = "Champ obligatoire";
+      nextErrors.openingDate = dict.validation.required;
     }
 
     if (
@@ -738,7 +949,7 @@ export default function AoCreationWizard({
       form.offerDeadline &&
       form.dceDeadline > form.offerDeadline
     ) {
-      nextErrors.offerDeadline = "Doit etre apres la date DCE";
+      nextErrors.offerDeadline = dict.validation.offerDeadlineAfterDce;
     }
 
     if (
@@ -746,7 +957,7 @@ export default function AoCreationWizard({
       form.openingDate &&
       form.offerDeadline > form.openingDate
     ) {
-      nextErrors.openingDate = "Doit etre apres la date limite depot";
+      nextErrors.openingDate = dict.validation.openingDateAfterOffer;
     }
 
     setErrors(nextErrors);
@@ -835,7 +1046,7 @@ export default function AoCreationWizard({
         console.error("Unable to save AO draft", error);
         setSavedDraft(false);
         setReviewActionMessage(null);
-        setReviewActionError("Echec de sauvegarde du brouillon.");
+        setReviewActionError(dict.errors.draftSaveFailed);
       } finally {
         setIsSubmittingAction(false);
       }
@@ -881,7 +1092,7 @@ export default function AoCreationWizard({
     if (file.size > maxFileSize) {
       setCdcErrors((prev) => ({
         ...prev,
-        file: "Le fichier ne doit pas depasser 25 MB",
+        file: dict.validation.fileTooLarge,
       }));
       return;
     }
@@ -889,7 +1100,7 @@ export default function AoCreationWizard({
     if (!file.name.toLowerCase().endsWith(".pdf")) {
       setCdcErrors((prev) => ({
         ...prev,
-        file: "Seuls les fichiers PDF sont autorises",
+        file: dict.validation.pdfOnly,
       }));
       return;
     }
@@ -907,15 +1118,15 @@ export default function AoCreationWizard({
     }
 
     if (!cdcFile && !existingCdcFileName) {
-      nextErrors.file = "Veuillez telecharger le fichier CDC";
+      nextErrors.file = dict.validation.cdcFileRequired;
     }
 
     if (!cdcForm.version.trim()) {
-      nextErrors.version = "Champ obligatoire";
+      nextErrors.version = dict.validation.required;
     }
 
     if (!cdcForm.withdrawalPrice.trim()) {
-      nextErrors.withdrawalPrice = "Champ obligatoire";
+      nextErrors.withdrawalPrice = dict.validation.required;
     }
 
     setCdcErrors(nextErrors);
@@ -928,13 +1139,13 @@ export default function AoCreationWizard({
 
   const validateStep5 = () => {
     if (evaluationCriteria.length === 0) {
-      setEvaluationStepError("Ajoutez au moins un critere d'evaluation.");
+      setEvaluationStepError(dict.validation.addEvaluationCriterion);
       return false;
     }
 
     if (Math.abs(totalEvaluationWeight - 100) > 0.01) {
       setEvaluationStepError(
-        "La somme totale des ponderations doit etre egale a 100%.",
+        dict.validation.totalWeightMustBe100,
       );
       return false;
     }
@@ -989,7 +1200,7 @@ export default function AoCreationWizard({
     const nextErrors: Partial<Record<keyof CriterionForm, string>> = {};
 
     if (!criterionForm.designation.trim()) {
-      nextErrors.designation = "Champ obligatoire";
+      nextErrors.designation = dict.validation.required;
     }
 
     if (!criterionForm.description.trim()) {
@@ -1022,11 +1233,11 @@ export default function AoCreationWizard({
       return current.map((item) =>
         item.id === editingCriterionId
           ? {
-              ...item,
-              designation: criterionForm.designation.trim(),
-              description: criterionForm.description.trim(),
-              eliminatory: criterionForm.eliminatory,
-            }
+            ...item,
+            designation: criterionForm.designation.trim(),
+            description: criterionForm.description.trim(),
+            eliminatory: criterionForm.eliminatory,
+          }
           : item,
       );
     });
@@ -1138,11 +1349,11 @@ export default function AoCreationWizard({
       {};
 
     if (!evaluationForm.designation.trim()) {
-      nextErrors.designation = "Champ obligatoire";
+      nextErrors.designation = dict.validation.required;
     }
 
     if (!evaluationForm.weighting.trim()) {
-      nextErrors.weighting = "Champ obligatoire";
+      nextErrors.weighting = dict.validation.required;
     }
 
     const weightingValue = parseNumericInput(evaluationForm.weighting);
@@ -1152,7 +1363,7 @@ export default function AoCreationWizard({
         weightingValue <= 0 ||
         weightingValue > 100)
     ) {
-      nextErrors.weighting = "Valeur invalide (0 < % <= 100)";
+      nextErrors.weighting = dict.validation.weightingInvalid;
     }
 
     if (evaluationForm.eliminationScore.trim()) {
@@ -1164,7 +1375,7 @@ export default function AoCreationWizard({
         eliminationValue < 0 ||
         eliminationValue > 100
       ) {
-        nextErrors.eliminationScore = "Doit etre entre 0 et 100";
+        nextErrors.eliminationScore = dict.validation.eliminationScoreRange;
       }
     }
 
@@ -1203,13 +1414,13 @@ export default function AoCreationWizard({
       const mapped = current.map((item) =>
         item.id === editingEvaluationId
           ? {
-              ...item,
-              designation: evaluationForm.designation.trim(),
-              type: evaluationForm.type,
-              weighting: evaluationForm.weighting.trim(),
-              eliminationScore: evaluationForm.eliminationScore.trim(),
-              lotAssignment: evaluationForm.lotAssignment.trim(),
-            }
+            ...item,
+            designation: evaluationForm.designation.trim(),
+            type: evaluationForm.type,
+            weighting: evaluationForm.weighting.trim(),
+            eliminationScore: evaluationForm.eliminationScore.trim(),
+            lotAssignment: evaluationForm.lotAssignment.trim(),
+          }
           : item,
       );
 
@@ -1255,7 +1466,7 @@ export default function AoCreationWizard({
       } catch (error) {
         console.error("Unable to save review draft", error);
         setReviewActionMessage(null);
-        setReviewActionError("Echec de sauvegarde du brouillon.");
+        setReviewActionError(dict.errors.draftSaveFailed);
       } finally {
         setIsSubmittingAction(false);
       }
@@ -1357,19 +1568,19 @@ export default function AoCreationWizard({
     const nextErrors: Partial<Record<keyof LotEditorForm, string>> = {};
 
     if (!lotForm.designation.trim()) {
-      nextErrors.designation = "Champ obligatoire";
+      nextErrors.designation = dict.validation.required;
     }
 
     if (!lotForm.description.trim()) {
-      nextErrors.description = "Champ obligatoire";
+      nextErrors.description = dict.validation.required;
     }
 
     if (!lotForm.estimatedAmount.trim()) {
-      nextErrors.estimatedAmount = "Champ obligatoire";
+      nextErrors.estimatedAmount = dict.validation.required;
     }
 
     if (!lotForm.delayDays.trim()) {
-      nextErrors.delayDays = "Champ obligatoire";
+      nextErrors.delayDays = dict.validation.required;
     }
 
     setLotErrors(nextErrors);
@@ -1399,12 +1610,12 @@ export default function AoCreationWizard({
       return current.map((item) =>
         item.id === editingLotId
           ? {
-              ...item,
-              designation: lotForm.designation.trim(),
-              description: lotForm.description.trim(),
-              estimatedAmount: lotForm.estimatedAmount.trim(),
-              delayDays: lotForm.delayDays.trim(),
-            }
+            ...item,
+            designation: lotForm.designation.trim(),
+            description: lotForm.description.trim(),
+            estimatedAmount: lotForm.estimatedAmount.trim(),
+            delayDays: lotForm.delayDays.trim(),
+          }
           : item,
       );
     });
@@ -1573,6 +1784,7 @@ export default function AoCreationWizard({
   return (
     <div className="ao-wizard space-y-4">
       <AoWizardHeader
+        dict={dict}
         step={step}
         stepPrefix={dict.stepPrefix}
         stepOn={dict.stepOn}
@@ -1590,7 +1802,7 @@ export default function AoCreationWizard({
       {step === 6 && <Step6 props={wizardProps} />}
 
       <p className="text-center text-[11px] text-slate-400">
-        Besoin d&apos;aide ? • Centre de l&apos;assistant
+        {dict.footer}
       </p>
     </div>
   );

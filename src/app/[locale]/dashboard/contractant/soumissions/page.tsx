@@ -14,10 +14,9 @@ export default async function ContractantSoumissionsPage({
 
   return (
     <main className="p-6 space-y-4 overflow-auto">
-      <h1 className="text-2xl font-semibold text-gray-900">{dict.sidebar.mySubmissions}</h1>
+      <h1 className="text-2xl font-semibold text-gray-900">{dict.sidebar?.mySubmissions || "Mes Soumissions"}</h1>
       <p className="text-sm text-gray-600 max-w-3xl">
-        Consultez vos soumissions via la liste des appels d&apos;offres, puis ouvrez un AO pour voir le detail des
-        soumissions et leur statut.
+        {(dict as any).dashboard?.contractant?.soumissions?.landing?.description || "Consultez les soumissions via la liste des appels d'offres, puis ouvrez un AO pour voir le détail des soumissions et leur statut."}
       </p>
 
       <div className="rounded-xl border border-gray-200 bg-white p-4">
@@ -25,7 +24,7 @@ export default async function ContractantSoumissionsPage({
           href={`/${locale}/dashboard/contractant/appels-offres`}
           className="inline-flex items-center rounded-lg bg-[#4CAF50] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
         >
-          Aller aux appels d&apos;offres
+          {(dict as any).dashboard?.contractant?.soumissions?.landing?.goToAos || "Aller aux appels d'offres"}
         </Link>
       </div>
     </main>

@@ -17,7 +17,7 @@ export default function VerifyForm({ dict }: VerifyFormProps) {
     const router = useRouter();
     const locale = (params?.locale as Locale) || "fr";
     const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(""));
-    const [timeLeft, setTimeLeft] = useState(119); 
+    const [timeLeft, setTimeLeft] = useState(119);
     const [isVerifying, setIsVerifying] = useState(false);
     const [error, setError] = useState("");
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -69,7 +69,7 @@ export default function VerifyForm({ dict }: VerifyFormProps) {
         }
         setIsVerifying(true);
         setError("");
-        
+
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/mfa/verify`, {
                 method: "POST",
@@ -77,22 +77,23 @@ export default function VerifyForm({ dict }: VerifyFormProps) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ code: fullCode }),
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.message || "Verification failed");
             }
-            
+
             const result = await response.json();
-            
+
             if (result.role === "admin") {
-                router.push(`/${locale}/dashboard/admin/tableau-de-bord`);
+                const adminId = result.user?.id || result.userId || result.id || "admin";
+                router.push(`/${locale}/dashboard/admin/${adminId}/tableau-de-bord`);
             } else if (result.role === "contractant") {
                 router.push(`/${locale}/dashboard/contractant/tableau-de-bord`);
             } else {
                 router.push(`/${locale}/dashboard`);
             }
-            
+
         } catch (error: any) {
             console.error("Verification error:", error);
             setError(error.message || "Verification failed");
@@ -108,12 +109,12 @@ export default function VerifyForm({ dict }: VerifyFormProps) {
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.message || "Failed to resend code");
             }
-            
+
             setTimeLeft(119);
             setCode(Array(CODE_LENGTH).fill(""));
             setError("");

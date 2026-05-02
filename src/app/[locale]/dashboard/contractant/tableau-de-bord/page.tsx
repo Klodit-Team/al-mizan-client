@@ -14,10 +14,10 @@ export default async function ContractantDashboardPage({
   const dict = await getDictionary(locale as Locale);
   const dashboardDict =
     (
-      dict as {
-        serviceContractantDashboard?: typeof defaultServiceContractantDashboardDict;
+      dict as unknown as {
+        dashboard: { contractant: { dashboard: typeof defaultServiceContractantDashboardDict } };
       }
-    ).serviceContractantDashboard || defaultServiceContractantDashboardDict;
+    ).dashboard.contractant.dashboard || defaultServiceContractantDashboardDict;
 
   return (
     <main className="p-6 space-y-5 overflow-auto">

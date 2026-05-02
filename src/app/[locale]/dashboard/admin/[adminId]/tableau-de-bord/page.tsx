@@ -1,10 +1,7 @@
 
-import Navbar from "@/components/layout/Navbar";
-import Sidebar from "@/components/layout/Sidebar";
 import { getDictionary } from "@/i18n/get-dictionaries";
 import { type Locale } from "@/i18n/config";
-import Link from "next/link";
-import StatsCards from "@/components/dashboard/admin/StatsCards";
+import AdminStatsSection from "@/components/dashboard/admin/AdminStatsSection";
 import ActionsRapides from "@/components/dashboard/admin/ActionsRapides";
 import ActiviteRecente from "@/components/dashboard/admin/ActiviteRecente";
 import AlertesIA from "@/components/dashboard/admin/AlertesIA";
@@ -18,25 +15,6 @@ interface DashboardPageProps {
 export default async function AdminDashboardPage({ params }: DashboardPageProps) {
     const { locale } = await params;
     const commonDict = await getDictionary(locale);
-
-    let stats = {
-    utilisateursActifs: 0,
-    aoEnCours: 0,
-    recoursOuverts: 0,
-    incidentsIA: 0,
-        };
-
-    try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/admin/stats`, {
-            cache: 'no-store'
-        });
-        if (response.ok) {
-            const data = await response.json();
-            stats = { ...stats, ...data };
-        }
-    } catch (error) {
-        console.error("Failed to fetch dashboard stats, using defaults:", error);
-    }
 
     return (
         <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#f1f5f9" }}>
@@ -55,11 +33,7 @@ export default async function AdminDashboardPage({ params }: DashboardPageProps)
                     </div>
  
                    
-                    <StatsCards
-                        
-                        dict={commonDict.dashboard.admin.stats}
-                        stats={stats}
-                    />
+                    <AdminStatsSection dict={commonDict.dashboard.admin} />
  
                    
                     <ActionsRapides locale={locale} role="admin" dict={commonDict.dashboard.admin.actionsRapides} />

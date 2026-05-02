@@ -1,4 +1,5 @@
 import type { RecoursStatus } from "@/services/operateur-recours/api";
+export type { RecoursStatus };
 
 // ─── Status helpers ────────────────────────────────────────────────────────────
 
@@ -12,9 +13,9 @@ export const STATUS_META: Record<
   rejete:     { label: "Rejeté",     bg: "bg-rose-100",    text: "text-rose-700",    border: "border-rose-200" },
 };
 
-export function fmt(iso: string) {
+export function fmt(iso: string, locale: string = "fr") {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("fr-DZ", {
+  return new Date(iso).toLocaleDateString(locale === "ar" ? "ar-DZ" : "fr-DZ", {
     day: "numeric",
     month: "short",
     year: "numeric",

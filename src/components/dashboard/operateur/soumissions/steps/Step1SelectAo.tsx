@@ -14,6 +14,8 @@ interface Props {
   onSelectAo: (id: string) => void;
   onSelectLot: (id: string) => void;
   onNext: () => void;
+  dict: any;
+  navDict: any;
 }
 
 export default function Step1({
@@ -25,6 +27,8 @@ export default function Step1({
   onSelectAo,
   onSelectLot,
   onNext,
+  dict,
+  navDict,
 }: Props) {
   const [search, setSearch] = useState("");
 
@@ -41,8 +45,8 @@ export default function Step1({
   return (
     <div className="space-y-5">
       <SectionTitle
-        title="Sélection de l'appel d'offres"
-        subtitle="Choisissez l'AO auquel vous souhaitez soumissionner, puis sélectionnez les lots concernés."
+        title={dict.title}
+        subtitle={dict.subtitle}
       />
 
       {/* Search */}
@@ -52,7 +56,7 @@ export default function Step1({
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Rechercher un appel d'offres..."
+          placeholder={dict.searchPlaceholder}
           className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-4 text-xs text-slate-800 outline-none placeholder:text-slate-400 focus:border-[#4CAF50] focus:bg-white transition-colors"
         />
       </div>
@@ -68,11 +72,11 @@ export default function Step1({
         )}
         {isErrorAos && (
           <p className="py-4 text-center text-xs text-rose-500">
-            Impossible de charger les appels d'offres.
+            {dict.loadingError}
           </p>
         )}
         {!isLoadingAos && !isErrorAos && filtered.length === 0 && (
-          <p className="py-6 text-center text-xs text-slate-400">Aucun appel d&apos;offres trouvé</p>
+          <p className="py-6 text-center text-xs text-slate-400">{dict.notFound}</p>
         )}
         {!isLoadingAos && !isErrorAos && filtered.map((ao) => {
           const isSelected = ao.id === selectedAoId;
@@ -94,7 +98,7 @@ export default function Step1({
                     </span>
                     {isSelected && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-1.5 py-px text-[9px] font-bold text-emerald-700">
-                        <CheckCircle2 className="h-2.5 w-2.5" />Sélectionné
+                        <CheckCircle2 className="h-2.5 w-2.5" />{dict.selected}
                       </span>
                     )}
                   </div>
@@ -102,7 +106,7 @@ export default function Step1({
                   <p className="text-[10px] text-slate-500">{ao.organizationName} &middot; {ao.wilaya}</p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="text-[9px] text-slate-400">Limite</p>
+                  <p className="text-[9px] text-slate-400">{dict.limit}</p>
                   <p className="text-[10px] font-semibold text-rose-600">{fmtDate(ao.deadline)}</p>
                 </div>
               </div>
@@ -115,7 +119,7 @@ export default function Step1({
       {selectedAo && (
         <div className="rounded-xl border border-[#4CAF50]/20 bg-emerald-50/50 p-4">
           <p className="mb-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-600">
-            Selectionner le lot concerne - {selectedAo.reference}
+            {dict.selectLot} - {selectedAo.reference}
           </p>
           <div className="space-y-2">
             {selectedAo.lots.map((lot) => {
@@ -127,9 +131,9 @@ export default function Step1({
                   <input type="radio" name="selectedLot" checked={checked} onChange={() => onSelectLot(lot.id)}
                     className="mt-0.5 h-4 w-4 rounded accent-[#4CAF50]" />
                   <div>
-                    <p className="text-xs font-semibold text-slate-800">Lot {lot.lotNumber} &ndash; {lot.designation}</p>
+                    <p className="text-xs font-semibold text-slate-800">{dict.lot} {lot.lotNumber} &ndash; {lot.designation}</p>
                     {lot.estimatedAmount && (
-                      <p className="text-[10px] text-slate-500">Montant estimé : {lot.estimatedAmount}</p>
+                      <p className="text-[10px] text-slate-500">{dict.estimatedAmount} {lot.estimatedAmount}</p>
                     )}
                   </div>
                 </label>
@@ -139,7 +143,7 @@ export default function Step1({
         </div>
       )}
 
-      <NavButtons onNext={onNext} disabled={!canProceed} />
+      <NavButtons onNext={onNext} disabled={!canProceed} dict={navDict} />
     </div>
   );
 }

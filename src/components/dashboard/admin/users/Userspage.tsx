@@ -1,6 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
 import { type User } from "./types";
+import {
+  getAdminUsers,
+  updateAdminUserRole,
+  blacklistAdminUser,
+  removeAdminUserBlacklist,
+} from "@/services/admin/users";
 
 const dummyUsers: User[] = [
     { id: "1", username: "Karim Bensalem", email: "k.bensalem@btpplus.dz", role: "SERVICE_CONTRACTANT", organisation_id: "3", created_at: "2023-06-20T08:00:00Z", is_active: true },
@@ -37,15 +43,11 @@ export default function UsersPage({ locale, dict }: UsersPageProps) {
     const fetchUsers = async () => {
         try {
             setIsLoading(true);
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`);
-            if (res.ok) {
-                const data = await res.json();
-                setUsers(data);
-            } else {
-                console.error("Failed to fetch users");
-            }
+            const data = await getAdminUsers();
+            setUsers(Array.isArray(data) ? data : dummyUsers);
         } catch (error) {
             console.error("Error fetching users:", error);
+            setUsers(dummyUsers);
         } finally {
             setIsLoading(false);
         }
@@ -59,16 +61,7 @@ export default function UsersPage({ locale, dict }: UsersPageProps) {
         // Optimistic update
         setUsers(users.map(u => u.id === userId ? { ...u, role: newRole as any } : u));
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/${userId}/role`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ role: newRole })
-            });
-            if (!res.ok) {
-                // Revert on failure
-                console.error("Failed to update role");
-                fetchUsers();
-            }
+            await updateAdminUserRole(userId, newRole);
         } catch (error) {
             console.error("Error updating role:", error);
             fetchUsers();
@@ -83,15 +76,7 @@ export default function UsersPage({ locale, dict }: UsersPageProps) {
         setUsers(users.map(u => u.id === userId ? { ...u, is_blacklisted: true, blacklist_motif: blacklistModal.motif, is_active: false } : u));
         
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/${userId}/blacklist`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ motif: blacklistModal.motif })
-            });
-            if (!res.ok) {
-                console.error("Failed to blacklist user");
-                fetchUsers();
-            }
+            await blacklistAdminUser(userId, blacklistModal.motif);
         } catch (error) {
             console.error("Error blacklisting user:", error);
             fetchUsers();
@@ -105,13 +90,7 @@ export default function UsersPage({ locale, dict }: UsersPageProps) {
         setUsers(users.map(u => u.id === userId ? { ...u, is_blacklisted: false, blacklist_motif: undefined, is_active: true } : u));
         
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/${userId}/blacklist`, {
-                method: "DELETE"
-            });
-            if (!res.ok) {
-                console.error("Failed to remove blacklist");
-                fetchUsers();
-            }
+            await removeAdminUserBlacklist(userId);
         } catch (error) {
             console.error("Error removing blacklist:", error);
             fetchUsers();
