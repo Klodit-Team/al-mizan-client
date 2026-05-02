@@ -22,7 +22,7 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
     role === "commission"
       ? [
           {
-            label: "Tableau de bord",
+            label: dict.commission?.tableauDeBord || "Tableau de bord",
             href: `/${locale}/dashboard/commission/tableau-de-bord`,
             icon: (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -31,7 +31,7 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
             ),
           },
           {
-            label: "Mes Commissions",
+            label: dict.commission?.mesCommissions || "Mes Commissions",
             href: `/${locale}/dashboard/commission/commissions`,
             icon: (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -40,7 +40,7 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
             ),
           },
           {
-            label: "Évaluations en cours",
+            label: dict.commission?.evaluationsEnCours || "Évaluations en cours",
             href: `/${locale}/dashboard/commission/evaluations`,
             icon: (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,7 +49,7 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
             ),
           },
           {
-            label: "Vérification Documentaire",
+            label: dict.commission?.verificationDocumentaire || "Vérification Documentaire",
             href: `/${locale}/dashboard/commission/verification-documentaire`,
             icon: (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -58,7 +58,7 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
             ),
           },
           {
-            label: "Procès-Verbaux",
+            label: dict.commission?.procesVerbaux || "Procès-Verbaux",
             href: `/${locale}/dashboard/commission/rapports`,
             icon: (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

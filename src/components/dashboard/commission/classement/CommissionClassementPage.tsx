@@ -52,6 +52,7 @@ function DecisionDropdown({ current, onChange, t }: {
   const [open, setOpen] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const OPTIONS = [
     { label: t.decisions.retenir, value: "Retenir" as DecType, bg: "#fff", color: "#2e7d32", border: "#4CAF50" },
@@ -77,7 +78,12 @@ function DecisionDropdown({ current, onChange, t }: {
 
   useEffect(() => {
     if (!open) return;
-    const handler = (e: MouseEvent) => { if (!btnRef.current?.contains(e.target as Node)) setOpen(false); };
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (!btnRef.current?.contains(target) && !menuRef.current?.contains(target)) {
+        setOpen(false);
+      }
+    };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
@@ -92,7 +98,7 @@ function DecisionDropdown({ current, onChange, t }: {
         </svg>
       </button>
       {open && (
-        <div style={{ position: "fixed", top: menuPos.top, left: menuPos.left, zIndex: 9999, background: "#fff", boxShadow: "0 8px 24px rgba(0,0,0,0.18)", border: "1px solid #E5E7EB", borderRadius: 10, overflow: "hidden", minWidth: 130 }}>
+        <div ref={menuRef} style={{ position: "fixed", top: menuPos.top, left: menuPos.left, zIndex: 9999, background: "#fff", boxShadow: "0 8px 24px rgba(0,0,0,0.18)", border: "1px solid #E5E7EB", borderRadius: 10, overflow: "hidden", minWidth: 130 }}>
           {OPTIONS.map((o) => (
             <button key={String(o.value)} onClick={() => { onChange(o.value); setOpen(false); }}
               style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 14px", fontSize: 13, color: o.color, background: "transparent", border: "none", cursor: "pointer" }}>
