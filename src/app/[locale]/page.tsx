@@ -32,7 +32,7 @@ export default async function Home({ params }: HomeProps) {
                         </h1>
                         <p className="max-w-xl text-lg leading-8 text-zinc-600 dark:text-zinc-400">
                             La solution digitale complète pour la dématérialisation des marchés publics en Algérie.
-                            Accédez aux appels d'offres, suivez les statistiques sectorielles et gérez vos contrats en toute transparence.
+                            Accédez aux appels d&apos;offres, suivez les statistiques sectorielles et gérez vos contrats en toute transparence.
                         </p>
                     </div>
                     <div className="mt-10 flex flex-col gap-4 text-base font-medium sm:flex-row">
