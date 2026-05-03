@@ -551,6 +551,47 @@ export async function saveServiceContractantTenderDraft(
   });
 
   const created = unwrapEnvelope<AppelOffreRecord>(createdRaw);
+
+  // --- NEW FIX: Automatically save Lots and Criteria to the backend ---
+  if (created.id) {
+    // 1. Save Lots
+    for (const lot of payload.lots || []) {
+      await apiClient(`/api/v1/appels-offres/${created.id}/lots`, {
+        method: "POST",
+        body: JSON.stringify({
+          numero: lot.lotNumber,
+          designation: lot.designation,
+          montantEstime: parsePositiveNumber(lot.estimatedAmount)
+        }),
+      }).catch((err) => console.warn("Failed to save lot:", err));
+    }
+    
+    // 2. Save Eligibility Criteria
+    for (const crit of payload.eligibilityCriteria || []) {
+      await apiClient(`/api/v1/appels-offres/${created.id}/criteres-eligibilite`, {
+        method: "POST",
+        body: JSON.stringify({
+          libelle: crit.designation,
+          type: "EXPERIENCE", // Default fallback enum
+          valeurMinimale: crit.description || "N/A",
+        }),
+      }).catch((err) => console.warn("Failed to save eligibility:", err));
+    }
+
+    // 3. Save Evaluation Criteria
+    for (const evalCrit of payload.evaluationCriteria || []) {
+      await apiClient(`/api/v1/appels-offres/${created.id}/criteres-evaluation`, {
+        method: "POST",
+        body: JSON.stringify({
+          libelle: evalCrit.designation,
+          categorie: evalCrit.type === "financier" ? "FINANCIER" : "TECHNIQUE",
+          poids: parsePositiveNumber(evalCrit.weighting),
+        }),
+      }).catch((err) => console.warn("Failed to save evaluation:", err));
+    }
+  }
+  // --------------------------------------------------------------------
+
   return {
     id: created.id,
     reference: created.reference || payload.reference,
