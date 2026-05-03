@@ -113,6 +113,7 @@ export interface SaveTenderDraftPayload {
 export interface PublishTenderPayload {
   id?: string;
   draft: SaveTenderDraftPayload;
+  cdcFile?: File | null;
 }
 
 export interface ServiceContractantTenderDraft extends SaveTenderDraftPayload {
@@ -414,10 +415,7 @@ async function resolveCurrentContractantIdentity(): Promise<ContractantIdentity>
   const userId = me?.user?.userId || null;
 
   if (!userId) {
-    return {
-      userId: null,
-      serviceContractantId: null,
-    };
+      throw new Error("Session expirée. Veuillez rafraîchir la page et vous reconnecter.");
   }
 
   const listRaw = await apiClient<unknown>("/api/v1/users/services-contractants?page=1&limit=100", {
@@ -552,46 +550,6 @@ export async function saveServiceContractantTenderDraft(
 
   const created = unwrapEnvelope<AppelOffreRecord>(createdRaw);
 
-  // --- NEW FIX: Automatically save Lots and Criteria to the backend ---
-  if (created.id) {
-    // 1. Save Lots
-    for (const lot of payload.lots || []) {
-      await apiClient(`/api/v1/appels-offres/${created.id}/lots`, {
-        method: "POST",
-        body: JSON.stringify({
-          numero: lot.lotNumber,
-          designation: lot.designation,
-          montantEstime: parsePositiveNumber(lot.estimatedAmount)
-        }),
-      }).catch((err) => console.warn("Failed to save lot:", err));
-    }
-    
-    // 2. Save Eligibility Criteria
-    for (const crit of payload.eligibilityCriteria || []) {
-      await apiClient(`/api/v1/appels-offres/${created.id}/criteres-eligibilite`, {
-        method: "POST",
-        body: JSON.stringify({
-          libelle: crit.designation,
-          type: "EXPERIENCE", // Default fallback enum
-          valeurMinimale: crit.description || "N/A",
-        }),
-      }).catch((err) => console.warn("Failed to save eligibility:", err));
-    }
-
-    // 3. Save Evaluation Criteria
-    for (const evalCrit of payload.evaluationCriteria || []) {
-      await apiClient(`/api/v1/appels-offres/${created.id}/criteres-evaluation`, {
-        method: "POST",
-        body: JSON.stringify({
-          libelle: evalCrit.designation,
-          categorie: evalCrit.type === "financier" ? "FINANCIER" : "TECHNIQUE",
-          poids: parsePositiveNumber(evalCrit.weighting),
-        }),
-      }).catch((err) => console.warn("Failed to save evaluation:", err));
-    }
-  }
-  // --------------------------------------------------------------------
-
   return {
     id: created.id,
     reference: created.reference || payload.reference,
@@ -668,13 +626,78 @@ export async function publishServiceContractantTender(
     id: payload.id,
   });
 
-  await apiClient<unknown>(`/api/v1/appels-offres/${persisted.id}/statut`, {
+  const aoId = persisted.id;
+
+  // 1. Upload and link the CDC Document
+  if (payload.cdcFile) {
+    const formData = new FormData();
+    formData.append("file", payload.cdcFile);
+    formData.append("fichier", payload.cdcFile);
+    try {
+      const uploadRaw = await apiClient<any>("/api/v1/documents/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const uploaded = unwrapEnvelope<any>(uploadRaw);
+      const documentId = uploaded?.id || uploaded?.documentId;
+      if (documentId) {
+        await apiClient(`/api/v1/appels-offres/${aoId}/cdc`, {
+          method: "POST",
+          body: JSON.stringify({
+            documentId,
+            prixRetrait: parsePositiveNumber(payload.draft.cdc.withdrawalPrice || "0")
+          })
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to upload CDC:", err);
+    }
+  }
+
+  // 2. Save Lots
+  for (const lot of payload.draft.lots || []) {
+    await apiClient(`/api/v1/appels-offres/${aoId}/lots`, {
+      method: "POST",
+      body: JSON.stringify({
+        numero: lot.lotNumber,
+        designation: lot.designation,
+        montantEstime: parsePositiveNumber(lot.estimatedAmount)
+      }),
+    }).catch((err) => console.warn("Failed to save lot:", err));
+  }
+
+  // 3. Save Eligibility Criteria
+  for (const crit of payload.draft.eligibilityCriteria || []) {
+    await apiClient(`/api/v1/appels-offres/${aoId}/criteres-eligibilite`, {
+      method: "POST",
+      body: JSON.stringify({
+        libelle: crit.designation,
+        type: "EXPERIENCE",
+        valeurMinimale: crit.description || "N/A",
+      }),
+    }).catch((err) => console.warn("Failed to save eligibility:", err));
+  }
+
+  // 4. Save Evaluation Criteria
+  for (const evalCrit of payload.draft.evaluationCriteria || []) {
+    await apiClient(`/api/v1/appels-offres/${aoId}/criteres-evaluation`, {
+      method: "POST",
+      body: JSON.stringify({
+        libelle: evalCrit.designation,
+        categorie: evalCrit.type === "financier" ? "FINANCIER" : "TECHNIQUE",
+        poids: parsePositiveNumber(evalCrit.weighting),
+      }),
+    }).catch((err) => console.warn("Failed to save evaluation:", err));
+  }
+
+  // 5. Change status to PUBLIE
+  await apiClient<unknown>(`/api/v1/appels-offres/${aoId}/statut`, {
     method: "PATCH",
     body: JSON.stringify({ statut: "PUBLIE" }),
   });
 
   return {
-    id: persisted.id,
+    id: aoId,
     reference: persisted.reference,
     status: "publie",
   };

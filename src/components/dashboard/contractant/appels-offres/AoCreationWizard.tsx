@@ -1491,6 +1491,7 @@ export default function AoCreationWizard({
         const result = await publishServiceContractantTender({
           id: draftId,
           draft: buildDraftPayload(),
+          cdcFile: cdcFile,
         });
 
         const ref = result.avisReference || generateAvisReference();
