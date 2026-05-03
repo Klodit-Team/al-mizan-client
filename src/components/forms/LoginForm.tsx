@@ -53,12 +53,16 @@ export default function LoginForm({ dict }: LoginFormProps) {
                 mapRoleToDashboardUserType(loginResponse.user?.userType) ||
                 mapRoleToDashboardUserType(loginResponse.user?.role);
 
-            if (!userType) {
+            let userId = loginResponse.userId || loginResponse.user?.userId;
+
+            if (!userType || !userId) {
                 try {
                     const meResponse = await getCurrentUser();
                     userType =
+                        userType ||
                         mapRoleToDashboardUserType(meResponse.user?.userType) ||
                         mapRoleToDashboardUserType(meResponse.user?.role);
+                    userId = userId || meResponse.user?.userId;
                 } catch {
                     // Ignore role resolution failure and handle below.
                 }
@@ -73,7 +77,7 @@ export default function LoginForm({ dict }: LoginFormProps) {
             const resolvedUserType: DashboardUserType = userType;
             document.cookie = `user_type=${resolvedUserType}; Path=/; Max-Age=604800; SameSite=Lax`;
 
-            router.push(getDashboardHomePath(locale, resolvedUserType));
+            router.push(getDashboardHomePath(locale, resolvedUserType, userId));
             return;
         } catch (error) {
             if (error instanceof ApiClientError) {
