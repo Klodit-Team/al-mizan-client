@@ -592,9 +592,27 @@ export async function getServiceContractantTenderDraftById(
         withdrawalPrice: "0.00",
         isPublished: false,
       },
-      lots: [],
-      eligibilityCriteria: [],
-      evaluationCriteria: [],
+      lots: (ao.lots || []).map((lot: any, idx: number) => ({ 
+        lotNumber: lot.numero || String(idx + 1), 
+        designation: lot.designation || "", 
+        description: "", 
+        estimatedAmount: String(lot.montantEstime || ""), 
+        delayDays: "" 
+      })),
+      eligibilityCriteria: (ao.criteresEligibilite || []).map((c: any, idx: number) => ({ 
+        order: idx + 1, 
+        designation: c.libelle || "", 
+        description: "", 
+        eliminatory: c.eliminatoire || false 
+      })),
+      evaluationCriteria: (ao.criteresEvaluation || []).map((c: any, idx: number) => ({ 
+        order: idx + 1, 
+        designation: c.libelle || "", 
+        type: String(c.categorie).toUpperCase() === "FINANCIER" ? "financier" : "technique", 
+        weighting: String(c.poids || ""), 
+        eliminationScore: String(c.noteEliminatoire || ""), 
+        lotAssignment: "" 
+      })),
     };
   } catch {
     return null;
