@@ -47,6 +47,8 @@ export default function LoginForm({ dict }: LoginFormProps) {
                 password: data.password,
             });
 
+            console.log("Bruh I am here in the login form onSubmit function after successful login API call.");
+
             console.log("Login API Response:", loginResponse);
 
             let userType: DashboardUserType | null =
