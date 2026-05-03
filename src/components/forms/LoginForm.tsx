@@ -47,6 +47,8 @@ export default function LoginForm({ dict }: LoginFormProps) {
                 password: data.password,
             });
 
+            console.log("Login API Response:", loginResponse);
+
             let userType: DashboardUserType | null =
                 mapRoleToDashboardUserType(loginResponse.userType) ||
                 mapRoleToDashboardUserType(loginResponse.role) ||

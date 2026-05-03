@@ -33,6 +33,7 @@ export function getDashboardHomePath(locale: string, userType: DashboardUserType
   }
 
   if (userType === "operateur") {
+
     return `/${locale}/dashboard/operateur/tableau-de-bord`;
   }
 
