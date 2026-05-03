@@ -420,7 +420,7 @@ async function resolveCurrentContractantIdentity(): Promise<ContractantIdentity>
     };
   }
 
-  const listRaw = await apiClient<unknown>("/api/v1/users/services-contractants?page=1&limit=200", {
+  const listRaw = await apiClient<unknown>("/api/v1/users/services-contractants?page=1&limit=100", {
     method: "GET",
   }).catch(() => null);
 

@@ -306,7 +306,7 @@ async function getOperateurIdFromSession(): Promise<string | null> {
     return null;
   }
 
-  const operatorsRaw = await apiClient<unknown>("/api/v1/users/operateurs-economiques?page=1&limit=200", {
+  const operatorsRaw = await apiClient<unknown>("/api/v1/users/operateurs-economiques?page=1&limit=100", {
     method: "GET",
   }).catch(() => null);
 
