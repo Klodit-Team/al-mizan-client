@@ -44,11 +44,22 @@ const resolveRegistrationRole = (rawRole: string): RegistrationRole => {
     return "OPERATEUR_ECONOMIQUE";
 };
 
-const organisationTypeOptions: Array<{
+const organisationOperateurTypeOptions: Array<{
     value: RegisterFormData["organisationType"];
     label: string;
 }> = [
     { value: "ENTREPRISE_PRIVEE", label: "Entreprise privee" },
+    { value: "ENTREPRISE_PUBLIQUE", label: "Entreprise publique" },
+    { value: "MINISTERE", label: "Ministere" },
+    { value: "EPA", label: "EPA" },
+    { value: "EPIC", label: "EPIC" },
+    { value: "GROUPEMENT", label: "Groupement" },
+];
+
+const organisationContractantTypeOptions: Array<{
+    value: RegisterFormData["organisationType"];
+    label: string;
+}> = [
     { value: "ENTREPRISE_PUBLIQUE", label: "Entreprise publique" },
     { value: "MINISTERE", label: "Ministere" },
     { value: "EPA", label: "EPA" },
@@ -131,10 +142,6 @@ export default function RegisterForm({ dict, initialRole }: RegisterFormProps) {
                 "email",
                 "password",
             ];
-
-            if (registrationRole === "SERVICE_CONTRACTANT") {
-                fields.push("serviceCode");
-            }
         }
         const isValid = await trigger(fields);
         if (isValid) setStep(step + 1);
@@ -142,15 +149,6 @@ export default function RegisterForm({ dict, initialRole }: RegisterFormProps) {
    
     const onSubmit = async (data: RegisterFormData) => {
         setApiError(null);
-
-        if (registrationRole === "SERVICE_CONTRACTANT" && !data.serviceCode?.trim()) {
-            setError("serviceCode", {
-                type: "manual",
-                message: "Service code is required for service contractant",
-            });
-            setStep(2);
-            return;
-        }
 
         try {
             const result = await registerMutation.mutateAsync({
@@ -171,13 +169,11 @@ export default function RegisterForm({ dict, initialRole }: RegisterFormProps) {
                 type: data.organisationType,
                 ...(registrationRole === "SERVICE_CONTRACTANT"
                     ? {
-                        code_service: data.serviceCode,
                         secteur_activite: data.sectorActivity,
                         ordonnateur: data.ordonnateur,
                     }
                     : {
-                        qualifications: data.qualifications,
-                        categories: data.categories,
+
                     }),
             });
 
@@ -287,7 +283,13 @@ export default function RegisterForm({ dict, initialRole }: RegisterFormProps) {
                             {...register("organisationType")}
                             className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2 text-[#0F172A] bg-white ${errors.organisationType ? "border-red-400 focus:ring-red-100" : "border-gray-200 focus:ring-green-100 focus:border-[#4CAF50]"}`}
                         >
-                            {organisationTypeOptions.map((option) => (
+                            {registrationRole === "SERVICE_CONTRACTANT" && organisationContractantTypeOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+
+                            {registrationRole === "OPERATEUR_ECONOMIQUE" && organisationOperateurTypeOptions.map((option) => (
                                 <option key={option.value} value={option.value}>
                                     {option.label}
                                 </option>
@@ -462,18 +464,8 @@ export default function RegisterForm({ dict, initialRole }: RegisterFormProps) {
                         {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
                     </div>
 
-                    {registrationRole === "SERVICE_CONTRACTANT" ? (
+                    {registrationRole === "SERVICE_CONTRACTANT" && (
                         <>
-                            <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{dict.fields.serviceCode}</label>
-                                <input
-                                    {...register("serviceCode")}
-                                    type="text"
-                                    placeholder={dict.fields.serviceCodePlaceholder}
-                                    className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2 text-[#94A3B8] placeholder:text-[#94A3B8] ${errors.serviceCode ? "border-red-400 focus:ring-red-100" : "border-gray-200 focus:ring-green-100 focus:border-[#4CAF50]"}`}
-                                />
-                                {errors.serviceCode && <p className="text-red-500 text-xs mt-1">{errors.serviceCode.message}</p>}
-                            </div>
                             <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{dict.fields.sectorActivity}</label>
                                 <input
@@ -495,30 +487,8 @@ export default function RegisterForm({ dict, initialRole }: RegisterFormProps) {
                                 {errors.ordonnateur && <p className="text-red-500 text-xs mt-1">{errors.ordonnateur.message}</p>}
                             </div>
                         </>
-                    ) : (
-                        <>
-                            <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{dict.fields.qualifications}</label>
-                                <textarea
-                                    {...register("qualifications")}
-                                    rows={3}
-                                    placeholder={dict.fields.qualificationsPlaceholder}
-                                    className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2 text-[#94A3B8] placeholder:text-[#94A3B8] ${errors.qualifications ? "border-red-400 focus:ring-red-100" : "border-gray-200 focus:ring-green-100 focus:border-[#4CAF50]"}`}
-                                />
-                                {errors.qualifications && <p className="text-red-500 text-xs mt-1">{errors.qualifications.message}</p>}
-                            </div>
-                            <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{dict.fields.categories}</label>
-                                <input
-                                    {...register("categories")}
-                                    type="text"
-                                    placeholder={dict.fields.categoriesPlaceholder}
-                                    className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2 text-[#94A3B8] placeholder:text-[#94A3B8] ${errors.categories ? "border-red-400 focus:ring-red-100" : "border-gray-200 focus:ring-green-100 focus:border-[#4CAF50]"}`}
-                                />
-                                {errors.categories && <p className="text-red-500 text-xs mt-1">{errors.categories.message}</p>}
-                            </div>
-                        </>
                     )}
+
 
                     <div className="flex items-start gap-3 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
                         <div className="mt-0.5 text-[#4CAF50]">
