@@ -16,7 +16,9 @@ export interface LoginResponse {
   message: string;
   role?: AuthRoleName;
   userType?: AuthRoleName | 'admin' | 'contractant' | 'operateur';
+  userId?: string;
   user?: {
+    userId?: string;
     role?: AuthRoleName;
     userType?: AuthRoleName | 'admin' | 'contractant' | 'operateur';
   };
