@@ -591,20 +591,20 @@ export async function getServiceContractantTenderDraftById(
         withdrawalPrice: "0.00",
         isPublished: false,
       },
-      lots: (ao.lots || []).map((lot: any, idx: number) => ({ 
+      lots: (ao.lots ||[]).map((lot, idx) => ({ 
         lotNumber: lot.numero || String(idx + 1), 
         designation: lot.designation || "", 
         description: "", 
         estimatedAmount: String(lot.montantEstime || ""), 
         delayDays: "" 
       })),
-      eligibilityCriteria: (ao.criteresEligibilite || []).map((c: any, idx: number) => ({ 
+      eligibilityCriteria: (ao.criteresEligibilite ||[]).map((c, idx) => ({ 
         order: idx + 1, 
         designation: c.libelle || "", 
         description: "", 
         eliminatory: c.eliminatoire || false 
       })),
-      evaluationCriteria: (ao.criteresEvaluation || []).map((c: any, idx: number) => ({ 
+      evaluationCriteria: (ao.criteresEvaluation || evaluationCriteria: (ao.criteresEvaluation || []).map((c, idx) => ({ 
         order: idx + 1, 
         designation: c.libelle || "", 
         type: String(c.categorie).toUpperCase() === "FINANCIER" ? "financier" : "technique", 
