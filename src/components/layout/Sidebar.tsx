@@ -31,15 +31,6 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
             ),
           },
           {
-            label: dict.commission?.nouvelleEvaluation ?? "Nouvelle Évaluation",
-            href: `/${locale}/dashboard/commission/nouvel-evaluation`,
-            icon: (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-            ),
-          },
-          {
             label: dict.commission?.mesCommissions ?? "Mes Commissions",
             href: userId
               ? `/${locale}/dashboard/commission/${userId}/mes-commissions`
@@ -52,7 +43,7 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
           },
           {
             label: dict.commission?.evaluationsEnCours ?? "Évaluations en cours",
-            href: `/${locale}/dashboard/commission/evaluations-en-cours`,
+            href: `/${locale}/dashboard/commission/evaluations`,
             icon: (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
