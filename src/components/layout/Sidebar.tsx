@@ -14,15 +14,15 @@ interface SidebarProps {
 export default function Sidebar({ locale, role, dict }: SidebarProps) {
   const pathname = usePathname();
   const params = useParams();
-  const adminId = params?.adminId || "admin";
-  const userId = (params?.id as string) || "";
+  const adminId = params?.adminId ?? "admin";
+  const userId = (params?.id as string) ?? "";
 
   // ── Nav items by role ──────────────────────────────────────────────────────
   const navItems =
     role === "commission"
       ? [
           {
-            label: dict.commission?.tableauDeBord || "Tableau de bord",
+            label: dict.commission?.tableauDeBord ?? "Tableau de bord",
             href: `/${locale}/dashboard/commission/tableau-de-bord`,
             icon: (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -31,8 +31,10 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
             ),
           },
           {
-            label: dict.commission?.mesCommissions || "Mes Commissions",
-            href: `/${locale}/dashboard/commission/commissions`,
+            label: dict.commission?.mesCommissions ?? "Mes Commissions",
+            href: userId
+              ? `/${locale}/dashboard/commission/${userId}/mes-commissions`
+              : `/${locale}/dashboard/commission/commissions`,
             icon: (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -40,16 +42,16 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
             ),
           },
           {
-            label: dict.commission?.evaluationsEnCours || "Évaluations en cours",
+            label: dict.commission?.evaluationsEnCours ?? "Évaluations en cours",
             href: `/${locale}/dashboard/commission/evaluations`,
             icon: (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M12 3l2.09 6.26L21 9l-5.09 3.82L17.18 21 12 17.27 6.82 21l2.27-8.18L4 9l6.91-.74L12 3z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             ),
           },
           {
-            label: dict.commission?.verificationDocumentaire || "Vérification Documentaire",
+            label: dict.commission?.verificationDocumentaire ?? "Vérification Documentaire",
             href: `/${locale}/dashboard/commission/verification-documentaire`,
             icon: (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -58,8 +60,8 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
             ),
           },
           {
-            label: dict.commission?.procesVerbaux || "Procès-Verbaux",
-            href: `/${locale}/dashboard/commission/rapports`,
+            label: dict.commission?.procesVerbaux ?? "Procès-Verbaux",
+            href: `/${locale}/dashboard/commission/proces-verbaux`,
             icon: (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -69,38 +71,38 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
         ]
       : role === "operateur"
       ? [
-        {
-          label: dict.browseAOs || "Parcourir les AOs",
-          href: `/${locale}/dashboard/operateur/appels-offres`,
-          icon: (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          ),
-        },
-        {
-          label: dict.mySubmissions || "Mes Soumissions",
-          href: `/${locale}/dashboard/operateur/soumissions`,
-          icon: (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          ),
-        },
-        {
-          label: dict.recoursClaims || "Mes Recours",
-          href: `/${locale}/dashboard/operateur/recours`,
-          icon: (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-            </svg>
-          ),
-        },
-      ]
-      : role === "contractant"
-        ? [
           {
-            label: dict.browseAOs,
+            label: dict.browseAOs ?? "Parcourir les AOs",
+            href: `/${locale}/dashboard/operateur/appels-offres`,
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            ),
+          },
+          {
+            label: dict.mySubmissions ?? "Mes Soumissions",
+            href: `/${locale}/dashboard/operateur/soumissions`,
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            ),
+          },
+          {
+            label: dict.recoursClaims ?? "Mes Recours",
+            href: `/${locale}/dashboard/operateur/recours`,
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+              </svg>
+            ),
+          },
+        ]
+      : role === "contractant"
+      ? [
+          {
+            label: dict.browseAOs ?? "Parcourir les AOs",
             href: `/${locale}/dashboard/contractant/appels-offres`,
             icon: (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,26 +111,16 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
             ),
           },
           {
-            label: dict.greAGreRequests,
+            label: dict.greAGreRequests ?? "Gré à Gré",
             href: `/${locale}/dashboard/contractant/gre-a-gre`,
             icon: (
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             ),
           },
           {
-            label: dict.mySubmissions,
+            label: dict.mySubmissions ?? "Mes Soumissions",
             href: `/${locale}/dashboard/contractant/soumissions`,
             icon: (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,7 +129,7 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
             ),
           },
           {
-            label: dict.recoursClaims,
+            label: dict.recoursClaims ?? "Mes Recours",
             href: `/${locale}/dashboard/contractant/recours`,
             icon: (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,7 +138,7 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
             ),
           },
           {
-            label: dict.marchesRecords,
+            label: dict.marchesRecords ?? "Marchés",
             href: `/${locale}/dashboard/contractant/marches`,
             icon: (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,142 +147,86 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
             ),
           },
         ]
-        : role === "commission"
-          ? [
-            {
-              label: dict.commission.tableauDeBord,
-              href: `/${locale}/dashboard/commission/tableau-de-bord`,
-              icon: (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-              ),
-            },
-            {
-              label: dict.commission.nouvelleEvaluation,
-              href: `/${locale}/dashboard/commission/nouvel-evaluation`,
-              icon: (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-              ),
-            },
-            {
-              label: dict.commission.mesCommissions,
-              href: userId
-                ? `/${locale}/dashboard/commission/${userId}/mes-commissions`
-                : `/${locale}/dashboard/commission`,
-              icon: (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-              ),
-            },
-            {
-              label: dict.commission.evaluationsEnCours,
-              href: `/${locale}/dashboard/commission/evaluations-en-cours`,
-              icon: (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              ),
-            },
-            {
-              label: dict.commission.verificationDocumentaire,
-              href: `/${locale}/dashboard/commission/verification-documentaire`,
-              icon: (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-              ),
-            },
-            {
-              label: dict.commission.procesVerbaux,
-              href: `/${locale}/dashboard/commission/proces-verbaux`,
-              icon: (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-              ),
-            },
-          ]
-          : /* admin */
-          [
-            {
-              label: dict.admin.organisation,
-              href: `/${locale}/dashboard/admin/${adminId}/organisations`,
-              icon: (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              ),
-            },
-            {
-              label: dict.admin.utilisateurs,
-              href: `/${locale}/dashboard/admin/${adminId}/utilisateurs`,
-              icon: (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              ),
-            },
-            {
-              label: dict.admin.operateurs,
-              href: `/${locale}/dashboard/admin/${adminId}/operateurs`,
-              icon: (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              ),
-            },
-            {
-              label: dict.admin.commission,
-              href: `/${locale}/dashboard/admin/${adminId}/commissions`,
-              icon: (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                </svg>
-              ),
-            },
-            {
-              label: dict.admin.audit,
-              href: `/${locale}/dashboard/admin/${adminId}/journal-audit`,
-              icon: (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 12h6M9 16h4" />
-                </svg>
-              ),
-            },
-            {
-              label: dict.admin.incidents || "Incidents IA",
-              href: `/${locale}/dashboard/admin/${adminId}/incidents`,
-              icon: (
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-              ),
-            },
-          ];
+      : /* admin */
+        [
+          {
+            label: dict.admin?.organisation ?? "Organisations",
+            href: `/${locale}/dashboard/admin/${adminId}/organisations`,
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            ),
+          },
+          {
+            label: dict.admin?.utilisateurs ?? "Utilisateurs",
+            href: `/${locale}/dashboard/admin/${adminId}/utilisateurs`,
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            ),
+          },
+          {
+            label: dict.admin?.operateurs ?? "Opérateurs",
+            href: `/${locale}/dashboard/admin/${adminId}/operateurs`,
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            ),
+          },
+          {
+            label: dict.admin?.commission ?? "Commissions",
+            href: `/${locale}/dashboard/admin/${adminId}/commissions`,
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+            ),
+          },
+          {
+            label: dict.admin?.audit ?? "Journal d'audit",
+            href: `/${locale}/dashboard/admin/${adminId}/journal-audit`,
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 12h6M9 16h4" />
+              </svg>
+            ),
+          },
+          {
+            label: dict.admin?.incidents ?? "Incidents IA",
+            href: `/${locale}/dashboard/admin/${adminId}/incidents`,
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            ),
+          },
+        ];
 
   // ── Dashboard home href ────────────────────────────────────────────────────
   const dashboardHref =
     role === "admin"
       ? `/${locale}/dashboard/admin/${adminId}/tableau-de-bord`
       : role === "contractant"
-        ? `/${locale}/dashboard/contractant/tableau-de-bord`
-        : role === "commission"
-          ? `/${locale}/dashboard/commission/tableau-de-bord`
-          : `/${locale}/dashboard/operateur/tableau-de-bord`;
+      ? `/${locale}/dashboard/contractant/tableau-de-bord`
+      : role === "commission"
+      ? `/${locale}/dashboard/commission/tableau-de-bord`
+      : `/${locale}/dashboard/operateur/tableau-de-bord`;
 
   // ── Settings href ──────────────────────────────────────────────────────────
   const settingsHref =
     role === "admin"
       ? `/${locale}/dashboard/settings`
       : role === "contractant"
-        ? `/${locale}/dashboard/contractant/tableau-de-bord?view=settings`
-        : role === "commission"
-          ? `/${locale}/dashboard/commission/profil`
-          : `/${locale}/dashboard/operateur/profil`;
+      ? `/${locale}/dashboard/contractant/tableau-de-bord?view=settings`
+      : role === "commission"
+      ? `/${locale}/dashboard/commission/profil`
+      : `/${locale}/dashboard/operateur/profil`;
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
+  const isActive = (href: string) =>
+    pathname === href || pathname.startsWith(href + "/");
 
   return (
     <aside
@@ -320,10 +256,11 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
           <Link
             key={`${item.href}-${index}`}
             href={item.href}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${isActive(item.href)
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+              isActive(item.href)
                 ? "text-[#4CAF50] bg-emerald-50 font-medium"
                 : "text-gray-500 hover:text-[#2a3347] hover:bg-gray-100"
-              }`}
+            }`}
           >
             <span className={isActive(item.href) ? "text-[#4CAF50]" : ""}>
               {item.icon}
@@ -338,10 +275,11 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
         <div className="w-full h-px bg-gray-200 mb-3" />
         <Link
           href={settingsHref}
-          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${isActive(settingsHref)
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+            isActive(settingsHref)
               ? "text-[#4CAF50] bg-emerald-50 font-medium"
               : "text-gray-500 hover:text-gray-800 hover:bg-gray-100"
-            }`}
+          }`}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
