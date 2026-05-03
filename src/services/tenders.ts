@@ -632,7 +632,6 @@ export async function publishServiceContractantTender(
   if (payload.cdcFile) {
     const formData = new FormData();
     formData.append("file", payload.cdcFile);
-    formData.append("fichier", payload.cdcFile);
     try {
       const uploadRaw = await apiClient<any>("/api/v1/documents/upload", {
         method: "POST",
