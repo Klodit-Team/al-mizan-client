@@ -604,7 +604,7 @@ export async function getServiceContractantTenderDraftById(
         description: "", 
         eliminatory: c.eliminatoire || false 
       })),
-      evaluationCriteria: (ao.criteresEvaluation || evaluationCriteria: (ao.criteresEvaluation || []).map((c, idx) => ({ 
+      evaluationCriteria: (ao.criteresEvaluation || []).map((c, idx) => ({ 
         order: idx + 1, 
         designation: c.libelle || "", 
         type: String(c.categorie).toUpperCase() === "FINANCIER" ? "financier" : "technique", 
