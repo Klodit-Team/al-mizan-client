@@ -9,6 +9,7 @@ import {
   type OeDeadlineItem,
   type OeSubmissionItem,
 } from "@/services/operateur-dashboard";
+import { getCurrentUser } from "@/services/auth/api";
 import { type Locale } from "@/i18n/config";
 import {
   Search, FileText, Clock, Award, AlertTriangle, ChevronRight,
@@ -83,6 +84,19 @@ export default function OperateurDashboard({ dict, locale }: { dict: any; locale
 
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<OeDashboardData | null>(null);
+
+  useEffect(() => {
+    console.log("Operateur Dashboard Loaded - User logged in as operator");
+    
+    // Fetch and log the login response from API
+    getCurrentUser()
+      .then((response) => {
+        console.log("Login API Response (from /me endpoint):", response);
+      })
+      .catch((error) => {
+        console.error("Failed to fetch user data:", error);
+      });
+  }, []);
 
   useEffect(() => {
     let alive = true;
