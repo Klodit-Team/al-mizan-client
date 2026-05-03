@@ -10,5 +10,5 @@ export default async function Page({ params }: Props) {
   const { id, locale } = await params;
   const dict = await getDictionary(locale as Locale);
 
-  return <RecoursDetailPage recoursId={id} dict={(dict as any).dashboard.operateur.recours.detail} locale={locale as Locale} />;
+  return <RecoursDetailPage recoursId={id} dict={(dict as any).dashboard.operateur.dashboard.recours.detail} locale={locale as Locale} />;
 }

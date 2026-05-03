@@ -17,5 +17,5 @@ export default async function SoumissionDetailRoute({ params }: Props) {
 
   const dict = await getDictionary(locale as Locale);
 
-  return <SoumissionDetailPage subId={id} dict={(dict as any).dashboard.operateur.soumissions.detail} locale={locale as Locale} />;
+  return <SoumissionDetailPage subId={id} dict={(dict as any).dashboard.operateur.dashboard.soumissions.detail} locale={locale as Locale} />;
 }

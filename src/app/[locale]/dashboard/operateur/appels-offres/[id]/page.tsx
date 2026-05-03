@@ -10,5 +10,5 @@ export default async function OperateurAoDetailPage({ params }: OeAoDetailPagePr
   const { id, locale } = await params;
   const dict = await getDictionary(locale as Locale);
 
-  return <OeAoDetailPage aoId={id} dict={(dict as any).dashboard.appelsOffres.detail} locale={locale as Locale} />;
+  return <OeAoDetailPage aoId={id} dict={(dict as any).dashboard.contractant.appelsOffres.detail} locale={locale as Locale} />;
 }

@@ -1474,7 +1474,7 @@
           "browseAos": "Parcourir les AOs",
           "mySubmissions": "Mes Soumissions",
           "myRecours": "Mes Recours",
-"notifications": "Notifications"
+          "notifications": "Notifications"
         },
         "activity": {
           "title": "Activité Récente",
@@ -1498,216 +1498,216 @@
             "rejetee": "Rejetée"
           }
         },
-       "soumissions": {
-        "mesSoumissions": {
-          "title": "Mes Soumissions",
-          "subtitle": "Suivi de vos offres déposées et en cours",
-          "newSubmission": "Nouvelle soumission",
-          "stats": {
-            "total": "Total",
-            "enCours": "En cours",
-            "retenues": "Retenues",
-            "rejetees": "Rejetées"
-          },
-          "searchPlaceholder": "Référence, objet, organisme…",
-          "filters": {
-            "all": "Toutes",
-            "brouillon": "Brouillon",
-            "deposee": "Déposée",
-            "recue": "Reçue",
-            "evaluee": "Évaluée",
-            "retenue": "Retenue",
-            "rejetee": "Rejetée"
-          },
-          "table": {
-            "referenceId": "Référence / ID",
-            "objectOrg": "Objet & Organisme",
-            "dateDepot": "Date dépôt",
-            "status": "Statut",
-            "actions": "Actions"
-          },
-          "empty": {
-            "title": "Aucune soumission trouvée",
-            "subtitle": "Modifiez vos filtres ou déposez une nouvelle soumission"
-          },
-          "errorLoading": "Impossible de charger les soumissions. Vérifiez la disponibilité de la passerelle API et du service soumission.",
-          "actions": {
-            "view": "Voir le détail",
-            "continue": "Continuer la soumission",
-            "recours": "Déposer un recours"
-          }
-        },
-        "detail": {
-          "nav": {
-            "dashboard": "Tableau de bord",
-            "soumissions": "Mes soumissions"
-          },
-          "back": "Retour",
-          "depositedOn": "Déposée le",
-          "tabs": {
-            "apercu": "Aperçu",
-            "documents": "Documents",
-            "financier": "Offre financière",
-            "timeline": "Suivi"
-          },
-          "apercu": {
-            "lots": "Lots soumissionnés",
-            "noLots": "Aucun lot associé.",
-            "proof": "Preuve d'intégrité",
-            "serverTime": "Horodatage serveur :",
-            "sha256": "SHA-256 (offre financière) :",
-            "caution": "Caution bancaire",
-            "reference": "Référence :",
-            "bank": "Banque :",
-            "amount": "Montant :",
-            "expiration": "Expiration :"
-          },
-          "documents": {
-            "desc": "Documents disponibles pour cette soumission.",
-            "labels": {
-              "technique": "Offre technique",
-              "caution": "Caution bancaire",
-              "financiere": "Offre financière chiffrée"
+        "soumissions": {
+          "mesSoumissions": {
+            "title": "Mes Soumissions",
+            "subtitle": "Suivi de vos offres déposées et en cours",
+            "newSubmission": "Nouvelle soumission",
+            "stats": {
+              "total": "Total",
+              "enCours": "En cours",
+              "retenues": "Retenues",
+              "rejetees": "Rejetées"
             },
-            "download": "Télécharger",
-            "unavailable": "Document indisponible"
-          },
-          "financier": {
-            "encryptedWarning": "L'offre financière est chiffrée de bout en bout. Les montants ne sont visibles qu'après déchiffrement officiel.",
-            "cols": {
-              "lot": "Lot",
-              "designation": "Désignation",
-              "montant": "Montant HT"
+            "searchPlaceholder": "Référence, objet, organisme…",
+            "filters": {
+              "all": "Toutes",
+              "brouillon": "Brouillon",
+              "deposee": "Déposée",
+              "recue": "Reçue",
+              "evaluee": "Évaluée",
+              "retenue": "Retenue",
+              "rejetee": "Rejetée"
             },
-            "noLots": "Aucun lot disponible.",
-            "total": "Total HT",
-            "meta": {
-              "verified": "Signature vérifiée :",
-              "decrypted": "Offre déchiffrée :",
-              "hash": "Hash fichier :",
-              "yes": "Oui",
-              "no": "Non",
-              "noVerified": "Non ou non vérifiée"
+            "table": {
+              "referenceId": "Référence / ID",
+              "objectOrg": "Objet & Organisme",
+              "dateDepot": "Date dépôt",
+              "status": "Statut",
+              "actions": "Actions"
+            },
+            "empty": {
+              "title": "Aucune soumission trouvée",
+              "subtitle": "Modifiez vos filtres ou déposez une nouvelle soumission"
+            },
+            "errorLoading": "Impossible de charger les soumissions. Vérifiez la disponibilité de la passerelle API et du service soumission.",
+            "actions": {
+              "view": "Voir le détail",
+              "continue": "Continuer la soumission",
+              "recours": "Déposer un recours"
             }
           },
-          "timeline": {
-            "events": {
-              "creation": {
-                "label": "Brouillon créé",
-                "desc": "La soumission a été initialisée et enregistrée en brouillon."
+          "detail": {
+            "nav": {
+              "dashboard": "Tableau de bord",
+              "soumissions": "Mes soumissions"
+            },
+            "back": "Retour",
+            "depositedOn": "Déposée le",
+            "tabs": {
+              "apercu": "Aperçu",
+              "documents": "Documents",
+              "financier": "Offre financière",
+              "timeline": "Suivi"
+            },
+            "apercu": {
+              "lots": "Lots soumissionnés",
+              "noLots": "Aucun lot associé.",
+              "proof": "Preuve d'intégrité",
+              "serverTime": "Horodatage serveur :",
+              "sha256": "SHA-256 (offre financière) :",
+              "caution": "Caution bancaire",
+              "reference": "Référence :",
+              "bank": "Banque :",
+              "amount": "Montant :",
+              "expiration": "Expiration :"
+            },
+            "documents": {
+              "desc": "Documents disponibles pour cette soumission.",
+              "labels": {
+                "technique": "Offre technique",
+                "caution": "Caution bancaire",
+                "financiere": "Offre financière chiffrée"
               },
-              "depot": {
-                "label": "Dépôt de la soumission",
-                "desc": "Le dépôt final a été déclenché par l'opérateur."
+              "download": "Télécharger",
+              "unavailable": "Document indisponible"
+            },
+            "financier": {
+              "encryptedWarning": "L'offre financière est chiffrée de bout en bout. Les montants ne sont visibles qu'après déchiffrement officiel.",
+              "cols": {
+                "lot": "Lot",
+                "designation": "Désignation",
+                "montant": "Montant HT"
               },
-              "reception": {
-                "label": "Réception et horodatage",
-                "desc": "La plateforme a confirmé la réception de l'offre."
+              "noLots": "Aucun lot disponible.",
+              "total": "Total HT",
+              "meta": {
+                "verified": "Signature vérifiée :",
+                "decrypted": "Offre déchiffrée :",
+                "hash": "Hash fichier :",
+                "yes": "Oui",
+                "no": "Non",
+                "noVerified": "Non ou non vérifiée"
+              }
+            },
+            "timeline": {
+              "events": {
+                "creation": {
+                  "label": "Brouillon créé",
+                  "desc": "La soumission a été initialisée et enregistrée en brouillon."
+                },
+                "depot": {
+                  "label": "Dépôt de la soumission",
+                  "desc": "Le dépôt final a été déclenché par l'opérateur."
+                },
+                "reception": {
+                  "label": "Réception et horodatage",
+                  "desc": "La plateforme a confirmé la réception de l'offre."
+                },
+                "eval": {
+                  "label": "Évaluation",
+                  "desc": "La commission poursuit l'évaluation technique et financière."
+                },
+                "retenue": {
+                  "label": "Retenue",
+                  "desc": "L'offre a été retenue par la commission."
+                },
+                "rejetee": {
+                  "label": "Rejetée",
+                  "desc": "L'offre n'a pas été retenue."
+                }
+              }
+            }
+          },
+          "wizard": {
+            "success": {
+              "title": "Soumission déposée avec succès !",
+              "desc1": "Votre offre",
+              "desc2": "a été reçue, horodatée et chiffrée. Un accusé de réception vous sera envoyé par notification.",
+              "serverTime": "Horodatage serveur :",
+              "viewAction": "Voir mes soumissions"
+            },
+            "nav": {
+              "back": "Retour",
+              "continue": "Continuer",
+              "steps": {
+                "step1": "Sélection AO",
+                "step2": "Offre technique",
+                "step3": "Offre financière",
+                "step4": "Caution",
+                "step5": "Récapitulatif"
+              }
+            },
+            "errors": {
+              "noAo": "Sélectionnez un appel d'offres avant de déposer.",
+              "noLot": "Sélectionnez un lot valide pour continuer.",
+              "noTechFile": "Le fichier de l'offre technique est obligatoire.",
+              "noBpu": "Renseignez l'offre financière pour le lot sélectionné.",
+              "incompleteCaution": "Les informations de caution bancaire sont incomplètes.",
+              "submitFailed": "Le dépôt a échoué. Veuillez réessayer."
+            },
+            "header": {
+              "title": "Nouvelle Soumission",
+              "step": "étape",
+              "cancel": "Annuler"
+            },
+            "steps": {
+              "step1": {
+                "title": "Sélection de l'appel d'offres",
+                "subtitle": "Choisissez l'AO auquel vous souhaitez soumissionner, puis sélectionnez les lots concernés.",
+                "searchPlaceholder": "Rechercher un appel d'offres...",
+                "loadingError": "Impossible de charger les appels d'offres.",
+                "notFound": "Aucun appel d'offres trouvé",
+                "selected": "Sélectionné",
+                "limit": "Limite",
+                "selectLot": "Sélectionner le lot concerné",
+                "lot": "Lot",
+                "estimatedAmount": "Montant estimé :"
               },
-              "eval": {
-                "label": "Évaluation",
-                "desc": "La commission poursuit l'évaluation technique et financière."
+              "step3": {
+                "title": "Offre Technique",
+                "subtitle": "Téléversez le dossier technique requis par l'appel d'offres.",
+                "fileLabel": "Dossier technique",
+                "fileDesc": "Un seul fichier PDF contenant l'ensemble de votre offre technique.",
+                "selectFile": "Sélectionner un fichier",
+                "dragFile": "ou glisser-déposer ici",
+                "maxSize": "PDF jusqu'à 50 MB",
+                "replace": "Remplacer le fichier"
               },
-              "retenue": {
-                "label": "Retenue",
-                "desc": "L'offre a été retenue par la commission."
+              "step4": {
+                "title": "Offre Financière (BPU)",
+                "subtitle": "Renseignez les quantités et les prix unitaires pour chaque prestation du lot sélectionné.",
+                "line": "Prestation",
+                "unit": "Unité",
+                "quantity": "Quantité",
+                "unitPrice": "Prix U. HT",
+                "totalHt": "Total HT :",
+                "add": "Ajouter une ligne",
+                "remove": "Supprimer"
               },
-              "rejetee": {
-                "label": "Rejetée",
-                "desc": "L'offre n'a pas été retenue."
+              "step5": {
+                "title": "Caution Bancaire de Soumission",
+                "subtitle": "Saisissez les références de la garantie bancaire et téléversez le scan justificatif.",
+                "reference": "Référence",
+                "bank": "Banque émettrice",
+                "amount": "Montant",
+                "emission": "Date d'émission",
+                "expiry": "Date d'expiration",
+                "scan": "Scan de la caution",
+                "scanDesc": "Format PDF ou Image (max 10MB)",
+                "scanSelect": "Choisir le fichier",
+                "scanReplace": "Remplacer le scan"
+              },
+              "review": {
+                "title": "Vérification et Dépôt",
+                "subtitle": "Veuillez vérifier l'intégralité de vos informations avant de confirmer le dépôt définitif de votre offre.",
+                "alertTitle": "Chiffrement et Scellement",
+                "alertDesc": "Dès validation, votre offre financière sera chiffrée de bout en bout.",
+                "submit": "Confirmer et déposer mon offre"
               }
             }
           }
         },
-        "wizard": {
-          "success": {
-            "title": "Soumission déposée avec succès !",
-            "desc1": "Votre offre",
-            "desc2": "a été reçue, horodatée et chiffrée. Un accusé de réception vous sera envoyé par notification.",
-            "serverTime": "Horodatage serveur :",
-            "viewAction": "Voir mes soumissions"
-          },
-          "nav": {
-            "back": "Retour",
-            "continue": "Continuer",
-            "steps": {
-              "step1": "Sélection AO",
-              "step2": "Offre technique",
-              "step3": "Offre financière",
-              "step4": "Caution",
-              "step5": "Récapitulatif"
-            }
-          },
-          "errors": {
-            "noAo": "Sélectionnez un appel d'offres avant de déposer.",
-            "noLot": "Sélectionnez un lot valide pour continuer.",
-            "noTechFile": "Le fichier de l'offre technique est obligatoire.",
-            "noBpu": "Renseignez l'offre financière pour le lot sélectionné.",
-            "incompleteCaution": "Les informations de caution bancaire sont incomplètes.",
-            "submitFailed": "Le dépôt a échoué. Veuillez réessayer."
-          },
-          "header": {
-            "title": "Nouvelle Soumission",
-            "step": "étape",
-            "cancel": "Annuler"
-          },
-          "steps": {
-            "step1": {
-              "title": "Sélection de l'appel d'offres",
-              "subtitle": "Choisissez l'AO auquel vous souhaitez soumissionner, puis sélectionnez les lots concernés.",
-              "searchPlaceholder": "Rechercher un appel d'offres...",
-              "loadingError": "Impossible de charger les appels d'offres.",
-              "notFound": "Aucun appel d'offres trouvé",
-              "selected": "Sélectionné",
-              "limit": "Limite",
-              "selectLot": "Sélectionner le lot concerné",
-              "lot": "Lot",
-              "estimatedAmount": "Montant estimé :"
-            },
-            "step3": {
-              "title": "Offre Technique",
-              "subtitle": "Téléversez le dossier technique requis par l'appel d'offres.",
-              "fileLabel": "Dossier technique",
-              "fileDesc": "Un seul fichier PDF contenant l'ensemble de votre offre technique.",
-              "selectFile": "Sélectionner un fichier",
-              "dragFile": "ou glisser-déposer ici",
-              "maxSize": "PDF jusqu'à 50 MB",
-              "replace": "Remplacer le fichier"
-            },
-            "step4": {
-              "title": "Offre Financière (BPU)",
-              "subtitle": "Renseignez les quantités et les prix unitaires pour chaque prestation du lot sélectionné.",
-              "line": "Prestation",
-              "unit": "Unité",
-              "quantity": "Quantité",
-              "unitPrice": "Prix U. HT",
-              "totalHt": "Total HT :",
-              "add": "Ajouter une ligne",
-              "remove": "Supprimer"
-            },
-            "step5": {
-              "title": "Caution Bancaire de Soumission",
-              "subtitle": "Saisissez les références de la garantie bancaire et téléversez le scan justificatif.",
-              "reference": "Référence",
-              "bank": "Banque émettrice",
-              "amount": "Montant",
-              "emission": "Date d'émission",
-              "expiry": "Date d'expiration",
-              "scan": "Scan de la caution",
-              "scanDesc": "Format PDF ou Image (max 10MB)",
-              "scanSelect": "Choisir le fichier",
-              "scanReplace": "Remplacer le scan"
-            },
-            "review": {
-              "title": "Vérification et Dépôt",
-              "subtitle": "Veuillez vérifier l'intégralité de vos informations avant de confirmer le dépôt définitif de votre offre.",
-              "alertTitle": "Chiffrement et Scellement",
-              "alertDesc": "Dès validation, votre offre financière sera chiffrée de bout en bout.",
-              "submit": "Confirmer et déposer mon offre"
-            }
-          }
-        }
-      },
         "deadlines": {
           "title": "Échéances Prochaines",
           "fullCalendar": "Calendrier complet"
@@ -1810,6 +1810,49 @@
               "submit": "Déposer le recours définitif",
               "cancel": "Annuler"
             }
+          },
+          "detail": {
+            "notFound": "Recours introuvable",
+            "back": "Retour",
+            "depositedOn": "Déposé le",
+            "info": {
+              "title": "Informations",
+              "reference": "Référence",
+              "ao": "Appel d'offres",
+              "object": "Objet",
+              "winner": "Attributaire provisoire",
+              "amount": "Montant"
+            },
+            "motif": {
+              "title": "Motif du recours",
+              "edit": "Modifier",
+              "cancel": "Annuler",
+              "saving": "Enregistrement...",
+              "save": "Enregistrer"
+            },
+            "documents": {
+              "title": "Pièces jointes",
+              "download": "Télécharger"
+            },
+            "decision": {
+              "accepted": "Accepté",
+              "rejected": "Rejeté",
+              "rendered": "Rendue le"
+            },
+            "timeline": {
+              "title": "Suivi du recours",
+              "depot": "Dépôt",
+              "limite": "Date limite",
+              "decision": "Décision",
+              "pending": "En attente"
+            },
+            "attribution": {
+              "title": "Attribution",
+              "winner": "Attributaire",
+              "amount": "Montant",
+              "date": "Date"
+            },
+            "status": "Statut"
           }
         },
         "support": {
