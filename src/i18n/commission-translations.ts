@@ -93,6 +93,32 @@ export const commissionTranslations = {
       confirmer: "Confirmer",
     },
 
+    // CommissionOuverturePage
+    ouverture: {
+      roleHint: "Simulez votre rôle pour avancer dans le flux",
+      memberButton: "Membre",
+      presidentButton: "Président",
+      pageTitle: "Ouverture des Plis : Offre Financière",
+      pageSubTitle: (reference: string, objet: string) => `${reference} - ${objet}`,
+      infoBanner: "Seules les soumissions ayant passé l'évaluation technique sont listées ici.",
+      cardTitle: "Déchiffrement des Offres Financières",
+      cardDescription: "Le processus requiert la validation des membres de la commission. 3 clés sur 5 sont nécessaires pour déverrouiller les montants.",
+      steps: ["Membre 1", "Membre 2", "Président", "Membre 4", "Membre 5"],
+      unlockButton: "Déverrouiller les Offres",
+      unlocking: "Déverrouillage en cours...",
+      unlocked: "Offres Déverrouillées",
+      waitingPresident: "Vous avez déjà validé. En attente du Président.",
+      waitingMembers: "En attente des validations des membres d'abord.",
+      retainedSubmissionsTitle: "Soumissions Retenues",
+      retainedBadge: "3 offres techniquement qualifiées",
+      tableSoumissionnaire: "Soumissionnaire",
+      tableScoreTechnique: "Score Technique",
+      tableMontantFinancier: "Montant Financier (DZD)",
+      waitingDecryption: "En attente de déchiffrement...",
+      waitingDecryptionDescription: "Les données financières sont masquées pour préserver la confidentialité jusqu'au déblocage par la commission.",
+      proceedToDeliberation: "Procéder à la Délibération",
+    },
+
     // DocumentValidationPage
     document: {
       titre: "Vérification Documentaire",
@@ -204,6 +230,32 @@ export const commissionTranslations = {
       confirmTexte: "هذا الإجراء نهائي ولا يمكن التراجع عنه. سيتم تسجيل القرارات وإخطار المتعاملين. هل تؤكد التحقق؟",
       annuler: "إلغاء",
       confirmer: "تأكيد",
+    },
+
+    // CommissionOuverturePage
+    ouverture: {
+      roleHint: "حاكي دورك للتقدم في التدفق",
+      memberButton: "عضو",
+      presidentButton: "رئيس اللجنة",
+      pageTitle: "فتح الأظرف: العرض المالي",
+      pageSubTitle: (reference: string, objet: string) => `${reference} - ${objet}`,
+      infoBanner: "يتم سرد العروض التي اجتازت التقييم الفني فقط هنا.",
+      cardTitle: "فك تشفير العروض المالية",
+      cardDescription: "يتطلب العملية مصادقة أعضاء اللجنة. 3 مفاتيح من أصل 5 ضرورية لكشف المبالغ.",
+      steps: ["عضو 1", "عضو 2", "الرئيس", "عضو 4", "عضو 5"],
+      unlockButton: "فتح العروض",
+      unlocking: "جاري فتح القفل...",
+      unlocked: "تم فتح العروض",
+      waitingPresident: "لقد قمت بالمصادقة بالفعل. في انتظار الرئيس.",
+      waitingMembers: "في انتظار مصادقات الأعضاء أولاً.",
+      retainedSubmissionsTitle: "العروض المحتفظ بها",
+      retainedBadge: "3 عروض مؤهلة تقنيًا",
+      tableSoumissionnaire: "المقدم",
+      tableScoreTechnique: "النتيجة التقنية",
+      tableMontantFinancier: "المبلغ المالي (دج)",
+      waitingDecryption: "في انتظار فك التشفير...",
+      waitingDecryptionDescription: "يتم إخفاء البيانات المالية لحفظ السرية حتى يتم فتحها من قبل اللجنة.",
+      proceedToDeliberation: "المتابعة إلى المداولة",
     },
 
     // DocumentValidationPage
