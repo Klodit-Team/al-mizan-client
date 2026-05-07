@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { type Locale } from "@/i18n/config";
 import type { getAuthDictionary } from "@/i18n/get-dictionaries";
+import { mapRoleToDashboardUserType } from "@/lib/auth/userType";
 
 const CODE_LENGTH = 6;
 
@@ -71,7 +72,7 @@ export default function VerifyForm({ dict }: VerifyFormProps) {
         setError("");
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/mfa/verify`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/mfa/verify`, {
                 method: "POST",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
@@ -84,11 +85,16 @@ export default function VerifyForm({ dict }: VerifyFormProps) {
             }
 
             const result = await response.json();
+            const effectiveRole = result.role || result.user?.role || result.user?.userType;
+            const resolvedUserType = mapRoleToDashboardUserType(effectiveRole);
+            const routeUserId = result.user?.userId || result.userId || result.id || result.user?.id;
 
-            if (result.role === "admin") {
-                const adminId = result.user?.id || result.userId || result.id || "admin";
+            if (resolvedUserType === "admin") {
+                const adminId = routeUserId || "admin";
                 router.push(`/${locale}/dashboard/admin/${adminId}/tableau-de-bord`);
-            } else if (result.role === "contractant") {
+            } else if (resolvedUserType === "operateur") {
+                router.push(`/${locale}/dashboard/operateur/tableau-de-bord`);
+            } else if (resolvedUserType === "contractant") {
                 router.push(`/${locale}/dashboard/contractant/tableau-de-bord`);
             } else {
                 router.push(`/${locale}/dashboard`);
