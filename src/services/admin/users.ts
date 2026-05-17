@@ -11,29 +11,20 @@ export interface AdminUser {
   is_blacklisted?: boolean;
   blacklist_motif?: string;
 }
-
+const USERS_BASE_PATH = "/api/v1/users";
 export async function getAdminUsers(): Promise<AdminUser[]> {
-  return apiClient<AdminUser[]>("/api/admin/users", {
+  return apiClient<AdminUser[]>(`${USERS_BASE_PATH}/profiles`, {
     method: "GET",
   });
 }
 
 export async function updateAdminUserRole(userId: string, role: string): Promise<void> {
-  await apiClient<void>(`/api/admin/users/${userId}/role`, {
-    method: "PATCH",
+  await apiClient<void>(`${USERS_BASE_PATH}/user-roles/${userId}`, {
+    method: "POST",
     body: JSON.stringify({ role }),
   });
 }
 
-export async function blacklistAdminUser(userId: string, motif: string): Promise<void> {
-  await apiClient<void>(`/api/admin/users/${userId}/blacklist`, {
-    method: "POST",
-    body: JSON.stringify({ motif }),
-  });
-}
 
-export async function removeAdminUserBlacklist(userId: string): Promise<void> {
-  await apiClient<void>(`/api/admin/users/${userId}/blacklist`, {
-    method: "DELETE",
-  });
-}
+
+

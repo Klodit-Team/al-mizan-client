@@ -4,6 +4,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { type Locale } from "@/i18n/config";
 import type { getAuthDictionary } from "@/i18n/get-dictionaries";
 import { mapRoleToDashboardUserType } from "@/lib/auth/userType";
+import { useAdminId } from "@/hooks/useAdminId";
 
 
 const CODE_LENGTH = 6;
@@ -20,6 +21,7 @@ export default function VerifyForm({ dict }: VerifyFormProps) {
     const searchParams = useSearchParams(); 
     const email = searchParams.get("email");
     const locale = (params?.locale as Locale) || "fr";
+    const { setAdminId } = useAdminId();
     const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(""));
     const [timeLeft, setTimeLeft] = useState(119);
     const [isVerifying, setIsVerifying] = useState(false);
@@ -95,8 +97,25 @@ export default function VerifyForm({ dict }: VerifyFormProps) {
                 throw new Error(errorData.message || "Verification failed");
             }
 
-            // 2. Account is activated! Redirect to login so they can establish a session.
-            router.push(`/${locale}/auth/login`);
+
+            const result = await response.json();
+            const effectiveRole = result.role || result.user?.role || result.user?.userType;
+            const resolvedUserType = mapRoleToDashboardUserType(effectiveRole);
+            const routeUserId = result.user?.userId || result.userId || result.id || result.user?.id;
+
+            if (resolvedUserType === "admin") {
+                if (routeUserId) {
+                    setAdminId(routeUserId);
+                }
+                router.push(`/${locale}/dashboard/admin/id/tableau-de-bord`);
+            } else if (resolvedUserType === "operateur") {
+                router.push(`/${locale}/dashboard/operateur/tableau-de-bord`);
+            } else if (resolvedUserType === "contractant") {
+                router.push(`/${locale}/dashboard/contractant/tableau-de-bord`);
+            } else {
+                router.push(`/${locale}/dashboard`);
+            }
+
 
         } catch (error: any) {
             console.error("Verification error:", error);

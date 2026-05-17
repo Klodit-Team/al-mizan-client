@@ -22,8 +22,16 @@ export interface CreateCommissionInput {
   appel_offre_id?: string;
 }
 
+export type UpdateCommissionInput = Partial<CreateCommissionInput>;
+
+export interface ChangeCommissionStatusInput {
+  statut: CommissionStatut;
+}
+
+const COMMISSIONS_MARCHE_BASE_PATH = "/api/v1/commissions-marche";
+
 export async function getAdminCommissions(): Promise<Commission[]> {
-  return apiClient<Commission[]>("/api/admin/commissions", {
+  return apiClient<Commission[]>(`${COMMISSIONS_MARCHE_BASE_PATH}/`, {
     method: "GET",
   });
 }
@@ -31,8 +39,40 @@ export async function getAdminCommissions(): Promise<Commission[]> {
 export async function createAdminCommission(
   payload: CreateCommissionInput,
 ): Promise<Commission> {
-  return apiClient<Commission>("/api/admin/commissions", {
+  return apiClient<Commission>(`${COMMISSIONS_MARCHE_BASE_PATH}/`, {
     method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getAdminCommissionById(id: string): Promise<Commission> {
+  return apiClient<Commission>(`${COMMISSIONS_MARCHE_BASE_PATH}/${id}`, {
+    method: "GET",
+  });
+}
+
+export async function updateAdminCommission(
+  id: string,
+  payload: UpdateCommissionInput,
+): Promise<Commission> {
+  return apiClient<Commission>(`${COMMISSIONS_MARCHE_BASE_PATH}/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteAdminCommission(id: string): Promise<void> {
+  await apiClient<void>(`${COMMISSIONS_MARCHE_BASE_PATH}/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function changeAdminCommissionStatus(
+  id: string,
+  payload: ChangeCommissionStatusInput,
+): Promise<Commission> {
+  return apiClient<Commission>(`${COMMISSIONS_MARCHE_BASE_PATH}/${id}/statut`, {
+    method: "PATCH",
     body: JSON.stringify(payload),
   });
 }

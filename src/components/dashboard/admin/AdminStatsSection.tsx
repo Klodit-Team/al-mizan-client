@@ -1,18 +1,24 @@
 "use client";
 
 import type { getDictionary } from "@/i18n/get-dictionaries";
-import { useAdministratorDashboardStatsQuery } from "@/services/administrator-dashboard/queries";
+import type { AdministratorDashboardStats } from "@/services/administrator-dashboard/api";
 import StatsCards from "./StatsCards";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
 
 interface AdminStatsSectionProps {
   dict: CommonDict["dashboard"]["admin"];
+  stats?: AdministratorDashboardStats;
+  isLoading?: boolean;
+  error?: Error | null;
 }
 
-export default function AdminStatsSection({ dict }: AdminStatsSectionProps) {
-  const { data, isLoading, error } = useAdministratorDashboardStatsQuery();
-
+export default function AdminStatsSection({
+  dict,
+  stats,
+  isLoading = false,
+  error = null,
+}: AdminStatsSectionProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-4 gap-4">
@@ -23,7 +29,7 @@ export default function AdminStatsSection({ dict }: AdminStatsSectionProps) {
     );
   }
 
-  if (error || !data) {
+  if (error || !stats) {
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
         {error?.message || "Impossible de charger les données du tableau de bord."}
@@ -31,5 +37,5 @@ export default function AdminStatsSection({ dict }: AdminStatsSectionProps) {
     );
   }
 
-  return <StatsCards stats={data} dict={dict.stats} />;
+  return <StatsCards stats={stats} dict={dict.stats} />;
 }

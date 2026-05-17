@@ -16,9 +16,9 @@ export interface ResolveIncidentInput {
   statut?: "EMISE" | string;
   resolutionNotes?: string;
 }
-
+const INCIDENTS_BASE_PATH = "/api/v1/audit/incidents";
 export async function getAdminIncidents(): Promise<AIIncident[]> {
-  return apiClient<AIIncident[]>("/audit/incidents", {
+  return apiClient<AIIncident[]>(`${INCIDENTS_BASE_PATH}`, {
     method: "GET",
   });
 }
@@ -27,7 +27,7 @@ export async function resolveAdminIncident(
   incidentId: string,
   payload: ResolveIncidentInput,
 ): Promise<void> {
-  await apiClient<void>(`/audit/incidents/${incidentId}/resolve`, {
+  await apiClient<void>(`${INCIDENTS_BASE_PATH}/${incidentId}/resolve`, {
     method: "PATCH",
     body: JSON.stringify(payload),
   });
