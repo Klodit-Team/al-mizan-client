@@ -17,6 +17,7 @@ export interface AdminProfile {
 
 export async function updateAdminProfile(
   payload: UpdateAdminProfileInput,
+  id: string
 ): Promise<AdminProfile> {
   const formData = new FormData();
 
@@ -34,8 +35,8 @@ export async function updateAdminProfile(
   if (payload.avatar) {
     formData.append("avatar", payload.avatar);
   }
-
-  return apiClient<AdminProfile>("/api/admin/profile", {
+  const Base_URL = "/api/v1/users/profiles";
+  return apiClient<AdminProfile>(`${Base_URL}/${id}`, {
     method: "PATCH",
     body: formData,
   });

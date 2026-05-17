@@ -58,6 +58,7 @@
       "operateurs": "المتعاملون الاقتصاديون",
       "commission": "اللجان",
       "audit": "سجل المراجعة",
+      "sessions": "الاتصالات",
       "incidents": "حوادث الذكاء الاصطناعي"
     },
     "commission": {
@@ -254,10 +255,12 @@
           "niveau": "المستوى",
           "statut": "الحالة",
           "date": "تاريخ التأسيس",
-          "appelOffre": "طلب العروض"
+          "appelOffre": "طلب العروض",
+          "actions": "الإجراءات"
         },
         "modal": {
           "title": "إنشاء لجنة",
+          "editTitle": "تعديل اللجنة",
           "designationLabel": "التسمية",
           "designationPlaceholder": "مثال: اللجنة الوطنية للتقييم...",
           "typeLabel": "نوع اللجنة",
@@ -265,8 +268,16 @@
           "appelOffreLabel": "معرّف طلب العروض (اختياري)",
           "appelOffrePlaceholder": "أدخل المعرّف...",
           "cancel": "إلغاء",
-          "create": "إنشاء اللجنة"
+          "create": "إنشاء اللجنة",
+          "save": "حفظ"
         },
+        "actions": {
+          "edit": "تعديل",
+          "delete": "حذف",
+          "deleting": "جار الحذف..."
+        },
+        "loading": "جار تحميل اللجان...",
+        "error": "تعذر تحميل اللجان.",
         "enums": {
           "type": {
             "EVALUATION": "تقييم",
@@ -409,6 +420,35 @@
           "cancel": "إلغاء",
           "save": "حفظ وحل"
         }
+      },
+      "sessionsPage": {
+        "title": "سجل الاتصالات",
+        "subtitle": "استعرض الجلسات النشطة للكشف عن محاولات الوصول المشبوهة.",
+        "searchPlaceholder": "ابحث حسب IP أو الجهاز أو المستخدم...",
+        "noSessions": "لم يتم العثور على جلسات نشطة",
+        "columns": {
+          "user": "المستخدم",
+          "ip": "عنوان IP",
+          "userAgent": "User agent",
+          "device": "الجهاز",
+          "browser": "المتصفح",
+          "connected": "تاريخ الاتصال",
+          "lastActivity": "آخر نشاط",
+          "actions": "إجراءات"
+        },
+        "actions": {
+          "revoke": "إلغاء",
+          "revoking": "جار الإلغاء...",
+          "confirmRevoke": "هل تريد إلغاء الجلسة القادمة من عنوان IP {{ip}}؟",
+          "revokeError": "تعذر إلغاء الجلسة."
+        },
+        "loading": "جاري تحميل الجلسات...",
+        "error": "تعذر تحميل الجلسات.",
+        "success": "تم إلغاء الجلسة بنجاح.",
+        "unknown": "غير معروف",
+        "notAvailable": "غير متاح",
+        "infoTitle": "الأمان:",
+        "infoText": "يعرض هذا السجل كل الجلسات النشطة. يمكنك إلغاء جلسة لإنهاء اتصال المستخدم. تشير النقطة الخضراء إلى نشاط حديث خلال أقل من 5 دقائق."
       }
     },
     "commission": {

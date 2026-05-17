@@ -4,10 +4,13 @@ import { type User } from "./types";
 import {
   getAdminUsers,
   updateAdminUserRole,
-  blacklistAdminUser,
-  removeAdminUserBlacklist,
+
 } from "@/services/admin/users";
 
+import{
+      blacklistAdminOperateur,
+  unblacklistAdminOperateur,
+}from "@/services/admin/operateurs"
 const dummyUsers: User[] = [
     { id: "1", username: "Karim Bensalem", email: "k.bensalem@btpplus.dz", role: "SERVICE_CONTRACTANT", organisation_id: "3", created_at: "2023-06-20T08:00:00Z", is_active: true },
     { id: "2", username: "Sara Hamdi", email: "s.hamdi@btpplus.dz", role: "OPERATEUR_ECONOMIQUE", organisation_id: "3", created_at: "2023-07-01T10:00:00Z", is_active: true },
@@ -76,7 +79,7 @@ export default function UsersPage({ locale, dict }: UsersPageProps) {
         setUsers(users.map(u => u.id === userId ? { ...u, is_blacklisted: true, blacklist_motif: blacklistModal.motif, is_active: false } : u));
         
         try {
-            await blacklistAdminUser(userId, blacklistModal.motif);
+            await blacklistAdminOperateur(userId, blacklistModal.motif);
         } catch (error) {
             console.error("Error blacklisting user:", error);
             fetchUsers();
@@ -90,7 +93,7 @@ export default function UsersPage({ locale, dict }: UsersPageProps) {
         setUsers(users.map(u => u.id === userId ? { ...u, is_blacklisted: false, blacklist_motif: undefined, is_active: true } : u));
         
         try {
-            await removeAdminUserBlacklist(userId);
+            await unblacklistAdminOperateur(userId);
         } catch (error) {
             console.error("Error removing blacklist:", error);
             fetchUsers();

@@ -18,15 +18,15 @@ export interface AuditLog {
 export interface AuditIntegrityResult {
   valid: boolean;
 }
-
+const AUDIT_BASE_PATH = '/api/v1/audit';
 export async function getAdminAuditLogs(): Promise<AuditLog[]> {
-  return apiClient<AuditLog[]>("/audit/logs", {
+  return apiClient<AuditLog[]>(`${AUDIT_BASE_PATH}/logs`, {
     method: "GET",
   });
 }
 
 export async function verifyAdminAuditIntegrity(): Promise<AuditIntegrityResult> {
-  return apiClient<AuditIntegrityResult>("/audit/integrity", {
+  return apiClient<AuditIntegrityResult>(`${AUDIT_BASE_PATH}/integrity`, {
     method: "GET",
   });
 }

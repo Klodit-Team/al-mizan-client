@@ -37,21 +37,22 @@ export interface AdminOrganisationDetails {
   organisation: AdminOrganisation;
   users: AdminOrganisationUser[];
 }
+const ORGANISATIONS_BASE_PATH = "/api/v1/users/organisations";
 
 export async function getAdminOrganisations(): Promise<AdminOrganisation[]> {
-  return apiClient<AdminOrganisation[]>("/users/organisations", {
+  return apiClient<AdminOrganisation[]>(`${ORGANISATIONS_BASE_PATH}`, {
     method: "GET",
   });
 }
 
 export async function getAdminOrganisationById(orgId: string): Promise<AdminOrganisationDetails> {
-  return apiClient<AdminOrganisationDetails>(`/users/organisations/${orgId}`, {
+  return apiClient<AdminOrganisationDetails>(`${ORGANISATIONS_BASE_PATH}/${orgId}`, {
     method: "GET",
   });
 }
 
 export async function verifyAdminOrganisation(orgId: string): Promise<void> {
-  await apiClient<void>(`/users/organisations/${orgId}/verify`, {
+  await apiClient<void>(`${ORGANISATIONS_BASE_PATH}/${orgId}/verify`, {
     method: "PATCH",
   });
 }

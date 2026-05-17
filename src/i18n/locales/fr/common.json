@@ -58,6 +58,7 @@
       "operateurs": "Operateurs",
       "commission": "Commissions",
       "audit": "Journal d'Audit",
+      "sessions": "Connexions",
       "incidents": "Incidents IA"
     },
     "commission": {
@@ -254,10 +255,12 @@
           "niveau": "Niveau",
           "statut": "Statut",
           "date": "Date de constitution",
-          "appelOffre": "Appel d'offre"
+          "appelOffre": "Appel d'offre",
+          "actions": "Actions"
         },
         "modal": {
           "title": "Créer une commission",
+          "editTitle": "Modifier la commission",
           "designationLabel": "Désignation",
           "designationPlaceholder": "Ex: Commission Nationale d'Évaluation...",
           "typeLabel": "Type de commission",
@@ -265,8 +268,16 @@
           "appelOffreLabel": "ID de l'Appel d'Offre (Optionnel)",
           "appelOffrePlaceholder": "Entrez l'identifiant...",
           "cancel": "Annuler",
-          "create": "Créer la commission"
+          "create": "Créer la commission",
+          "save": "Enregistrer"
         },
+        "actions": {
+          "edit": "Modifier",
+          "delete": "Supprimer",
+          "deleting": "Suppression..."
+        },
+        "loading": "Chargement des commissions...",
+        "error": "Impossible de charger les commissions.",
         "enums": {
           "type": {
             "EVALUATION": "Évaluation",
@@ -409,6 +420,35 @@
           "cancel": "Annuler",
           "save": "Enregistrer et résoudre"
         }
+      },
+      "sessionsPage": {
+        "title": "Historique des Connexions",
+        "subtitle": "Consultez l'historique des connexions actives pour détecter les accès suspects.",
+        "searchPlaceholder": "Rechercher par IP, appareil ou utilisateur...",
+        "noSessions": "Aucune session active trouvée",
+        "columns": {
+          "user": "Utilisateur",
+          "ip": "Adresse IP",
+          "userAgent": "User agent",
+          "device": "Appareil",
+          "browser": "Navigateur",
+          "connected": "Connecté le",
+          "lastActivity": "Dernière activité",
+          "actions": "Actions"
+        },
+        "actions": {
+          "revoke": "Révoquer",
+          "revoking": "Révocation...",
+          "confirmRevoke": "Révoquer la session depuis l'adresse IP {{ip}} ?",
+          "revokeError": "Impossible de révoquer la session."
+        },
+        "loading": "Chargement des sessions...",
+        "error": "Impossible de charger les sessions.",
+        "success": "Session révoquée avec succès.",
+        "unknown": "Inconnu",
+        "notAvailable": "N/A",
+        "infoTitle": "Sécurité:",
+        "infoText": "Cet historique affiche toutes les sessions actives. Vous pouvez révoquer une session pour terminer la connexion utilisateur. Un point vert indique une activité récente (moins de 5 minutes)."
       }
     },
     "commission": {

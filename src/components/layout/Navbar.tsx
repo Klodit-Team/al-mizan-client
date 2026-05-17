@@ -5,6 +5,7 @@ import { useRouter, usePathname, useParams } from "next/navigation";
 import { type Locale } from "@/i18n/config";
 import type { getDictionary } from "@/i18n/get-dictionaries";
 import { logout } from "@/services/auth/api";
+import { useAdminId } from "@/hooks/useAdminId";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
 
@@ -22,9 +23,8 @@ interface NavbarProps {
 export default function Navbar({ isLoggedIn = false, userInitial = "R", userName = "Ahmed Mansour", userCompany = "MANSOUR Administrateur", userRole = "ADMIN", adminId, dict, locale }: NavbarProps) {
     const router = useRouter();
     const pathname = usePathname();
-    const params = useParams<{ adminId?: string | string[] }>();
-    const routeAdminId = Array.isArray(params.adminId) ? params.adminId[0] : params.adminId;
-    const currentAdminId = adminId || routeAdminId || "admin";
+    const { adminId: storedAdminId } = useAdminId();
+    const currentAdminId = adminId || storedAdminId || "id";
 
     const toggleLang = () => {
         const nextLocale = locale === "fr" ? "ar" : "fr";
@@ -80,7 +80,7 @@ export default function Navbar({ isLoggedIn = false, userInitial = "R", userName
                         title="notifications"
                         className="relative text-gray-400 hover:text-white transition-colors" onClick={()=>{
                             if(userRole === "ADMIN"){
-                                router.push(`/${locale}/dashboard/admin/${currentAdminId}/notif`);
+                                router.push(`/${locale}/dashboard/admin/id/notif`);
 
                             }else{
                                 router.push(`/${locale}/dashboard/operateur/notifications`)
@@ -115,7 +115,7 @@ export default function Navbar({ isLoggedIn = false, userInitial = "R", userName
 
                     <div className="flex items-center gap-3 cursor-pointer group" onClick={() => {
                         switch(userRole){
-                            case "ADMIN": router.push(`/${locale}/dashboard/admin/${currentAdminId}/profile`); break;
+                            case "ADMIN": router.push(`/${locale}/dashboard/admin/id/profile`); break;
                             case "OPERATEUR": router.push(`/${locale}/dashboard/operateur/profil`); break;
                             case  "COMMISSION": router.push(`/${locale}/dashboard/commission/profil`); break;
                         }

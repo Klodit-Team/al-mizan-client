@@ -18,21 +18,22 @@ export interface Notification {
   time: string;
   read: boolean;
 }
+const NOTIFICATIONS_BASE_PATH = "/api/v1/notifications";
 
 export async function getAdminNotifications(): Promise<Notification[]> {
-  return apiClient<Notification[]>("/notifications", {
+  return apiClient<Notification[]>(`${NOTIFICATIONS_BASE_PATH}`, {
     method: "GET",
   });
 }
 
 export async function markAdminNotificationRead(id: string): Promise<void> {
-  await apiClient<void>(`/notifications/${id}/lire`, {
+  await apiClient<void>(`${NOTIFICATIONS_BASE_PATH}/${id}/lire`, {
     method: "PATCH",
   });
 }
 
 export async function markAllAdminNotificationsRead(): Promise<void> {
-  await apiClient<void>("/notifications/marquer-toutes-lues", {
+  await apiClient<void>(`${NOTIFICATIONS_BASE_PATH}/marquer-toutes-lues`, {
     method: "PATCH",
   });
 }

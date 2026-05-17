@@ -1,26 +1,17 @@
 "use client";
 import { type Locale } from "@/i18n/config";
+import type { AdministratorAiAlert } from "@/services/administrator-dashboard/api";
 import type { getDictionary } from "@/i18n/get-dictionaries";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
 
-
-interface Alerte {
-    id: string;
-    severity: "high" | "medium" | "low";
-    title: string;
-    description: string;
-    actionLabel?: string;
-    actionHref?: string;
-}
-
 interface AlertesIAProps {
-    alertes?: Alerte[];
+    alertes?: AdministratorAiAlert[];
     dict:CommonDict['dashboard']['admin']['alertesIA'];
     locale:Locale;
 }
 
-const defaultAlertes: Alerte[] = [
+const defaultAlertes: AdministratorAiAlert[] = [
     {
         id: "1",
         severity: "high",
@@ -55,6 +46,18 @@ const severityStyles = {
     },
 };
 
+function resolveHref(locale: Locale, href?: string): string {
+    if (!href || href === "#") {
+        return "#";
+    }
+
+    if (href.startsWith("http") || href.startsWith(`/${locale}`)) {
+        return href;
+    }
+
+    return `/${locale}${href.startsWith("/") ? href : `/${href}`}`;
+}
+
 export default function AlertesIA({ alertes = defaultAlertes,dict,locale }: AlertesIAProps) {
     return (
         <div className="rounded-xl border overflow-hidden" style={{ backgroundColor: "#1e2535", borderColor: "#2a3347" }}>
@@ -83,7 +86,7 @@ export default function AlertesIA({ alertes = defaultAlertes,dict,locale }: Aler
                             </div>
                             <p className="text-xs text-gray-600 leading-snug">{alerte.description}</p>
                             {alerte.actionLabel && (
-                                <a href={alerte.actionHref ?? "#"} className={`text-xs font-semibold mt-2 inline-block ${styles.text} hover:underline`}>
+                                <a href={resolveHref(locale, alerte.actionHref)} className={`text-xs font-semibold mt-2 inline-block ${styles.text} hover:underline`}>
                                     {alerte.actionLabel} →
                                 </a>
                             )}

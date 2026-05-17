@@ -12,3 +12,10 @@ export interface Commission {
     date_constitution: string;
     created_at: string;
 }
+
+export interface CommissionFormData {
+    designation: string;
+    type: CommissionType;
+    niveau: CommissionNiveau;
+    appel_offre_id: string;
+}

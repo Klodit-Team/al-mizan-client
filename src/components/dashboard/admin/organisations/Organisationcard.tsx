@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import { type Organisation } from "./types";
 
 import type { getDictionary } from "@/i18n/get-dictionaries";
@@ -23,8 +22,6 @@ interface OrganisationCardProps {
 }
 
 export default function OrganisationCard({ org, locale, dict }: OrganisationCardProps) {
-    const params = useParams();
-    const adminId = params?.adminId || "admin";
     const typeLabels: Record<string, string> = {
         EPA: dict.types.EPA,
         EPIC: dict.types.EPIC,
@@ -37,7 +34,7 @@ export default function OrganisationCard({ org, locale, dict }: OrganisationCard
     const initials = org.denomination.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 
     return (
-        <Link href={`/${locale}/dashboard/admin/${adminId}/organisations/${org.id}`}>
+        <Link href={`/${locale}/dashboard/admin/id/organisations/${org.id}`}>
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:shadow-md hover:border-green-200 transition-all cursor-pointer group">
                 <div className="flex items-start justify-between mb-4">
                     {/* Avatar + name */}

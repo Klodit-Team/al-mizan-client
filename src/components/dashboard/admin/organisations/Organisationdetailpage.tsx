@@ -56,8 +56,6 @@ interface OrganisationDetailPageProps {
 
 export default function OrganisationDetailPage({ locale, orgId, dict }: OrganisationDetailPageProps) {
     const router = useRouter();
-    const params = useParams();
-    const adminId = params?.adminId || "admin";
     const [org, setOrg] = useState<Organisation>(dummyOrg);
     const [users, setUsers] = useState<User[]>(dummyUsers);
     const [isLoading, setIsLoading] = useState(true);
@@ -83,7 +81,7 @@ export default function OrganisationDetailPage({ locale, orgId, dict }: Organisa
         try {
             // Reject endpoint is not available in the documented list, so keep the current UI behavior until backend provides one.
             await new Promise((r) => setTimeout(r, 800));
-            router.push(`/${locale}/dashboard/admin/${adminId}/organisations`);
+            router.push(`/${locale}/dashboard/admin/id/organisations`);
         } catch (error) {
             console.error("Error rejecting organisation:", error);
         } finally {

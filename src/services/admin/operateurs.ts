@@ -16,22 +16,23 @@ export interface AdminOperateur {
   is_active?: boolean;
   blacklist_motif?: string;
 }
+const OPERATEURS_BASE_PATH = "/api/v1/users/operateurs-economiques";
 
 export async function getAdminOperateurs(): Promise<AdminOperateur[]> {
-  return apiClient<AdminOperateur[]>("/users/operateurs-economiques", {
+  return apiClient<AdminOperateur[]>(`${OPERATEURS_BASE_PATH}`, {
     method: "GET",
   });
 }
 
 export async function blacklistAdminOperateur(userId: string, motif: string): Promise<void> {
-  await apiClient<void>(`/users/operateurs-economiques/${userId}/blacklist`, {
+  await apiClient<void>(`${OPERATEURS_BASE_PATH}/${userId}/blacklist`, {
     method: "PATCH",
     body: JSON.stringify({ motif }),
   });
 }
 
 export async function unblacklistAdminOperateur(userId: string): Promise<void> {
-  await apiClient<void>(`/users/operateurs-economiques/${userId}/unblacklist`, {
+  await apiClient<void>(`${OPERATEURS_BASE_PATH}/${userId}/unblacklist`, {
     method: "PATCH",
   });
 }
