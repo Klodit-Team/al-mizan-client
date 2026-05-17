@@ -15,9 +15,6 @@ export default function middleware(request: NextRequest) {
         );
     }
 
-    const token =
-        request.cookies.get("access_token")?.value ||
-        request.cookies.get("token")?.value;
     const userType = request.cookies.get("user_type")?.value;
     const isProtected = pathname.includes("/dashboard");
 
@@ -34,7 +31,7 @@ export default function middleware(request: NextRequest) {
         const isOperateurPath = pathname.includes("/dashboard/operateur");
 
         if (userType === "admin" && !isAdminPath) {
-            return NextResponse.redirect(new URL(`/${locale}/dashboard/admin/tableau-de-bord`, request.url));
+            return NextResponse.redirect(new URL(`/${locale}/dashboard/admin/id/tableau-de-bord`, request.url));
         }
 
         if (userType === "contractant" && !isContractantPath) {
@@ -52,4 +49,3 @@ export default function middleware(request: NextRequest) {
 export const config = {
     matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.svg|.*\\.gif|.*\\.ico|.*\\.webp).*)'],
 };
-
