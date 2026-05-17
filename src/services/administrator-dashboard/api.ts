@@ -162,3 +162,23 @@ export async function getAdministratorDashboardStats(): Promise<AdministratorDas
   const dashboard = await getAdministratorDashboardData();
   return dashboard.stats;
 }
+
+export async function getAdministratorDashboardActivities(): Promise<AdministratorActivityItem[]> {
+  const dashboard = await getAdministratorDashboardData();
+  return dashboard.activities;
+}
+
+export async function getAdministratorDashboardAiAlerts(): Promise<AdministratorAiAlert[]> {
+  const dashboard = await getAdministratorDashboardData();
+  return dashboard.aiAlerts;
+}
+
+export async function getAdministratorDashboardDeadlines(): Promise<AdministratorDeadlineItem[]> {
+  const dashboard = await getAdministratorDashboardData();
+  return dashboard.deadlines;
+}
+
+export async function getAdministratorDashboardSupportLinks(): Promise<AdministratorSupportLink[]> {
+  const dashboard = await getAdministratorDashboardData();
+  return dashboard.supportLinks;
+}
