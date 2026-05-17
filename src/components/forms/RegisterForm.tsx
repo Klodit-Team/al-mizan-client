@@ -151,6 +151,7 @@ export default function RegisterForm({ dict, initialRole }: RegisterFormProps) {
         setApiError(null);
 
         try {
+            // 1. Create the user in the database
             const result = await registerMutation.mutateAsync({
                 email: data.email,
                 password: data.password,
@@ -172,18 +173,24 @@ export default function RegisterForm({ dict, initialRole }: RegisterFormProps) {
                         secteur_activite: data.sectorActivity,
                         ordonnateur: data.ordonnateur,
                     }
-                    : {
-
-                    }),
+                    : {}),
             });
 
-            router.push(`/${locale}/auth/register/success?id=${encodeURIComponent(result.user_id)}`);
+            // 2. Trigger the OTP Email
+            await fetch('/api/v1/auth/otp/send', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: data.email }),
+            });
+
+            // 3. Redirect to the Verify page, passing the email in the URL
+            router.push(`/${locale}/auth/verify?email=${encodeURIComponent(data.email)}`);
+            
         } catch (error) {
             if (error instanceof ApiClientError) {
                 setApiError(error.message);
                 return;
             }
-
             setApiError("Registration failed. Please try again.");
         }
     };
