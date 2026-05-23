@@ -9,9 +9,6 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  experimental: {
-    missingSuspenseWithCsrBailout: false,
-  },
   // Trick the browser: Proxy API calls directly to the Docker container!
   async rewrites() {
     return[
