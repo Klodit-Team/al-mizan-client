@@ -170,10 +170,8 @@ export default function RegisterForm({ dict, initialRole }: RegisterFormProps) {
                 type: data.organisationType,
                 ...(registrationRole === "SERVICE_CONTRACTANT"
                     ? {
-                        code_service: data.nif,
                         secteur_activite: data.sectorActivity,
                         ordonnateur: data.ordonnateur,
-                        code_service: "SVC-MOCK-001",
                     }
                     : {}),
             });
