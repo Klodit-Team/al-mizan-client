@@ -150,10 +150,10 @@ export default function MarchesTable({
                 <TableCell className="whitespace-nowrap px-4 py-3 text-xs font-semibold text-[#4CAF50]">
                   {row.reference}
                 </TableCell>
-                <TableCell className="max-w-65 px-4 py-3 text-xs text-slate-700">
+                <TableCell className="max-w-[16.25rem] px-4 py-3 text-xs text-slate-700">
                   {row.object}
                 </TableCell>
-                <TableCell className="max-w-55 px-4 py-3 text-xs text-slate-700">
+                <TableCell className="max-w-[13.75rem] px-4 py-3 text-xs text-slate-700">
                   {row.economicOperatorName}
                 </TableCell>
                 <TableCell className="whitespace-nowrap px-4 py-3 text-xs text-slate-700">

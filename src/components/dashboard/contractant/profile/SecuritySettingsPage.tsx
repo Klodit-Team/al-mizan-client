@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   CheckCircle2,
   Monitor,
-  Shield,
   Smartphone,
   Trash2,
   XCircle,
@@ -21,13 +20,13 @@ import {
   type ServiceContractantSecurityOverview,
 } from "@/services/contractantSecurity";
 
-function formatDateTime(value: string) {
+function formatDateTime(value: string, locale: string) {
   const parsedDate = new Date(value);
   if (Number.isNaN(parsedDate.getTime())) {
     return value;
   }
 
-  return new Intl.DateTimeFormat("fr-FR", {
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-FR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -343,7 +342,7 @@ export default function SecuritySettingsPage({
                 </p>
                 <p className="mt-0.5 text-slate-500">IP: {session.ip}</p>
                 <p className="text-slate-400">
-                  {formatDateTime(session.createdAt)}
+                  {formatDateTime(session.createdAt, locale)}
                 </p>
                 {session.isCurrent && (
                   <span className="mt-1 inline-flex rounded-full border border-emerald-200 bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">

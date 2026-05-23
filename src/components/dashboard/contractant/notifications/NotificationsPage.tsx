@@ -30,13 +30,13 @@ const CATEGORY_STYLES: Record<
   ia: { bg: "bg-violet-100", text: "text-violet-700" },
 };
 
-function formatDate(value: string) {
+function formatDate(value: string, locale: string) {
   const parsedDate = new Date(value);
   if (Number.isNaN(parsedDate.getTime())) {
     return value;
   }
 
-  return new Intl.DateTimeFormat("fr-FR", {
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-FR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -45,7 +45,7 @@ function formatDate(value: string) {
   }).format(parsedDate);
 }
 
-export default function NotificationsPage() {
+export default function NotificationsPage({ locale }: { locale: string }) {
   const [items, setItems] = useState<ServiceContractantNotificationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isBusy, setIsBusy] = useState(false);
@@ -243,7 +243,7 @@ export default function NotificationsPage() {
                         {CATEGORY_LABELS[item.category]}
                       </span>
                       <span className="text-[10px] text-slate-400">
-                        {formatDate(item.sentAt)}
+                        {formatDate(item.sentAt, locale)}
                       </span>
                       <span
                         className={`inline-flex rounded-full border px-2 py-px text-[10px] font-semibold ${

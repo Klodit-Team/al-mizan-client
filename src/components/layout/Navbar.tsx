@@ -53,7 +53,7 @@ export default function Navbar({
 
   const profileHref =
     userRole === "ADMIN"
-      ? `/${locale}/dashboard/admin/tableau-de-bord`
+      ? `/${locale}/dashboard/admin/profile`
       : userRole === "CONTRACTANT"
         ? `/${locale}/dashboard/contractant/profil`
         : `/${locale}/dashboard/operateur/profil`;

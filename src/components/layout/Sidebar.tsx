@@ -246,7 +246,7 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
   // ── Settings href ──────────────────────────────────────────────────────────
   const settingsHref =
     role === "admin"
-      ? `/${locale}/dashboard/settings`
+      ? `/${locale}/dashboard/admin/profile`
       : role === "contractant"
         ? `/${locale}/dashboard/contractant/profil`
         : `/${locale}/dashboard/operateur/profil`;
