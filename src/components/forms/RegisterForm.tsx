@@ -172,6 +172,7 @@ export default function RegisterForm({ dict, initialRole }: RegisterFormProps) {
                     ? {
                         secteur_activite: data.sectorActivity,
                         ordonnateur: data.ordonnateur,
+                        code_service: "SVC-MOCK-001",
                     }
                     : {}),
             });
