@@ -9,6 +9,7 @@ import { loginSchema, type LoginFormData } from "@/lib/validations/loginSchema";
 import { useLoginMutation } from "@/services/auth/queries";
 import { ApiClientError } from "@/services/client";
 import { getCurrentUser } from "@/services/auth/api";
+import { useAdminId } from "@/hooks/useAdminId";
 import {
     getDashboardHomePath,
     mapRoleToDashboardUserType,
@@ -23,6 +24,19 @@ interface LoginFormProps {
     dict: AuthDict["login"];
 }
 
+function setUserTypeCookie(userType: DashboardUserType | null) {
+    if (typeof document === "undefined") {
+        return;
+    }
+
+    if (!userType) {
+        document.cookie = "user_type=; Path=/; Max-Age=0; SameSite=Lax";
+        return;
+    }
+
+    document.cookie = `user_type=${userType}; Path=/; Max-Age=604800; SameSite=Lax`;
+}
+
 export default function LoginForm({ dict }: LoginFormProps) {
     const params = useParams();
     const locale = (params?.locale as Locale) || "fr";
@@ -31,6 +45,7 @@ export default function LoginForm({ dict }: LoginFormProps) {
     const [attempCount, setAttempCount] = useState(0);
     const [apiError, setApiError] = useState<string | null>(null);
     const loginMutation = useLoginMutation();
+    const { setAdminId } = useAdminId();
     const {
         register,
         handleSubmit,
@@ -47,33 +62,45 @@ export default function LoginForm({ dict }: LoginFormProps) {
                 password: data.password,
             });
 
+            console.log("Bruh I am here in the login form onSubmit function after successful login API call.");
+
+            console.log("Login API Response:", loginResponse);
+
             let userType: DashboardUserType | null =
                 mapRoleToDashboardUserType(loginResponse.userType) ||
                 mapRoleToDashboardUserType(loginResponse.role) ||
                 mapRoleToDashboardUserType(loginResponse.user?.userType) ||
                 mapRoleToDashboardUserType(loginResponse.user?.role);
 
-            if (!userType) {
+            let userId = loginResponse.userId || loginResponse.user?.userId;
+
+            if (!userType || !userId) {
                 try {
                     const meResponse = await getCurrentUser();
                     userType =
+                        userType ||
                         mapRoleToDashboardUserType(meResponse.user?.userType) ||
                         mapRoleToDashboardUserType(meResponse.user?.role);
+                    userId = userId || meResponse.user?.userId;
                 } catch {
                     // Ignore role resolution failure and handle below.
                 }
             }
 
             if (!userType) {
-                document.cookie = "user_type=; Path=/; Max-Age=0; SameSite=Lax";
+                setUserTypeCookie(null);
                 setApiError("Unable to resolve your account role. Please try again.");
                 return;
             }
 
             const resolvedUserType: DashboardUserType = userType;
-            document.cookie = `user_type=${resolvedUserType}; Path=/; Max-Age=604800; SameSite=Lax`;
+            setUserTypeCookie(resolvedUserType);
 
-            router.push(getDashboardHomePath(locale, resolvedUserType));
+            if (resolvedUserType === "admin" && userId) {
+                setAdminId(userId);
+            }
+
+            router.push(getDashboardHomePath(locale, resolvedUserType, userId));
             return;
         } catch (error) {
             if (error instanceof ApiClientError) {

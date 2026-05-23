@@ -34,7 +34,7 @@ export default function OrganisationCard({ org, locale, dict }: OrganisationCard
     const initials = org.denomination.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 
     return (
-        <Link href={`/${locale}/dashboard/admin/organisations/${org.id}`}>
+        <Link href={`/${locale}/dashboard/admin/id/organisations/${org.id}`}>
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:shadow-md hover:border-green-200 transition-all cursor-pointer group">
                 <div className="flex items-start justify-between mb-4">
                     {/* Avatar + name */}
@@ -65,7 +65,7 @@ export default function OrganisationCard({ org, locale, dict }: OrganisationCard
                         <svg className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                         </svg>
-                        {org.telephone}
+                        {org.telephone || "-"}
                     </div>
                     <div className="flex items-center gap-2 text-xs text-gray-500">
                         <svg className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

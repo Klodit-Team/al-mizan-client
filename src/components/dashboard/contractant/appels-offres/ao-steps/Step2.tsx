@@ -6,74 +6,23 @@ export default function Step2({ props }: { props: WizardStepProps }) {
   const {
     dict,
     stepTitles,
-    getSwitchThumbClass,
-    form,
-    updateField,
-    errors,
+    
     lots,
-    setLots,
+   
     lotForm,
-    setLotForm,
+   
     showLotForm,
-    setShowLotForm,
+   
     editingLotId,
-    setEditingLotId,
+   
     saveLot,
-    editLot,
+ 
     deleteLot,
     lotErrors,
-    cdcForm,
-    setCdcForm,
-    updateCdcField,
-    cdcFile,
-    handleCdcFileChange,
-    existingCdcFileName,
-    setExistingCdcFileName,
-    triggerCdcFileInput,
-    removeCdcFile,
-    cdcErrors,
-    criteria,
-    setCriteria,
-    showCriterionForm,
-    setShowCriterionForm,
-    criterionForm,
-    setCriterionForm,
-    editingCriterionId,
-    setEditingCriterionId,
-    saveCriterion,
-    editCriterion,
-    deleteCriterion,
-    moveCriterionUp,
-    moveCriterionDown,
-    criterionErrors,
-    evaluationCriteria,
-    setEvaluationCriteria,
-    showEvaluationForm,
-    setShowEvaluationForm,
-    evaluationForm,
-    setEvaluationForm,
-    editingEvaluationId,
-    setEditingEvaluationId,
-    evaluationTab,
-    setEvaluationTab,
-    evaluationErrors,
-    saveEvaluationCriterion,
-    editEvaluationCriterion,
-    deleteEvaluationCriterion,
-    moveEvaluationCriterionUp,
-    moveEvaluationCriterionDown,
-    evaluationStepError,
+    
     goBack,
     goNextAfterValidation,
-    isSubmittingAction,
-    saveReviewDraft,
-    reviewActionError,
-    reviewActionMessage,
-    generatedAvisRef,
-    step,
-    isRtl,
-    fileInputRef,
-    setEvaluationStepError,
+   
     openCreateLotForm,
     openEditLotForm,
     updateLotField,
@@ -89,10 +38,10 @@ export default function Step2({ props }: { props: WizardStepProps }) {
       <div className="flex flex-col gap-3 border-b border-slate-100 pb-3 md:flex-row md:items-start md:justify-between">
         <div>
           <h3 className="text-lg font-semibold text-slate-900">
-            Liste des Lots
+            {dict.step2.title}
           </h3>
           <p className="text-xs text-slate-500">
-            Gerez les divisions de votre appel d&apos;offres
+            {dict.step2.subtitle}
           </p>
         </div>
         <button
@@ -101,26 +50,26 @@ export default function Step2({ props }: { props: WizardStepProps }) {
           className="inline-flex h-9 items-center justify-center gap-1 rounded-md bg-[#4CAF50] px-3 text-xs font-semibold text-white hover:opacity-95"
         >
           <Plus className="h-3.5 w-3.5" />
-          Ajouter un Lot
+          {dict.step2.addLotBtn}
         </button>
       </div>
       <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[780px] border-collapse">
           <thead>
             <tr className="border-b border-slate-200 text-left text-[11px] font-semibold text-slate-500">
-              <th className="px-2 py-2">N°</th>
-              <th className="px-2 py-2">Designation</th>
-              <th className="px-2 py-2">Description</th>
-              <th className="px-2 py-2">Montant Estime</th>
-              <th className="px-2 py-2">Delai (jours)</th>
-              <th className="px-2 py-2 text-right">Actions</th>
+              <th className="px-2 py-2">{dict.step2.columns.number}</th>
+              <th className="px-2 py-2">{dict.step2.columns.designation}</th>
+              <th className="px-2 py-2">{dict.step2.columns.description}</th>
+              <th className="px-2 py-2">{dict.step2.columns.estimatedAmount}</th>
+              <th className="px-2 py-2">{dict.step2.columns.delay}</th>
+              <th className="px-2 py-2 text-right">{dict.step2.columns.actions}</th>
             </tr>
           </thead>
           <tbody>
             {lots.length === 0 ? (
               <tr className="text-xs text-slate-500">
                 <td colSpan={6} className="px-2 py-6 text-center">
-                  Aucun lot ajoute pour le moment.
+                  {dict.step2.emptyMessage}
                 </td>
               </tr>
             ) : (
@@ -138,9 +87,9 @@ export default function Step2({ props }: { props: WizardStepProps }) {
                   </td>
                   <td className="px-2 py-3">
                     <span className="font-medium">{lot.estimatedAmount}</span>
-                    <span className="ml-1 text-slate-500">DA</span>
+                    <span className="ml-1 text-slate-500">{dict.currency}</span>
                   </td>
-                  <td className="px-2 py-3">{lot.delayDays} jours</td>
+                  <td className="px-2 py-3">{lot.delayDays} {dict.step2.daysUnit}</td>
                   <td className="px-2 py-3">
                     <div className="flex items-center justify-end gap-2">
                       <button
@@ -170,12 +119,12 @@ export default function Step2({ props }: { props: WizardStepProps }) {
       {showLotForm && (
         <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
           <h3 className="mb-3 text-sm font-semibold text-slate-800">
-            {editingLotId ? "Modifier le Lot" : "Details du Nouveau Lot"}
+            {editingLotId ? dict.step2.editLotTitle : dict.step2.newLotTitle}
           </h3>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
             <div>
               <label className="mb-1 block text-[11px] font-semibold text-slate-600">
-                Numero du Lot
+                {dict.step2.lotNumberLabel}
               </label>
               <input
                 value={lotForm.lotNumber}
@@ -188,14 +137,14 @@ export default function Step2({ props }: { props: WizardStepProps }) {
             </div>
             <div className="md:col-span-2">
               <label className="mb-1 block text-[11px] font-semibold text-slate-600">
-                Designation
+                {dict.step2.designationLabel}
               </label>
               <input
                 value={lotForm.designation}
                 onChange={(event) =>
                   updateLotField("designation", event.target.value)
                 }
-                placeholder="Titre du lot"
+                placeholder={dict.step2.designationPlaceholder}
                 className={cn(
                   "h-9 w-full rounded-md border px-3 text-xs outline-none focus:border-[#4CAF50]",
                   lotErrors.designation
@@ -211,14 +160,14 @@ export default function Step2({ props }: { props: WizardStepProps }) {
             </div>
             <div>
               <label className="mb-1 block text-[11px] font-semibold text-slate-600">
-                Delai (jours)
+                {dict.step2.delayLabel}
               </label>
               <input
                 value={lotForm.delayDays}
                 onChange={(event) =>
                   updateLotField("delayDays", event.target.value)
                 }
-                placeholder="ex: 30"
+                placeholder={dict.step2.delayPlaceholder}
                 className={cn(
                   "h-9 w-full rounded-md border px-3 text-xs outline-none focus:border-[#4CAF50]",
                   lotErrors.delayDays
@@ -234,14 +183,14 @@ export default function Step2({ props }: { props: WizardStepProps }) {
             </div>
             <div className="md:col-span-3">
               <label className="mb-1 block text-[11px] font-semibold text-slate-600">
-                Description detaillee
+                {dict.step2.descriptionLabel}
               </label>
               <input
                 value={lotForm.description}
                 onChange={(event) =>
                   updateLotField("description", event.target.value)
                 }
-                placeholder="Decrivez les travaux specifiques..."
+                placeholder={dict.step2.descriptionPlaceholder}
                 className={cn(
                   "h-9 w-full rounded-md border px-3 text-xs outline-none focus:border-[#4CAF50]",
                   lotErrors.description
@@ -257,7 +206,7 @@ export default function Step2({ props }: { props: WizardStepProps }) {
             </div>
             <div>
               <label className="mb-1 block text-[11px] font-semibold text-slate-600">
-                Montant Estime (DA)
+                {dict.step2.estimatedAmountLabel}
               </label>
               <input
                 value={lotForm.estimatedAmount}
@@ -285,14 +234,14 @@ export default function Step2({ props }: { props: WizardStepProps }) {
               onClick={cancelLotEdit}
               className="inline-flex h-9 items-center justify-center rounded-md border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100"
             >
-              Annuler
+              {dict.buttons.cancel}
             </button>
             <button
               type="button"
               onClick={saveLot}
               className="inline-flex h-9 items-center justify-center rounded-md bg-[#4CAF50] px-3 text-xs font-semibold text-white hover:opacity-95"
             >
-              Enregistrer le Lot
+              {dict.step2.saveLotBtn}
             </button>
           </div>
         </div>

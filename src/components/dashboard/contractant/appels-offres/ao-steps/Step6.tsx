@@ -95,34 +95,34 @@ export default function Step6({ props }: { props: WizardStepProps }) {
                 onClick={() => setStep(1)}
                 className="text-[11px] font-semibold text-[#2F9E44] hover:underline"
               >
-                Modifier
+                {dict.buttons.edit || "Modifier"}
               </button>
             </div>
             <dl className="grid grid-cols-1 gap-y-2 px-3 py-3 text-xs md:grid-cols-2 md:gap-x-4">
               <div className="flex items-center justify-between gap-2">
-                <dt className="text-slate-500">AO Name</dt>
+                <dt className="text-slate-500">{dict.step6.reviewLabels.aoName}</dt>
                 <dd className="font-semibold text-slate-800">
                   {form.object || "-"}
                 </dd>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <dt className="text-slate-500">Category</dt>
+                <dt className="text-slate-500">{dict.step6.reviewLabels.category}</dt>
                 <dd className="font-semibold text-slate-800 capitalize">
                   {form.marketType || "-"}
                 </dd>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <dt className="text-slate-500">Duration</dt>
+                <dt className="text-slate-500">{dict.step6.reviewLabels.duration}</dt>
                 <dd className="font-semibold text-slate-800">
                   {form.executionDelayDays
-                    ? `${form.executionDelayDays} jours`
+                    ? `${form.executionDelayDays} ${dict.step2.daysUnit}`
                     : "-"}
                 </dd>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <dt className="text-slate-500">Estimated Value</dt>
+                <dt className="text-slate-500">{dict.step6.reviewLabels.estimatedValue}</dt>
                 <dd className="font-semibold text-slate-800">
-                  {form.estimatedAmount ? `${form.estimatedAmount} DZD` : "-"}
+                  {form.estimatedAmount ? `${form.estimatedAmount} ${dict.currency}` : "-"}
                 </dd>
               </div>
             </dl>
@@ -132,14 +132,14 @@ export default function Step6({ props }: { props: WizardStepProps }) {
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-sm font-semibold text-slate-800">
-              Lots et specifications
+              {dict.step6.lotsTitle}
             </p>
             <button
               type="button"
               onClick={() => setStep(2)}
               className="text-[11px] font-semibold text-[#2F9E44] hover:underline"
             >
-              Modifier
+              {dict.buttons.edit || "Modifier"}
             </button>
           </div>
 
@@ -147,16 +147,16 @@ export default function Step6({ props }: { props: WizardStepProps }) {
             <table className="w-full min-w-140 border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 text-left text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                  <th className="px-2 py-2">Lot ID</th>
-                  <th className="px-2 py-2">Description</th>
-                  <th className="px-2 py-2">Quantity/Delay</th>
+                  <th className="px-2 py-2">{dict.step6.lotsColumns.lotId}</th>
+                  <th className="px-2 py-2">{dict.step6.lotsColumns.description}</th>
+                  <th className="px-2 py-2">{dict.step6.lotsColumns.quantityDelay}</th>
                 </tr>
               </thead>
               <tbody>
                 {reviewLots.length === 0 ? (
                   <tr className="text-xs text-slate-500">
                     <td colSpan={3} className="px-2 py-5 text-center">
-                      Aucun lot ajoute.
+                      {dict.step6.lotsEmpty}
                     </td>
                   </tr>
                 ) : (
@@ -169,7 +169,7 @@ export default function Step6({ props }: { props: WizardStepProps }) {
                         LOT-{lot.lotNumber}
                       </td>
                       <td className="px-2 py-2">{lot.designation}</td>
-                      <td className="px-2 py-2">{lot.delayDays} jours</td>
+                      <td className="px-2 py-2">{lot.delayDays} {dict.step2.daysUnit}</td>
                     </tr>
                   ))
                 )}
@@ -181,21 +181,21 @@ export default function Step6({ props }: { props: WizardStepProps }) {
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-sm font-semibold text-slate-800">
-              Criteres de notation
+              {dict.step6.scoringTitle}
             </p>
             <button
               type="button"
               onClick={() => setStep(5)}
               className="text-[11px] font-semibold text-[#2F9E44] hover:underline"
             >
-              Modifier
+              {dict.buttons.edit || "Modifier"}
             </button>
           </div>
 
           <div className="space-y-2">
             {reviewScoringSummary.length === 0 ? (
               <p className="text-xs text-slate-500">
-                Aucun critere d&apos;evaluation.
+                {dict.step6.scoringEmpty}
               </p>
             ) : (
               reviewScoringSummary.map((item) => (
@@ -220,7 +220,7 @@ export default function Step6({ props }: { props: WizardStepProps }) {
 
             <div className="mt-3 flex items-center justify-between rounded-md border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs">
               <span className="font-semibold text-slate-700">
-                Ponderation totale
+                {dict.step6.totalWeighting}
               </span>
               <span className="font-bold text-[#2F9E44]">
                 {(Math.round(totalEvaluationWeight * 100) / 100).toFixed(2)}%
@@ -231,10 +231,10 @@ export default function Step6({ props }: { props: WizardStepProps }) {
           <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
             <div className="mb-1 flex items-center justify-between text-[11px]">
               <span className="font-semibold text-slate-700">
-                Regles d&apos;eligibilite
+                {dict.step6.eligibilityTitle}
               </span>
               <span className="text-slate-600">
-                {reviewEligibilityCriteria.length} criteres
+                {reviewEligibilityCriteria.length} {dict.step6.eligibilityCriteria}
               </span>
             </div>
             <p className="text-[11px] text-slate-500">
@@ -242,7 +242,7 @@ export default function Step6({ props }: { props: WizardStepProps }) {
                 reviewEligibilityCriteria.filter((item) => item.eliminatory)
                   .length
               }{" "}
-              regles eliminatoires actives.
+              {dict.step6.eliminatoryRules}
             </p>
           </div>
         </div>
@@ -265,10 +265,10 @@ export default function Step6({ props }: { props: WizardStepProps }) {
               />
               <div>
                 <p className="font-semibold text-slate-700">
-                  Informations generales
+                  {dict.step6.checks.generalInfoTitle}
                 </p>
                 <p className="text-slate-500">
-                  Tous les champs obligatoires sont renseignes.
+                  {dict.step6.checks.generalInfoDesc}
                 </p>
               </div>
             </li>
@@ -282,8 +282,8 @@ export default function Step6({ props }: { props: WizardStepProps }) {
                 )}
               />
               <div>
-                <p className="font-semibold text-slate-700">Lots configures</p>
-                <p className="text-slate-500">Au moins un lot est requis.</p>
+                <p className="font-semibold text-slate-700">{dict.step6.checks.lotsTitle}</p>
+                <p className="text-slate-500">{dict.step6.checks.lotsDesc}</p>
               </div>
             </li>
             <li className="flex items-start gap-2">
@@ -296,9 +296,9 @@ export default function Step6({ props }: { props: WizardStepProps }) {
                 )}
               />
               <div>
-                <p className="font-semibold text-slate-700">CDC Uploaded</p>
+                <p className="font-semibold text-slate-700">{dict.step6.checks.cdcTitle}</p>
                 <p className="text-slate-500">
-                  Le document des specifications est present.
+                  {dict.step6.checks.cdcDesc}
                 </p>
               </div>
             </li>
@@ -313,10 +313,10 @@ export default function Step6({ props }: { props: WizardStepProps }) {
               />
               <div>
                 <p className="font-semibold text-slate-700">
-                  Calcul de ponderation
+                  {dict.step6.checks.weightTitle}
                 </p>
                 <p className="text-slate-500">
-                  La somme des criteres doit etre egale a 100%.
+                  {dict.step6.checks.weightDesc}
                 </p>
               </div>
             </li>
@@ -331,10 +331,10 @@ export default function Step6({ props }: { props: WizardStepProps }) {
               />
               <div>
                 <p className="font-semibold text-slate-700">
-                  Coherence des dates
+                  {dict.step6.checks.datesTitle}
                 </p>
                 <p className="text-slate-500">
-                  Les dates suivent un ordre chronologique logique.
+                  {dict.step6.checks.datesDesc}
                 </p>
               </div>
             </li>
@@ -349,10 +349,10 @@ export default function Step6({ props }: { props: WizardStepProps }) {
               />
               <div>
                 <p className="font-semibold text-slate-700">
-                  Criteres d&apos;eligibilite
+                  {dict.step6.checks.eligibilityTitle}
                 </p>
                 <p className="text-slate-500">
-                  Au moins un critere d&apos;eligibilite est requis.
+                  {dict.step6.checks.eligibilityDesc}
                 </p>
               </div>
             </li>
@@ -361,7 +361,7 @@ export default function Step6({ props }: { props: WizardStepProps }) {
 
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <p className="mb-2 text-sm font-semibold text-slate-800">
-            Document CDC
+            {dict.step6.cdcDocTitle}
           </p>
           {cdcFile || existingCdcFileName ? (
             <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
@@ -371,7 +371,7 @@ export default function Step6({ props }: { props: WizardStepProps }) {
               <p className="text-[11px] text-slate-500">
                 {cdcFile
                   ? formatFileSize(cdcFile.size)
-                  : "Fichier deja enregistre"}
+                  : dict.step3.fileAlreadySaved}
               </p>
               {cdcFile && (
                 <button
@@ -385,10 +385,10 @@ export default function Step6({ props }: { props: WizardStepProps }) {
               )}
             </div>
           ) : (
-            <p className="text-xs text-slate-500">Aucun fichier CDC.</p>
+            <p className="text-xs text-slate-500">{dict.step6.cdcNoFile}</p>
           )}
           <div className="mt-2 text-[11px] text-slate-500">
-            Version:{" "}
+            {dict.step6.versionLabel}
             <span className="font-semibold text-slate-700">
               {cdcForm.version || "-"}
             </span>
@@ -424,7 +424,7 @@ export default function Step6({ props }: { props: WizardStepProps }) {
 
           {generatedAvisRef && (
             <p className="mt-3 rounded-md border border-emerald-100 bg-emerald-50 px-3 py-2 text-[11px] font-semibold text-emerald-700">
-              Avis genere: {generatedAvisRef}
+              {dict.step6.avisGenerated}: {generatedAvisRef}
             </p>
           )}
         </div>

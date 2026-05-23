@@ -1,27 +1,19 @@
 "use client";
 import Link from "next/link";
 import { type Locale } from "@/i18n/config";
+import type { AdministratorActivityItem } from "@/services/administrator-dashboard/api";
 
 import type { getDictionary } from "@/i18n/get-dictionaries";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
 
-
-interface Activity {
-    id: string;
-    type: "update" | "submission" | "recours" | "pv" | "marche";
-    title: string;
-    description: string;
-    time: string;
-}
-
 interface ActiviteRecenteProps {
     locale: Locale;
     dict:CommonDict['dashboard']['admin']['activiteRecente'];
-    activities?: Activity[];
+    activities?: AdministratorActivityItem[];
 }
 
-const defaultActivities: Activity[] = [
+const defaultActivities: AdministratorActivityItem[] = [
     {
         id: "1",
         type: "update",
@@ -97,13 +89,13 @@ const iconMap = {
     ),
 };
 
-export default function ActiviteRecente({ locale, activities = defaultActivities }: ActiviteRecenteProps) {
+export default function ActiviteRecente({ locale, dict, activities = defaultActivities }: ActiviteRecenteProps) {
     return (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                <h2 className="text-sm font-bold text-gray-800">Activité Récente</h2>
-                <Link href={`/${locale}/dashboard/contractant/activity`} className="text-xs font-semibold text-green-500 hover:text-green-600 transition-colors">
-                    VOIR TOUT
+                <h2 className="text-sm font-bold text-gray-800">{dict.title}</h2>
+                <Link href={`/${locale}/dashboard/admin/id/journal-audit`} className="text-xs font-semibold text-green-500 hover:text-green-600 transition-colors">
+                    {dict.voirTout}
                 </Link>
             </div>
             <div className="divide-y divide-gray-50">

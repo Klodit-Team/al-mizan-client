@@ -1,8 +1,11 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { type Locale } from "@/i18n/config";
 import type { getAuthDictionary } from "@/i18n/get-dictionaries";
+import { mapRoleToDashboardUserType } from "@/lib/auth/userType";
+import { useAdminId } from "@/hooks/useAdminId";
+
 
 const CODE_LENGTH = 6;
 
@@ -15,9 +18,12 @@ interface VerifyFormProps {
 export default function VerifyForm({ dict }: VerifyFormProps) {
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams(); 
+    const email = searchParams.get("email");
     const locale = (params?.locale as Locale) || "fr";
+    const { setAdminId } = useAdminId();
     const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(""));
-    const [timeLeft, setTimeLeft] = useState(119); 
+    const [timeLeft, setTimeLeft] = useState(119);
     const [isVerifying, setIsVerifying] = useState(false);
     const [error, setError] = useState("");
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -63,38 +69,57 @@ export default function VerifyForm({ dict }: VerifyFormProps) {
 
     const handleVerify = async () => {
         const fullCode = code.join("");
+        
         if (fullCode.length < CODE_LENGTH) {
             setError(dict.errors.incomplete);
             return;
         }
+
+        // If there is no email in the URL, redirect to login (bilingual safety)
+        if (!email) {
+            router.push(`/${locale}/auth/login`);
+            return;
+        }
+
         setIsVerifying(true);
         setError("");
-        
+
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/mfa/verify`, {
+            // 1. Call the new OTP Verify endpoint
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/v1/auth/otp/verify`, {
                 method: "POST",
-                credentials: "include",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ code: fullCode }),
+                body: JSON.stringify({ email, code: fullCode }),
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.message || "Verification failed");
             }
-            
+
+
             const result = await response.json();
-            
-            if (result.role === "admin") {
-                router.push(`/${locale}/dashboard/admin/tableau-de-bord`);
-            } else if (result.role === "contractant") {
+            const effectiveRole = result.role || result.user?.role || result.user?.userType;
+            const resolvedUserType = mapRoleToDashboardUserType(effectiveRole);
+            const routeUserId = result.user?.userId || result.userId || result.id || result.user?.id;
+
+            if (resolvedUserType === "admin") {
+                if (routeUserId) {
+                    setAdminId(routeUserId);
+                }
+                router.push(`/${locale}/dashboard/admin/id/tableau-de-bord`);
+            } else if (resolvedUserType === "operateur") {
+                router.push(`/${locale}/dashboard/operateur/tableau-de-bord`);
+            } else if (resolvedUserType === "contractant") {
                 router.push(`/${locale}/dashboard/contractant/tableau-de-bord`);
             } else {
                 router.push(`/${locale}/dashboard`);
             }
-            
+
+
         } catch (error: any) {
             console.error("Verification error:", error);
+            // Display backend error message
             setError(error.message || "Verification failed");
         } finally {
             setIsVerifying(false);
@@ -102,24 +127,33 @@ export default function VerifyForm({ dict }: VerifyFormProps) {
     };
 
     const handleResend = async () => {
+        // If there is no email in the URL, redirect to login
+        if (!email) {
+            router.push(`/${locale}/auth/login`);
+            return;
+        }
+
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/resend-mfa`, {
+            // 1. Call the new OTP Send endpoint
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/v1/auth/otp/send`, {
                 method: "POST",
-                credentials: "include",
                 headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.message || "Failed to resend code");
             }
-            
+
+            // 2. Reset the timer and inputs
             setTimeLeft(119);
             setCode(Array(CODE_LENGTH).fill(""));
             setError("");
             inputRefs.current[0]?.focus();
         } catch (error: any) {
             console.error("Resend error:", error);
+            // Display backend error message
             setError(error.message || "Failed to resend code");
         }
     };

@@ -19,7 +19,7 @@ export default async function OperateurLayout({
   const userType = cookieStore.get("user_type")?.value;
 
   if (userType === "admin") {
-    redirect(`/${locale}/dashboard/admin/tableau-de-bord`);
+    redirect(`/${locale}/dashboard/admin/id/tableau-de-bord`);
   }
 
   if (userType === "contractant") {

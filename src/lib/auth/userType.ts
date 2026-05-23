@@ -24,12 +24,13 @@ export function mapRoleToDashboardUserType(
   return null;
 }
 
-export function getDashboardHomePath(locale: string, userType: DashboardUserType): string {
+export function getDashboardHomePath(locale: string, userType: DashboardUserType, userId?: string): string {
   if (userType === "admin") {
-    return `/${locale}/dashboard/admin/tableau-de-bord`;
+    return `/${locale}/dashboard/admin/id/tableau-de-bord`;
   }
 
   if (userType === "operateur") {
+
     return `/${locale}/dashboard/operateur/tableau-de-bord`;
   }
 

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import Image from "next/image";
+import { updateAdminProfile } from "@/services/admin/profile";
 
 interface ProfileFormData {
     username: string;
@@ -52,17 +53,13 @@ export default function ModifierProfilPage() {
         if (!validate()) return;
         setSaving(true);
         try {
-            // ── API HANDLER (wire up when backend is ready) ──
-            const formData = new FormData();
-            formData.append("username", form.username);
-            formData.append("email", form.email);
-            if (form.currentPassword) formData.append("currentPassword", form.currentPassword);
-            if (form.newPassword) formData.append("newPassword", form.newPassword);
-            if (fileInputRef.current?.files?.[0]) {
-                formData.append("avatar", fileInputRef.current.files[0]);
-            }
-            // await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile/update`, { method: "PATCH", body: formData });
-            await new Promise((r) => setTimeout(r, 800)); // remove when API is ready
+            await updateAdminProfile({
+                username: form.username,
+                email: form.email,
+                currentPassword: form.currentPassword || undefined,
+                newPassword: form.newPassword || undefined,
+                avatar: fileInputRef.current?.files?.[0],
+            });
             setSuccessMessage("Profil mis à jour avec succès.");
             setForm((prev) => ({ ...prev, currentPassword: "", newPassword: "", confirmPassword: "" }));
         } catch {
@@ -98,7 +95,7 @@ export default function ModifierProfilPage() {
                 <div className="flex items-center gap-5">
                     <div className="relative">
                         {avatar ? (
-                            <img src={avatar} alt="avatar" className="w-20 h-20 rounded-full object-cover" />
+                            <Image src={avatar} alt="avatar" width={80} height={80} unoptimized className="w-20 h-20 rounded-full object-cover" />
                         ) : (
                             <div className="w-20 h-20 rounded-full flex items-center justify-center text-white text-xl font-bold" style={{ backgroundColor: "#4CAF50" }}>
                                 {initials}
@@ -133,7 +130,7 @@ export default function ModifierProfilPage() {
                 {/* Username */}
                 <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
-                        Nom d'utilisateur
+                        Nom d&apos;utilisateur
                     </label>
                     <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">

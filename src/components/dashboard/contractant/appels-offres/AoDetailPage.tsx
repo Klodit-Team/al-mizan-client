@@ -53,6 +53,7 @@ type DetailTab =
 
 interface AoDetailPageProps {
   locale: string;
+  dict: any;
   aoId: string;
   initialTab?: DetailTab;
 }
@@ -87,14 +88,17 @@ function isTabEnabledForStage(tab: DetailTab, stage: WorkflowStage): boolean {
   return getStageIndex(stage) >= getStageIndex(requiredStage);
 }
 
-function getStageLabel(stage: WorkflowStage): string {
-  return WORKFLOW_STEPS.find((item) => item.key === stage)?.label || stage;
+function getStageLabel(stage: WorkflowStage, dict: any): string {
+  const labelFromSteps = WORKFLOW_STEPS.find((item) => item.key === stage)?.label || stage;
+  // Try to find a localized label in dict.tendersList.statusLabels or dict.aoCreation.steps
+  const localized = dict.tendersList?.statusLabels?.[stage];
+  return localized || labelFromSteps;
 }
 
-function getTypeLabel(type: ServiceContractantTenderType) {
-  if (type === "ouvert") return "Appel offres ouvert";
-  if (type === "restreint") return "Appel offres restreint";
-  return "Procedure gre a gre";
+function getTypeLabel(type: ServiceContractantTenderType, dict: any) {
+  if (type === "ouvert") return dict.tendersList?.typeLabels?.ouvert || "Appel d'offres ouvert";
+  if (type === "restreint") return dict.tendersList?.typeLabels?.restreint || "Appel d'offres restreint";
+  return dict.tendersList?.typeLabels?.gre_a_gre || "Procédure gré à gré";
 }
 
 function mapTenderStatusToWorkflowStage(
@@ -151,6 +155,7 @@ function mapApiStatusToWorkflowStage(status: ServiceContractantApiStatus): Workf
 
 export default function AoDetailPage({
   locale,
+  dict,
   aoId,
   initialTab = "soumissions",
 }: AoDetailPageProps) {
@@ -232,15 +237,15 @@ export default function AoDetailPage({
   }, [aoId]);
 
   const tabs: Array<{ key: DetailTab; label: string; count?: number }> = [
-    { key: "general", label: "Infos Generales" },
-    { key: "lots", label: "Lots" },
-    { key: "cdc", label: "CDC" },
-    { key: "criteria", label: "Criteres" },
-    { key: "soumissions", label: "Soumissions", count: soumissionsCount },
-    { key: "evaluation", label: "Evaluation" },
-    { key: "attribution", label: "Attribution" },
-    { key: "recours", label: "Recours" },
-    { key: "avis", label: "Avis" },
+    { key: "general", label: dict.appelsOffres?.detail?.tabs?.general || "Infos Générales" },
+    { key: "lots", label: dict.appelsOffres?.detail?.tabs?.lots || "Lots" },
+    { key: "cdc", label: dict.appelsOffres?.detail?.tabs?.documents || "CDC" },
+    { key: "criteria", label: dict.aoCreation?.steps?.step5?.scoringTitle || "Critères" },
+    { key: "soumissions", label: dict.soumissions?.mesSoumissions?.title || "Soumissions", count: soumissionsCount },
+    { key: "evaluation", label: dict.tendersList?.statusLabels?.evaluation || "Evaluation" },
+    { key: "attribution", label: dict.aoCreation?.steps?.step6?.stepTitle || "Attribution" },
+    { key: "recours", label: dict.recoursClaims?.list?.title || "Recours" },
+    { key: "avis", label: dict.aoCreation?.steps?.step6?.avisGenerated || "Avis" },
   ];
 
   const currentStepIndex = useMemo(
@@ -312,7 +317,7 @@ export default function AoDetailPage({
     ? activeTab
     : "general";
   const activeTabLabel =
-    tabs.find((item) => item.key === effectiveActiveTab)?.label || "Details";
+    tabs.find((item) => item.key === effectiveActiveTab)?.label || (dict.appelsOffres?.detail?.title || "Details");
   const canPublish = stage === "brouillon";
 
   const renderActiveTabContent = () => {
@@ -320,9 +325,9 @@ export default function AoDetailPage({
       const requiredStage = TAB_STAGE_REQUIREMENTS[activeTab];
       return (
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-600">
-          Cet onglet sera disponible a partir de l etape{" "}
+          Cet onglet sera disponible à partir de l'étape{" "}
           <span className="font-semibold text-slate-800">
-            {requiredStage ? getStageLabel(requiredStage) : "suivante"}
+            {requiredStage ? getStageLabel(requiredStage, dict) : "suivante"}
           </span>
           .
         </div>
@@ -361,10 +366,10 @@ export default function AoDetailPage({
           </div>
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              Procedure
+              Procédure
             </p>
             <p className="mt-1 text-slate-700">
-              {tender ? getTypeLabel(tender.type) : "-"}
+              {tender ? getTypeLabel(tender.type, dict) : "-"}
             </p>
             <p className="mt-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
               Dates
@@ -573,7 +578,7 @@ export default function AoDetailPage({
     }
 
     if (effectiveActiveTab === "recours") {
-      return <RecoursListTab locale={locale} aoId={aoId} isRtl={isRtl} />;
+      return <RecoursListTab locale={locale} dict={dict.recoursClaims?.list} aoId={aoId} isRtl={isRtl} />;
     }
 
     if (effectiveActiveTab === "avis") {
@@ -591,8 +596,8 @@ export default function AoDetailPage({
     <div className="space-y-3">
       <header className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
         <p className="text-[11px] text-slate-500">
-          Tableau de bord <span className="mx-1">/</span> Mes marches{" "}
-          <span className="mx-1">/</span> Details AO
+          {dict.aoCreation?.header?.breadcrumbDashboard || "Tableau de bord"} <span className="mx-1">/</span> {dict.tendersList?.title || "Mes marchés"}{" "}
+          <span className="mx-1">/</span> {dict.appelsOffres?.detail?.title || "Détails AO"}
         </p>
 
         <div className="mt-1 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -609,7 +614,7 @@ export default function AoDetailPage({
                 className="inline-flex h-8 items-center gap-1 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
               >
                 <Pencil className="h-3 w-3" />
-                Modifier
+                {dict.tendersList?.actions?.edit || "Modifier"}
               </Link>
             )}
 
@@ -625,10 +630,10 @@ export default function AoDetailPage({
             >
               <Check className="h-3 w-3" />
               {isApplyingStatus
-                ? "Mise a jour..."
+                ? (dict.aoCreation?.steps?.step6?.submitting || "Mise à jour...")
                 : canPublish
-                  ? "Publier AO"
-                  : "AO deja publie"}
+                  ? (dict.aoCreation?.steps?.step6?.publishBtn || "Publier AO")
+                  : (dict.aoCreation?.steps?.step6?.alreadyPublished || "AO déjà publié")}
             </button>
           </div>
         </div>
@@ -644,13 +649,13 @@ export default function AoDetailPage({
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <div className="space-y-2 rounded-lg bg-slate-50 p-3">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              Reference
+              {dict.tendersList?.table?.reference || "Référence"}
             </p>
             <p className="text-sm font-bold text-slate-900">
               {tender?.reference || aoId}
             </p>
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              Objet
+              {dict.tendersList?.table?.object || "Objet"}
             </p>
             <p className="text-xs text-slate-600">
               {tender?.object || "Aucun objet"}
@@ -659,7 +664,7 @@ export default function AoDetailPage({
 
           <div className="space-y-2 rounded-lg bg-slate-50 p-3">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              Statut actuel
+              {dict.tendersList?.statusLabels?.title || "Statut actuel"}
             </p>
             <span
               className={cn(
@@ -667,20 +672,20 @@ export default function AoDetailPage({
                 statusBadgeClass,
               )}
             >
-              {stage}
+              {getStageLabel(stage, dict)}
             </span>
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              Type procedure
+              Type procédure
             </p>
             <p className="text-xs text-slate-600">
-              {tender ? getTypeLabel(tender.type) : "-"}
+              {tender ? getTypeLabel(tender.type, dict) : "-"}
             </p>
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              Montant estime
+              {dict.tendersList?.card?.estimatedAmount || "Montant estimé"}
             </p>
             <p className="text-xs text-slate-600">{tender?.amount || "-"}</p>
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              Wilaya / Secteur
+              {dict.tendersList?.labels?.wilaya || "Wilaya / Secteur"}
             </p>
             <p className="text-xs text-slate-600">
               {tender ? `${tender.wilaya} / ${tender.sector}` : "-"}
@@ -690,11 +695,11 @@ export default function AoDetailPage({
           <div className="space-y-2 rounded-lg bg-slate-50 p-3">
             <div className="flex items-center gap-2 text-xs text-slate-700">
               <Calendar className="h-3.5 w-3.5 text-[#4CAF50]" />
-              Publie le: <span className="font-semibold">{publishDate}</span>
+              {dict.tendersList?.card?.submitted || "Publié le:"} <span className="font-semibold">{publishDate}</span>
             </div>
             <div className="flex items-center gap-2 text-xs text-slate-700">
               <Calendar className="h-3.5 w-3.5 text-[#4CAF50]" />
-              Cloture le:{" "}
+              {dict.tendersList?.card?.deadline || "Clôture le:"}{" "}
               <span className="font-semibold text-red-600">{closeDate}</span>
             </div>
           </div>
@@ -725,7 +730,7 @@ export default function AoDetailPage({
                     active ? "text-[#2F9E44]" : "text-slate-400",
                   )}
                 >
-                  {item.label}
+                  {getStageLabel(item.key, dict)}
                 </p>
               </div>
             );
@@ -806,7 +811,7 @@ export default function AoDetailPage({
         <aside className="space-y-3">
           <section className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
             <p className="mb-2 text-sm font-semibold text-slate-800">
-              Gestion AO
+              {dict.appelsOffres?.detail?.gestionAo || "Gestion AO"}
             </p>
 
             <div className="space-y-2">
@@ -816,7 +821,7 @@ export default function AoDetailPage({
                 onClick={() => void applyStatus("OUVERTURE_PLIS")}
                 className="flex w-full items-center justify-between rounded-md bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
               >
-                Gerer Commission
+                {dict.appelsOffres?.detail?.buttons?.manageCommission || "Gérer Commission"}
                 <Settings className="h-3.5 w-3.5" />
               </button>
 
@@ -826,7 +831,7 @@ export default function AoDetailPage({
                 onClick={nextStage}
                 className="flex w-full items-center justify-between rounded-md bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Changer de statut
+                {dict.appelsOffres?.detail?.buttons?.changeStatus || "Changer de statut"}
                 <Check className="h-3.5 w-3.5" />
               </button>
 
@@ -836,7 +841,7 @@ export default function AoDetailPage({
                 onClick={() => void applyStatus("ATTRIBUE")}
                 className="flex w-full items-center justify-between rounded-md bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Prononcer Attribution
+                {dict.appelsOffres?.detail?.buttons?.pronounceAttribution || "Prononcer Attribution"}
                 <Gavel className="h-3.5 w-3.5" />
               </button>
 
@@ -846,7 +851,7 @@ export default function AoDetailPage({
                 onClick={() => void applyStatus("ANNULE")}
                 className="flex w-full items-center justify-between rounded-md bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-100"
               >
-                Annuler Marche
+                {dict.appelsOffres?.detail?.buttons?.cancelTender || "Annuler Marché"}
                 <AlertTriangle className="h-3.5 w-3.5" />
               </button>
             </div>
@@ -854,29 +859,28 @@ export default function AoDetailPage({
 
           <section className="rounded-xl border border-[#D8EFD9] bg-[#EFF9EF] p-3 shadow-sm">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-[#2F9E44]">
-              Aide et support
+              {dict.appelsOffres?.detail?.help?.title || "Aide et support"}
             </p>
             <p className="mt-1 text-[11px] text-slate-600">
-              Consultez le manuel de lacteur public pour la phase douverture des
-              plis et devaluation technique.
+              {dict.appelsOffres?.detail?.help?.description || "Consultez le manuel de l'acteur public pour la phase d'ouverture des plis et d'évaluation technique."}
             </p>
             <button
               type="button"
               className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-[#2F9E44] hover:underline"
             >
-              Documentation <UserCheck className="h-3 w-3" />
+              {dict.appelsOffres?.detail?.help?.documentation || "Documentation"} <UserCheck className="h-3 w-3" />
             </button>
             <button
               type="button"
               className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-[#2F9E44] hover:underline"
             >
-              Integrite commission <ShieldCheck className="h-3 w-3" />
+              {dict.appelsOffres?.detail?.help?.integrity || "Intégrité commission"} <ShieldCheck className="h-3 w-3" />
             </button>
             <button
               type="button"
               className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-[#2F9E44] hover:underline"
             >
-              Membres commission <Users className="h-3 w-3" />
+              {dict.appelsOffres?.detail?.help?.members || "Membres commission"} <Users className="h-3 w-3" />
             </button>
           </section>
         </aside>

@@ -10,12 +10,12 @@ export interface Organisation {
     adresse: string;
     wilaya: string;
     commune: string;
-    telephone: string;
+    telephone?: string;
     email: string;
     type: OrgType;
     is_verified: boolean;
     created_at: string;
-    updated_at: string;
+    updated_at?: string;
 }
 
 export interface User {

@@ -1,27 +1,18 @@
 "use client";
 import Link from "next/link";
 import { type Locale } from "@/i18n/config";
+import type { AdministratorDeadlineItem } from "@/services/administrator-dashboard/api";
 import type { getDictionary } from "@/i18n/get-dictionaries";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
 
-
-
-interface Echeance {
-    id: string;
-    type: "depot" | "commission" | "expiration";
-    title: string;
-    subtitle: string;
-    time: string;
-}
-
 interface EcheancesProchainesProps {
     locale: Locale;
     dict:CommonDict['dashboard']['admin']['echeances'];
-    echeances?: Echeance[];
+    echeances?: AdministratorDeadlineItem[];
 }
 
-const defaultEcheances: Echeance[] = [
+const defaultEcheances: AdministratorDeadlineItem[] = [
     {
         id: "1",
         type: "depot",
@@ -77,8 +68,8 @@ export default function EcheancesProchaines({ locale,dict, echeances = defaultEc
 
             {/* Footer */}
             <div className="px-4 py-3 border-t" style={{ borderColor: "#2a3347" }}>
-                <Link href={`/${locale}/dashboard/contractant/calendar`} className="text-xs text-green-400 hover:text-green-300 font-semibold transition-colors">
-                    Ouvrir le calendrier complet →
+                <Link href={`/${locale}/dashboard/admin/id/commissions`} className="text-xs text-green-400 hover:text-green-300 font-semibold transition-colors">
+                    {dict.ouvrirCalendrier} →
                 </Link>
             </div>
         </div>

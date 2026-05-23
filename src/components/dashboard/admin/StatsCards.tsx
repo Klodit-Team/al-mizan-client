@@ -58,7 +58,7 @@ export default function StatsCards({ stats, dict  }: StatsCardsProps) {
                     <span className="text-xs font-semibold text-yellow-500">{dict.recoursOuvertsBadge}</span>
                 </div>
                 <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">{dict.recoursOuverts}</p>
-                <p className="text-3xl font-bold text-gray-800">0{stats.recoursOuverts}</p>
+                <p className="text-3xl font-bold text-gray-800">{stats.recoursOuverts}</p>
             </div>
 
             {/* Incidents IA */}

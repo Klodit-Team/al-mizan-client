@@ -1,5 +1,6 @@
 import AoDetailPage from "@/components/dashboard/contractant/appels-offres/AoDetailPage";
 import { type Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/get-dictionaries";
 
 type DetailTabParam =
   | "general"
@@ -44,11 +45,14 @@ export default async function ContractantTenderDetailPage({
   const { locale, id } = await params;
   const { tab } = await searchParams;
   const initialTab = parseTab(tab);
+  const dict = await getDictionary(locale as Locale);
+  const contractantDict = (dict as any).dashboard?.contractant || {};
 
   return (
     <main className="p-6 space-y-5 overflow-auto">
       <AoDetailPage
         locale={locale as Locale}
+        dict={contractantDict}
         aoId={id}
         initialTab={initialTab}
       />

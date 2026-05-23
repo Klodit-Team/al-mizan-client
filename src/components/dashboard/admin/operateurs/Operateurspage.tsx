@@ -2,6 +2,12 @@
 import { useState, useEffect } from "react";
 import { type User } from "../users/types";
 import type { getDictionary } from "@/i18n/get-dictionaries";
+import {
+  getAdminOperateurs,
+  blacklistAdminOperateur,
+  unblacklistAdminOperateur,
+  type AdminOperateur,
+} from "@/services/admin/operateurs";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
 
@@ -10,27 +16,25 @@ interface OperateursPageProps {
     dict: CommonDict['dashboard']['admin']['operateursPage'];
 }
 
-const dummyOperateurs: User[] = [
-    { id: "2", username: "Sara Hamdi", email: "s.hamdi@btpplus.dz", role: "OPERATEUR_ECONOMIQUE", organisation_id: "3", created_at: "2023-07-01T10:00:00Z", is_active: true },
-    { id: "6", username: "Mohamed Ali", email: "m.ali@entreprise.dz", role: "OPERATEUR_ECONOMIQUE", organisation_id: "4", created_at: "2023-09-11T10:00:00Z", is_active: false, is_blacklisted: true, blacklist_motif: "Non respect des délais" }
+const dummyOperateurs: AdminOperateur[] = [
+    { id: "2", organisation_id: "3", user_id: "user-2", is_eligible: true, is_blacklisted: false, username: "Sara Hamdi", email: "s.hamdi@btpplus.dz", role: "OPERATEUR_ECONOMIQUE", created_at: "2023-07-01T10:00:00Z", is_active: true },
+    { id: "6", organisation_id: "4", user_id: "user-6", is_eligible: false, is_blacklisted: true, blacklist_motif: "Non respect des délais", username: "Mohamed Ali", email: "m.ali@entreprise.dz", role: "OPERATEUR_ECONOMIQUE", created_at: "2023-09-11T10:00:00Z", is_active: false }
 ];
 
 export default function OperateursPage({ locale, dict }: OperateursPageProps) {
-    const [operateurs, setOperateurs] = useState<User[]>(dummyOperateurs);
+    const [operateurs, setOperateurs] = useState<AdminOperateur[]>(dummyOperateurs);
     const [search, setSearch] = useState("");
     const [isLoading, setIsLoading] = useState(true);
-    const [blacklistModal, setBlacklistModal] = useState<{isOpen: boolean; user: User | null; motif: string}>({ isOpen: false, user: null, motif: "" });
+    const [blacklistModal, setBlacklistModal] = useState<{isOpen: boolean; user: AdminOperateur | null; motif: string}>({ isOpen: false, user: null, motif: "" });
 
     const fetchOperateurs = async () => {
         try {
             setIsLoading(true);
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/operateurs`);
-            if (res.ok) {
-                const data = await res.json();
-                setOperateurs(data);
-            }
+            const data = await getAdminOperateurs();
+            setOperateurs(Array.isArray(data) ? data : dummyOperateurs);
         } catch (error) {
             console.error("Error fetching operateurs:", error);
+            setOperateurs(dummyOperateurs);
         } finally {
             setIsLoading(false);
         }
@@ -48,14 +52,7 @@ export default function OperateursPage({ locale, dict }: OperateursPageProps) {
         setOperateurs(operateurs.map(u => u.id === userId ? { ...u, is_blacklisted: true, blacklist_motif: blacklistModal.motif, is_active: false } : u));
         
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/${userId}/blacklist`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ motif: blacklistModal.motif })
-            });
-            if (!res.ok) {
-                fetchOperateurs();
-            }
+            await blacklistAdminOperateur(userId, blacklistModal.motif);
         } catch (error) {
             console.error(error);
             fetchOperateurs();
@@ -69,12 +66,7 @@ export default function OperateursPage({ locale, dict }: OperateursPageProps) {
         setOperateurs(operateurs.map(u => u.id === userId ? { ...u, is_blacklisted: false, blacklist_motif: undefined, is_active: true } : u));
         
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/${userId}/blacklist`, {
-                method: "DELETE"
-            });
-            if (!res.ok) {
-                fetchOperateurs();
-            }
+            await unblacklistAdminOperateur(userId);
         } catch (error) {
             console.error("Error removing blacklist:", error);
             fetchOperateurs();
@@ -82,8 +74,9 @@ export default function OperateursPage({ locale, dict }: OperateursPageProps) {
     };
 
     const filtered = operateurs.filter((op) => 
-        op.username.toLowerCase().includes(search.toLowerCase()) || 
-        op.email.toLowerCase().includes(search.toLowerCase())
+        (op.username && op.username.toLowerCase().includes(search.toLowerCase())) || 
+        (op.email && op.email.toLowerCase().includes(search.toLowerCase())) ||
+        (op.user_id && op.user_id.toLowerCase().includes(search.toLowerCase()))
     );
 
     const activeCount = operateurs.filter((u) => u.is_active && !u.is_blacklisted).length;
@@ -152,12 +145,12 @@ export default function OperateursPage({ locale, dict }: OperateursPageProps) {
                                         <td className="px-5 py-3">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: "#1e2535" }}>
-                                                    {user.username.split(" ").map((n) => n[0]).join("").toUpperCase()}
+                                                    {(user.username || user.user_id).split(" ").map((n) => n[0]).join("").toUpperCase()}
                                                 </div>
-                                                <span className="text-sm font-semibold text-gray-700">{user.username}</span>
+                                                <span className="text-sm font-semibold text-gray-700">{user.username || user.user_id}</span>
                                             </div>
                                         </td>
-                                        <td className="px-5 py-3 text-xs text-gray-500">{user.email}</td>
+                                        <td className="px-5 py-3 text-xs text-gray-500">{user.email || 'N/A'}</td>
                                         <td className="px-5 py-3">
                                             <span 
                                                 className={`text-xs font-semibold px-2 py-0.5 rounded-full ${user.is_blacklisted ? "bg-red-50 text-red-600" : user.is_active ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-400"}`}
@@ -167,7 +160,7 @@ export default function OperateursPage({ locale, dict }: OperateursPageProps) {
                                             </span>
                                         </td>
                                         <td className="px-5 py-3 text-xs text-gray-400">
-                                            {new Date(user.created_at).toLocaleDateString(locale === 'ar' ? 'ar-DZ' : 'fr-DZ')}
+                                            {user.created_at ? new Date(user.created_at).toLocaleDateString(locale === 'ar' ? 'ar-DZ' : 'fr-DZ') : 'N/A'}
                                         </td>
                                         <td className="px-5 py-3 text-right">
                                             {!user.is_blacklisted ? (
@@ -208,7 +201,7 @@ export default function OperateursPage({ locale, dict }: OperateursPageProps) {
                         </div>
                         <div className="p-6 space-y-4">
                             <p className="text-sm text-gray-600">
-                                {dict.modal.warning1} <strong>{blacklistModal.user?.username}</strong>. 
+                                {dict.modal.warning1} <strong>{blacklistModal.user?.username || blacklistModal.user?.user_id}</strong>. 
                                 {dict.modal.warning2}
                             </p>
                             <div>

@@ -10,70 +10,10 @@ export default function Step1({ props }: { props: WizardStepProps }) {
     form,
     updateField,
     errors,
-    lots,
-    setLots,
-    lotForm,
-    setLotForm,
-    showLotForm,
-    setShowLotForm,
-    editingLotId,
-    setEditingLotId,
-    saveLot,
-    editLot,
-    deleteLot,
-    lotErrors,
-    cdcForm,
-    setCdcForm,
-    updateCdcField,
-    cdcFile,
-    handleCdcFileChange,
-    existingCdcFileName,
-    setExistingCdcFileName,
-    triggerCdcFileInput,
-    removeCdcFile,
-    cdcErrors,
-    criteria,
-    setCriteria,
-    showCriterionForm,
-    setShowCriterionForm,
-    criterionForm,
-    setCriterionForm,
-    editingCriterionId,
-    setEditingCriterionId,
-    saveCriterion,
-    editCriterion,
-    deleteCriterion,
-    moveCriterionUp,
-    moveCriterionDown,
-    criterionErrors,
-    evaluationCriteria,
-    setEvaluationCriteria,
-    showEvaluationForm,
-    setShowEvaluationForm,
-    evaluationForm,
-    setEvaluationForm,
-    editingEvaluationId,
-    setEditingEvaluationId,
-    evaluationTab,
-    setEvaluationTab,
-    evaluationErrors,
-    saveEvaluationCriterion,
-    editEvaluationCriterion,
-    deleteEvaluationCriterion,
-    moveEvaluationCriterionUp,
-    moveEvaluationCriterionDown,
-    evaluationStepError,
-    goBack,
+   
     goNextAfterValidation,
     isSubmittingAction,
-    saveReviewDraft,
-    reviewActionError,
-    reviewActionMessage,
-    generatedAvisRef,
-    step,
-    isRtl,
-    fileInputRef,
-    setEvaluationStepError,
+   
     saveDraft,
     savedDraft,
   } = props;
@@ -87,7 +27,7 @@ export default function Step1({ props }: { props: WizardStepProps }) {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
           <label className="mb-1.5 block text-[11px] font-semibold text-slate-600">
-            Reference (Auto-generee)
+            {dict.step1.referenceLabel}
           </label>
           <input
             value={form.reference}
@@ -97,12 +37,12 @@ export default function Step1({ props }: { props: WizardStepProps }) {
         </div>
         <div>
           <label className="mb-1.5 block text-[11px] font-semibold text-slate-600">
-            Objet de l&apos;AO
+            {dict.step1.objectLabel}
           </label>
           <input
             value={form.object}
             onChange={(event) => updateField("object", event.target.value)}
-            placeholder="Ex. Acquisition de materiel informatique"
+            placeholder={dict.step1.objectPlaceholder}
             className={cn(
               "h-10 w-full rounded-md border px-3 text-sm outline-none focus:border-[#4CAF50]",
               errors.object
@@ -116,13 +56,13 @@ export default function Step1({ props }: { props: WizardStepProps }) {
         </div>
         <div className="md:col-span-2">
           <label className="mb-1.5 block text-[11px] font-semibold text-slate-600">
-            Description detaillee
+            {dict.step1.descriptionLabel}
           </label>
           <textarea
             rows={4}
             value={form.description}
             onChange={(event) => updateField("description", event.target.value)}
-            placeholder="Decrivez les besoins et les specifications techniques principales..."
+            placeholder={dict.step1.descriptionPlaceholder}
             className={cn(
               "w-full rounded-md border px-3 py-2 text-sm outline-none focus:border-[#4CAF50]",
               errors.description
@@ -138,7 +78,7 @@ export default function Step1({ props }: { props: WizardStepProps }) {
         </div>
         <div>
           <label className="mb-1.5 block text-[11px] font-semibold text-slate-600">
-            Type de marche
+            {dict.step1.marketTypeLabel}
           </label>
           <select
             value={form.marketType}
@@ -150,10 +90,10 @@ export default function Step1({ props }: { props: WizardStepProps }) {
                 : "border-slate-200 bg-white",
             )}
           >
-            <option value="">Selectionner un type</option>
-            <option value="fournitures">Fournitures</option>
-            <option value="services">Services</option>
-            <option value="travaux">Travaux</option>
+            <option value="">{dict.step1.marketTypePlaceholder}</option>
+            <option value="fournitures">{dict.step1.marketTypes.fournitures}</option>
+            <option value="services">{dict.step1.marketTypes.services}</option>
+            <option value="travaux">{dict.step1.marketTypes.travaux}</option>
           </select>
           {errors.marketType && (
             <p className="mt-1 text-[11px] text-red-600">{errors.marketType}</p>
@@ -161,7 +101,7 @@ export default function Step1({ props }: { props: WizardStepProps }) {
         </div>
         <div>
           <label className="mb-1.5 block text-[11px] font-semibold text-slate-600">
-            Type d&apos;appel
+            {dict.step1.procedureTypeLabel}
           </label>
           <select
             value={form.procedureType}
@@ -175,10 +115,10 @@ export default function Step1({ props }: { props: WizardStepProps }) {
                 : "border-slate-200 bg-white",
             )}
           >
-            <option value="">Selectionner une procedure</option>
-            <option value="ouvert">Ouvert</option>
-            <option value="restreint">Restreint</option>
-            <option value="gre_a_gre">Gre a gre</option>
+            <option value="">{dict.step1.procedureTypePlaceholder}</option>
+            <option value="ouvert">{dict.step1.procedureTypes.ouvert}</option>
+            <option value="restreint">{dict.step1.procedureTypes.restreint}</option>
+            <option value="gre_a_gre">{dict.step1.procedureTypes.greAgre}</option>
           </select>
           {errors.procedureType && (
             <p className="mt-1 text-[11px] text-red-600">
@@ -188,7 +128,7 @@ export default function Step1({ props }: { props: WizardStepProps }) {
         </div>
         <div>
           <label className="mb-1.5 block text-[11px] font-semibold text-slate-600">
-            Montant estime (DZD)
+            {dict.step1.estimatedAmountLabel}
           </label>
           <div className="flex h-10 overflow-hidden rounded-md border border-slate-200">
             <input
@@ -203,7 +143,7 @@ export default function Step1({ props }: { props: WizardStepProps }) {
               )}
             />
             <span className="flex items-center bg-slate-100 px-3 text-xs font-semibold text-slate-600">
-              DZD
+              {dict.currency}
             </span>
           </div>
           {errors.estimatedAmount && (
@@ -214,14 +154,14 @@ export default function Step1({ props }: { props: WizardStepProps }) {
         </div>
         <div>
           <label className="mb-1.5 block text-[11px] font-semibold text-slate-600">
-            Wilaya d&apos;execution
+            {dict.step1.wilayaLabel}
           </label>
           <input
             value={form.executionWilaya}
             onChange={(event) =>
               updateField("executionWilaya", event.target.value)
             }
-            placeholder="Saisir la wilaya"
+            placeholder={dict.step1.wilayaPlaceholder}
             className={cn(
               "h-10 w-full rounded-md border px-3 text-sm outline-none focus:border-[#4CAF50]",
               errors.executionWilaya
@@ -237,14 +177,14 @@ export default function Step1({ props }: { props: WizardStepProps }) {
         </div>
         <div>
           <label className="mb-1.5 block text-[11px] font-semibold text-slate-600">
-            Delai d&apos;execution (jours)
+            {dict.step1.executionDelayLabel}
           </label>
           <input
             value={form.executionDelayDays}
             onChange={(event) =>
               updateField("executionDelayDays", event.target.value)
             }
-            placeholder="Ex. 90"
+            placeholder={dict.step1.executionDelayPlaceholder}
             className={cn(
               "h-10 w-full rounded-md border px-3 text-sm outline-none focus:border-[#4CAF50]",
               errors.executionDelayDays
@@ -262,7 +202,7 @@ export default function Step1({ props }: { props: WizardStepProps }) {
       <div className="mt-4 rounded-lg border border-emerald-100 bg-emerald-50 p-3">
         <div className="mb-3 flex items-center justify-between gap-3">
           <p className="text-xs font-semibold text-slate-700">
-            Caution de soumission
+            {dict.step1.submissionBondTitle}
           </p>
           <button
             type="button"
@@ -287,14 +227,14 @@ export default function Step1({ props }: { props: WizardStepProps }) {
           </button>
         </div>
         <label className="mb-1.5 block text-[11px] font-semibold text-slate-600">
-          Montant de la caution (DZD)
+          {dict.step1.submissionBondAmountLabel}
         </label>
         <input
           value={form.submissionBondAmount}
           onChange={(event) =>
             updateField("submissionBondAmount", event.target.value)
           }
-          placeholder="Ex. 500,000.00"
+          placeholder={dict.step1.submissionBondPlaceholder}
           disabled={!form.submissionBondRequired}
           className={cn(
             "h-10 w-full rounded-md border px-3 text-sm outline-none",
@@ -313,12 +253,12 @@ export default function Step1({ props }: { props: WizardStepProps }) {
       </div>
       <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
         <p className="mb-3 text-xs font-semibold text-slate-700">
-          Echeances cles
+          {dict.step1.deadlinesTitle}
         </p>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <div>
             <label className="mb-1 block text-[11px] text-slate-600">
-              Date limite retrait DCE
+              {dict.step1.dceDeadlineLabel}
             </label>
             <input
               type="date"
@@ -341,7 +281,7 @@ export default function Step1({ props }: { props: WizardStepProps }) {
           </div>
           <div>
             <label className="mb-1 block text-[11px] text-slate-600">
-              Date limite depot offres
+              {dict.step1.offerDeadlineLabel}
             </label>
             <input
               type="date"
@@ -364,7 +304,7 @@ export default function Step1({ props }: { props: WizardStepProps }) {
           </div>
           <div>
             <label className="mb-1 block text-[11px] text-slate-600">
-              Date ouverture des plis
+              {dict.step1.openingDateLabel}
             </label>
             <input
               type="date"

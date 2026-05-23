@@ -10,10 +10,12 @@ import {
 
 interface GreAGreListContainerProps {
   locale: string;
+  dict: any;
 }
 
 export default function GreAGreListContainer({
   locale,
+  dict,
 }: GreAGreListContainerProps) {
   const [data, setData] = useState<ServiceContractantGreAGreRequestItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,7 +29,7 @@ export default function GreAGreListContainer({
       const response = await listServiceContractantGreAGreRequests();
       setData(response);
     } catch {
-      setError("Impossible de charger les demandes Gre a Gre.");
+      setError(dict?.errorLoading || "Impossible de charger les demandes.");
     } finally {
       setIsLoading(false);
     }
@@ -45,7 +47,7 @@ export default function GreAGreListContainer({
         </div>
       ) : null}
 
-      <GreAGreListPage locale={locale} data={data} isLoading={isLoading} />
+      <GreAGreListPage locale={locale} data={data} isLoading={isLoading} dict={dict} />
     </div>
   );
 }

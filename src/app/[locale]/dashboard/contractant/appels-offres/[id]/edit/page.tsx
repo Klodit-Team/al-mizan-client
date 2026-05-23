@@ -14,8 +14,7 @@ export default async function ContractantTenderEditPage({
   const { locale, id } = await params;
   const dict = await getDictionary(locale as Locale);
   const tendersListDict =
-    (dict as { tendersList?: typeof defaultTendersListDict }).tendersList ||
-    defaultTendersListDict;
+    (dict as any).dashboard?.contractant?.tendersList || defaultTendersListDict;
   const draft = await getServiceContractantTenderDraftById(id);
 
   return (

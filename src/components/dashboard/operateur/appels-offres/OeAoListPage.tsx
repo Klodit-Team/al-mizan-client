@@ -58,11 +58,11 @@ function typeBadgeClass(type: OeAoType) {
   }
 }
 
-function formatDeadline(iso: string) {
+function formatDeadline(iso: string, locale: Locale) {
   const d = new Date(iso);
   const now = new Date();
   const diff = Math.ceil((d.getTime() - now.getTime()) / 86400000);
-  const label = d.toLocaleDateString("fr-DZ", { day: "numeric", month: "short", year: "numeric" });
+  const label = d.toLocaleDateString(locale === "ar" ? "ar-DZ" : "fr-DZ", { day: "numeric", month: "short", year: "numeric" });
   if (diff < 0) return { label, urgency: "expired" as const };
   if (diff <= 3) return { label, urgency: "high" as const };
   if (diff <= 7) return { label, urgency: "medium" as const };
@@ -108,10 +108,8 @@ const ITEMS_PER_PAGE = 6;
 // Main component
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function OeAoListPage() {
-  const params = useParams();
+export default function OeAoListPage({ dict, locale }: { dict: any; locale: Locale }) {
   const router = useRouter();
-  const locale = (params?.locale as Locale) || "fr";
 
   const { data = [], isLoading } = useOperateurAppelsOffresQuery();
   const [showFilters, setShowFilters] = useState(false);
@@ -177,12 +175,12 @@ export default function OeAoListPage() {
       <header className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-lg font-bold uppercase tracking-[0.03em] text-slate-900">
-            Appels d&apos;Offres
+            {dict.title}
           </h1>
           <p className="mt-0.5 text-xs text-slate-500">
             {isLoading
-              ? "Chargement…"
-              : `${filtered.length} appel${filtered.length !== 1 ? "s" : ""} d'offres trouvé${filtered.length !== 1 ? "s" : ""}`}
+              ? dict.loading
+              : `${filtered.length} ${filtered.length !== 1 ? dict.countLabelPlural : dict.countLabel}`}
           </p>
         </div>
         {/* Search bar */}
@@ -193,7 +191,7 @@ export default function OeAoListPage() {
               type="text"
               value={filters.keyword}
               onChange={(e) => setFilter("keyword", e.target.value)}
-              placeholder="Référence, objet, organisme…"
+              placeholder={dict.searchPlaceholder}
               className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-8 pr-3 text-xs text-slate-800 outline-none placeholder:text-slate-400 focus:border-[#4CAF50] focus:bg-white transition-colors"
             />
           </div>
@@ -207,7 +205,7 @@ export default function OeAoListPage() {
             }`}
           >
             <SlidersHorizontal className="h-3.5 w-3.5" />
-            Filtres
+            {dict.filtersBtn}
             {activeFilterCount > 0 && (
               <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#4CAF50] text-[9px] font-bold text-white">
                 {activeFilterCount}
@@ -222,7 +220,7 @@ export default function OeAoListPage() {
         <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">
-              Filtres avancés
+              {dict.advancedFilters}
             </h2>
             {activeFilterCount > 0 && (
               <button
@@ -231,7 +229,7 @@ export default function OeAoListPage() {
                 className="flex items-center gap-1 text-[11px] font-medium text-rose-500 hover:text-rose-700"
               >
                 <X className="h-3 w-3" />
-                Réinitialiser
+                {dict.reset}
               </button>
             )}
           </div>
@@ -239,44 +237,48 @@ export default function OeAoListPage() {
             {/* Status */}
             <div>
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                Statut
+                {dict.labels.status}
               </label>
               <select
                 value={filters.status}
                 onChange={(e) => setFilter("status", e.target.value as Filters["status"])}
                 className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 outline-none focus:border-[#4CAF50]"
               >
-                {ALL_STATUSES.map((s) => (
-                  <option key={s.value} value={s.value}>{s.label}</option>
-                ))}
+                <option value="all">{dict.values.allStatuses}</option>
+                <option value="publie">{dict.statusLabels.publie}</option>
+                <option value="en_cours">{dict.statusLabels.en_cours}</option>
+                <option value="evaluation">{dict.statusLabels.evaluation}</option>
+                <option value="attribue">{dict.statusLabels.attribue}</option>
+                <option value="annule">{dict.statusLabels.annule}</option>
               </select>
             </div>
             {/* Type */}
             <div>
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                Type de procédure
+                {dict.labels.type}
               </label>
               <select
                 value={filters.type}
                 onChange={(e) => setFilter("type", e.target.value as Filters["type"])}
                 className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 outline-none focus:border-[#4CAF50]"
               >
-                {ALL_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
+                <option value="all">{dict.values.allTypes}</option>
+                <option value="ouvert">{dict.typeLabels.ouvert}</option>
+                <option value="restreint">{dict.typeLabels.restreint}</option>
+                <option value="gre_a_gre">{dict.typeLabels.gre_a_gre}</option>
               </select>
             </div>
             {/* Wilaya */}
             <div>
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                Wilaya
+                {dict.labels.wilaya}
               </label>
               <select
                 value={filters.wilaya}
                 onChange={(e) => setFilter("wilaya", e.target.value)}
                 className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 outline-none focus:border-[#4CAF50]"
               >
-                <option value="">Toutes les wilayas</option>
+                <option value="">{dict.values.allWilayas}</option>
                 {wilayas.map((w) => (
                   <option key={w} value={w}>{w}</option>
                 ))}
@@ -285,16 +287,16 @@ export default function OeAoListPage() {
             {/* Has submission */}
             <div>
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                Ma soumission
+                {dict.labels.mySubmission}
               </label>
               <select
                 value={filters.hasSubmission}
                 onChange={(e) => setFilter("hasSubmission", e.target.value as Filters["hasSubmission"])}
                 className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 outline-none focus:border-[#4CAF50]"
               >
-                <option value="all">Tous</option>
-                <option value="yes">Déjà soumis</option>
-                <option value="no">Non soumis</option>
+                <option value="all">{dict.values.all}</option>
+                <option value="yes">{dict.values.alreadySubmitted}</option>
+                <option value="no">{dict.values.notSubmitted}</option>
               </select>
             </div>
           </div>
@@ -311,13 +313,13 @@ export default function OeAoListPage() {
       ) : paginated.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white py-16 text-slate-400 shadow-sm">
           <FileText className="mb-3 h-10 w-10 opacity-30" />
-          <p className="text-sm font-medium">Aucun appel d&apos;offres trouvé</p>
-          <p className="mt-1 text-xs">Modifiez vos critères de recherche</p>
+          <p className="text-sm font-medium">{dict.empty.title}</p>
+          <p className="mt-1 text-xs">{dict.empty.subtitle}</p>
         </div>
       ) : (
         <div className="space-y-2">
           {paginated.map((ao) => {
-            const dl = formatDeadline(ao.deadline);
+            const dl = formatDeadline(ao.deadline, locale);
             return (
               <article
                 key={ao.id}
@@ -328,22 +330,22 @@ export default function OeAoListPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-mono text-[11px] font-bold text-slate-500">
-                        {ao.reference}
+                        {dict.card.reference} {ao.reference}
                       </span>
                       <span
                         className={`inline-flex rounded-full border px-2 py-px text-[10px] font-semibold ${statusBadgeClass(ao.status)}`}
                       >
-                        {STATUS_LABELS[ao.status]}
+                        {dict.statusLabels[ao.status]}
                       </span>
                       <span
                         className={`inline-flex rounded-full px-2 py-px text-[10px] font-medium ${typeBadgeClass(ao.type)}`}
                       >
-                        {TYPE_LABELS[ao.type]}
+                        {dict.typeLabels[ao.type]}
                       </span>
                       {ao.hasSubmission && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-px text-[10px] font-semibold text-emerald-700">
                           <FileText className="h-2.5 w-2.5" />
-                          Soumis
+                          {dict.card.submitted}
                         </span>
                       )}
                     </div>
@@ -355,7 +357,7 @@ export default function OeAoListPage() {
                     </p>
                     {ao.estimatedAmount && (
                       <p className="mt-1 text-[11px] font-medium text-slate-700">
-                        Montant estimé :{" "}
+                        {dict.card.estimatedAmount} :{" "}
                         <span className="text-[#364150]">{ao.estimatedAmount}</span>
                       </p>
                     )}
@@ -387,7 +389,7 @@ export default function OeAoListPage() {
                       className="inline-flex items-center gap-1.5 rounded-lg border border-[#4CAF50] px-3 py-1.5 text-[11px] font-semibold text-[#4CAF50] hover:bg-[#4CAF50] hover:text-white transition-colors"
                     >
                       <Eye className="h-3.5 w-3.5" />
-                      Voir le détail
+                      {dict.card.viewDetail}
                     </button>
                   </div>
                 </div>
@@ -401,8 +403,8 @@ export default function OeAoListPage() {
       {!isLoading && filtered.length > ITEMS_PER_PAGE && (
         <div className="flex flex-col items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs text-slate-500 shadow-sm md:flex-row">
           <p>
-            Affichage {(page - 1) * ITEMS_PER_PAGE + 1}–
-            {Math.min(page * ITEMS_PER_PAGE, filtered.length)} sur {filtered.length}
+            {dict.pagination.displaying} {(page - 1) * ITEMS_PER_PAGE + 1}–
+            {Math.min(page * ITEMS_PER_PAGE, filtered.length)} {dict.pagination.of} {filtered.length}
           </p>
           <div className="flex items-center gap-2">
             <button

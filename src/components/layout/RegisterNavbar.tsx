@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 
 import { type Locale } from "@/i18n/config";
 
@@ -13,6 +14,16 @@ interface NavbarRegisterProps {
   locale: Locale;
 }
 export default function NavbarRegister({ dict, locale }: NavbarRegisterProps) {
+    const router = useRouter();
+    const pathname = usePathname();
+
+    const toggleLang = () => {
+        const nextLocale = locale === "fr" ? "ar" : "fr";
+        const segments = pathname.split("/");
+        segments[1] = nextLocale;
+        window.location.href = segments.join("/");
+    };
+
     return (
         <header className="w-full bg-white border-b-2 border-[#4CAF50]">
             <div className="mx-auto px-8 h-14 flex items-center justify-between">
@@ -31,6 +42,12 @@ export default function NavbarRegister({ dict, locale }: NavbarRegisterProps) {
 
                 {/* Right side */}
                 <div className="flex items-center gap-6">
+                    <button
+                        onClick={toggleLang}
+                        className="text-sm text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg px-3 py-1.5 transition-colors hover:border-gray-400"
+                    >
+                        {locale === "fr" ? "FR / AR" : "AR / FR"}
+                    </button>
                     <Link
                         href="/help"
                         className="text-sm text-gray-500 hover:text-gray-700 transition-colors"

@@ -16,12 +16,14 @@ interface GreAGreListPageProps {
   locale: string;
   data: ServiceContractantGreAGreRequestItem[];
   isLoading: boolean;
+  dict: any;
 }
 
 export default function GreAGreListPage({
   locale,
   data,
   isLoading,
+  dict,
 }: GreAGreListPageProps) {
   const router = useRouter();
   const isRtl = locale === "ar";
@@ -47,10 +49,10 @@ export default function GreAGreListPage({
       >
         <div>
           <h1 className="text-lg font-bold uppercase tracking-[0.03em] text-slate-900">
-            Demandes Gre a Gre
+            {dict?.title || "Demandes Gre a Gre"}
           </h1>
           <p className="text-xs text-slate-500">
-            Suivi des demandes, analyse IA et decisions.
+            {dict?.subtitle || "Suivi des demandes, analyse IA et decisions."}
           </p>
         </div>
 
@@ -60,17 +62,18 @@ export default function GreAGreListPage({
           style={{ backgroundColor: "#4CAF50" }}
         >
           <span className="text-base leading-none">+</span>
-          Nouvelle demande
+          {dict?.createBtn || "Nouvelle demande"}
         </Link>
       </header>
 
-      <GreAGreFilters status={statusFilter} onStatusChange={setStatusFilter} />
+      <GreAGreFilters status={statusFilter} onStatusChange={setStatusFilter} dict={dict?.filters} />
 
       <GreAGreTable
         locale={locale}
         isRtl={isRtl}
         data={filteredData}
         isLoading={isLoading}
+        dict={dict}
         onViewDetail={(id) => {
           router.push(`/${locale}/dashboard/contractant/gre-a-gre/${id}`);
         }}
