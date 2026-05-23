@@ -1,21 +1,21 @@
 "use client";
 import Link from "next/link";
 import StatutBadge from "./StatutBadge";
-import type { MembreCommission } from "./types";
+import type { MembreCommission, CommissionDict } from "./types";
 
 interface CommissionRowProps {
     commission: MembreCommission;
     locale: string;
-    dict: Record<string, any>;
-    userId: string;
+    dict: CommissionDict;
 }
 
-export default function CommissionRow({ commission, locale, dict, userId }: CommissionRowProps) {
+export default function CommissionRow({ commission, locale, dict }: CommissionRowProps) {
     const roleKeyMap: Record<string, string> = {
         "Président": "president",
         "Évaluateur": "evaluateur",
         "Rapporteur": "rapporteur",
-        "Membre": "membre"
+        "Membre": "membre",
+        "Observateur": "observateur"
     };
 
     const roleKey = roleKeyMap[commission.monRole] || "membre";
@@ -37,8 +37,8 @@ export default function CommissionRow({ commission, locale, dict, userId }: Comm
 
             {/* Mon Rôle */}
             <td className="px-5 py-4">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                    {dict.roles[roleKey]}
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                    {dict.roles?.[roleKey] ?? roleKey}
                 </span>
             </td>
 
@@ -52,13 +52,13 @@ export default function CommissionRow({ commission, locale, dict, userId }: Comm
 
             {/* Statut */}
             <td className="px-5 py-4">
-                <StatutBadge statut={commission.statut} dict={dict.statuts} />
+                <StatutBadge statut={commission.statut} dict={dict.statuts ?? {}} />
             </td>
 
             {/* Actions */}
             <td className="px-5 py-4">
                 <Link
-                    href={`/${locale}/dashboard/commission/${userId}`}
+                    href={`/${locale}/dashboard/commission/${commission.id}`}
                     title={dict.actions}
                     className="inline-flex items-center gap-2 rounded-full bg-[#4CAF50] px-4 py-2 text-white text-sm font-semibold shadow-sm shadow-emerald-200 hover:bg-[#43A047] transition-all"
                 >
