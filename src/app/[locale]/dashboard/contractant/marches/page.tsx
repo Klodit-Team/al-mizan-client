@@ -1,6 +1,7 @@
-import Link from "next/link";
+import MarchesListContainer from "@/components/dashboard/contractant/marches/MarchesListContainer";
 import { type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionaries";
+import { listServiceContractantMarches } from "@/services/tenderMarches";
 
 interface ContractantMarchesPageProps {
   params: Promise<{ locale: string }>;
@@ -11,6 +12,7 @@ export default async function ContractantMarchesPage({
 }: ContractantMarchesPageProps) {
   const { locale } = await params;
   const dict = await getDictionary(locale as Locale);
+  const data = await listServiceContractantMarches();
 
   const mDict = (dict as any).dashboard.contractant.marches;
 
