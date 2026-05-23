@@ -10,5 +10,5 @@ export default async function Page({
     const { locale, id } = await params;
     const dict = await getDictionary(locale);
     
-    return <MesCommissionsPage locale={locale} userId={id} dict={dict.dashboard.commission.mesCommissionsPage} />;
+    return <MesCommissionsPage locale={locale} dict={dict.dashboard.commission.mesCommissionsPage} />;
 }
