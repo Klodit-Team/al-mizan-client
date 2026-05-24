@@ -23,15 +23,15 @@ function normalizeBaseUrl(rawBaseUrl: string): string {
 }
 
 function buildUrl(path: string): string {
+  const isServer = typeof window === 'undefined';
+  
+  // If on server (SSR/Middleware), call the API Gateway directly inside Docker.
+  // If in browser (Client), use relative paths (automatically resolves to https://klodit.app).
+  const baseUrl = isServer 
+    ? 'http://api-gateway:3000' 
+    : '';
+
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-
-  // In the browser, use relative URLs so Next.js rewrites proxy to the gateway (avoids CORS)
-  if (typeof window !== 'undefined') {
-    return normalizedPath;
-  }
-
-  // Server-side (SSR), call the gateway directly
-  const baseUrl = normalizeBaseUrl(process.env.NEXT_PUBLIC_API_URL || FALLBACK_BASE_URL);
   return `${baseUrl}${normalizedPath}`;
 }
 
