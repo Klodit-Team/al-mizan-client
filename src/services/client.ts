@@ -23,8 +23,15 @@ function normalizeBaseUrl(rawBaseUrl: string): string {
 }
 
 function buildUrl(path: string): string {
-  const baseUrl = normalizeBaseUrl(process.env.NEXT_PUBLIC_API_URL || FALLBACK_BASE_URL);
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+
+  // In the browser, use relative URLs so Next.js rewrites proxy to the gateway (avoids CORS)
+  if (typeof window !== 'undefined') {
+    return normalizedPath;
+  }
+
+  // Server-side (SSR), call the gateway directly
+  const baseUrl = normalizeBaseUrl(process.env.NEXT_PUBLIC_API_URL || FALLBACK_BASE_URL);
   return `${baseUrl}${normalizedPath}`;
 }
 

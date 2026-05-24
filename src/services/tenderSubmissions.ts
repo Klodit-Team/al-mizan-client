@@ -69,7 +69,8 @@ export interface ServiceContractantTenderSubmissionDetail extends ServiceContrac
   administrativeDocuments: TenderSubmissionAdministrativeDocument[];
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "");
+const API_BASE_URL = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "");
+const USE_REAL_API = typeof window !== "undefined" || Boolean(process.env.NEXT_PUBLIC_API_BASE_URL);
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -262,11 +263,9 @@ function ensureMockSubmissions(
 }
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  if (!API_BASE_URL) {
-    throw new Error("API base URL is not configured");
-  }
+  const url = API_BASE_URL ? `${API_BASE_URL}${path}` : path;
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(url, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -280,19 +279,35 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(message || `Request failed with status ${response.status}`);
   }
 
-  return (await response.json()) as T;
+  const json = await response.json();
+
+  // Unwrap paginated responses { data: [...] }
+  if (json && typeof json === "object" && "data" in json && Array.isArray(json.data)) {
+    return json.data as T;
+  }
+
+  return json as T;
 }
 
 export async function listServiceContractantTenderSubmissions(
   aoId: string,
 ): Promise<ServiceContractantTenderSubmissionListItem[]> {
-  if (API_BASE_URL) {
-    return requestJson<ServiceContractantTenderSubmissionListItem[]>(
-      `/service-contractant/tenders/${aoId}/submissions`,
-      {
-        method: "GET",
-      },
+  if (USE_REAL_API) {
+    const raw = await requestJson<any[]>(
+      `/api/v1/soumissions/appel-offre/${aoId}`,
+      { method: "GET" },
     );
+    return (Array.isArray(raw) ? raw : []).map((item) => ({
+      id: item.id,
+      reference: item.reference || item.id,
+      operatorOrganizationName: item.operateurNom || item.operateurId || "Operateur",
+      lotLabel: item.lotId ? `Lot ${item.lotId.substring(0, 8)}` : null,
+      submittedAt: item.horodatageServeur || item.createdAt || "",
+      withinDeadline: item.isDansDelai ?? true,
+      status: mapSoumissionStatus(item.statut),
+      technicalOfferUploaded: item.offreTechniqueId != null,
+      cautionStatus: item.cautionId ? "valid" as TenderCautionStatus : "missing" as TenderCautionStatus,
+    }));
   }
 
   await sleep(200);
@@ -314,14 +329,28 @@ export async function getServiceContractantTenderSubmissionById(
   aoId: string,
   submissionId: string,
 ): Promise<ServiceContractantTenderSubmissionDetail | null> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     try {
-      return await requestJson<ServiceContractantTenderSubmissionDetail>(
-        `/service-contractant/tenders/${aoId}/submissions/${submissionId}`,
-        {
-          method: "GET",
-        },
+      const raw = await requestJson<any>(
+        `/api/v1/soumissions/${submissionId}`,
+        { method: "GET" },
       );
+      if (!raw || !raw.id) return null;
+      return {
+        id: raw.id,
+        reference: raw.reference || raw.id,
+        operatorOrganizationName: raw.operateurNom || raw.operateurId || "Operateur",
+        lotLabel: raw.lotId ? `Lot` : null,
+        submittedAt: raw.horodatageServeur || raw.createdAt || "",
+        withinDeadline: raw.isDansDelai ?? true,
+        status: mapSoumissionStatus(raw.statut),
+        technicalOfferUploaded: raw.offreTechniqueId != null,
+        cautionStatus: raw.cautionId ? "valid" : "missing",
+        technicalOffer: raw.offreTechnique || { fileName: "-", fileUrl: "#", sha256Hash: "-", complianceStatus: "en_verification", observations: "" },
+        financialOffer: raw.offreFinanciere || { amountHt: "0", amountTtc: "0", vatPercent: "19", decryptedAt: null },
+        caution: raw.caution || { amount: "0", bankName: "-", reference: "-", issueDate: "-", expirationDate: "-", status: "missing" },
+        administrativeDocuments: raw.documentsAdministratifs || [],
+      };
     } catch {
       return null;
     }
@@ -333,4 +362,19 @@ export async function getServiceContractantTenderSubmissionById(
     (entry) => entry.id === submissionId,
   );
   return item ? cloneDetail(item) : null;
+}
+
+// ─── Status mapping helper ───────────────────────────────────────────────────
+
+function mapSoumissionStatus(statut?: string): TenderSubmissionStatus {
+  const s = (statut || "").toUpperCase();
+  if (s === "BROUILLON" || s === "DRAFT") return "recue";
+  if (s === "DEPOSEE" || s === "SOUMISE" || s === "SUBMITTED") return "recue";
+  if (s === "RECUE" || s === "RECEIVED") return "recue";
+  if (s === "EN_VERIFICATION" || s === "VERIFICATION") return "en_verification";
+  if (s === "TECHNIQUE_CONFORME" || s === "CONFORME") return "technique_conforme";
+  if (s === "TECHNIQUE_NON_CONFORME" || s === "NON_CONFORME") return "technique_non_conforme";
+  if (s === "RETENUE" || s === "ATTRIBUEE") return "retenue";
+  if (s === "REJETEE" || s === "REJECTED") return "rejetee";
+  return "recue";
 }

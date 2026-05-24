@@ -9,12 +9,13 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Trick the browser: Proxy API calls directly to the Docker container!
+  // Proxy API calls to the gateway — avoids CORS issues with cookies
   async rewrites() {
+    const gatewayUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
     return[
       {
         source: '/api/v1/:path*',
-        destination: 'http://api-gateway:3000/api/v1/:path*',
+        destination: `${gatewayUrl}/api/v1/:path*`,
       },
     ];
   },

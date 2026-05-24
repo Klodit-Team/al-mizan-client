@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Bell, Check, CheckCheck, X, ChevronRight } from "lucide-react";
 import {
   MOCK_NOTIFS, CATEGORY_META, CATEGORY_FILTERS, fmtDate,
   type NotifItem, type NotifCategory,
 } from "./types";
+import { apiClient } from "@/services/client";
 
 // ─── Notification card ─────────────────────────────────────────────────────────
 
@@ -111,9 +112,60 @@ function NotifModal({ notif, onClose }: { notif: NotifItem; onClose: () => void 
 // ─── Main component ────────────────────────────────────────────────────────────
 
 export default function NotificationsPage() {
-  const [notifs, setNotifs]         = useState<NotifItem[]>(MOCK_NOTIFS);
+  const [notifs, setNotifs]         = useState<NotifItem[]>([]);
   const [catFilter, setCatFilter]   = useState<NotifCategory | "all">("all");
   const [unreadOnly, setUnreadOnly] = useState(false);
+  const [isLoading, setIsLoading]   = useState(true);
+
+  // Fetch real notifications from API
+  useEffect(() => {
+    apiClient<unknown>(
+      "/api/v1/notifications/mes-notifications",
+      { method: "GET" },
+    )
+      .then((response) => {
+        // Handle both flat array and paginated { data: [...] } response
+        let items: { id: string; titre?: string; title?: string; contenu?: string; content?: string; categorie?: string; type?: string; dateEnvoi?: string; date_envoi?: string; sentAt?: string; lu?: boolean; is_lue?: boolean; isRead?: boolean }[] = [];
+        if (Array.isArray(response)) {
+          items = response;
+        } else if (response && typeof response === "object" && "data" in (response as Record<string, unknown>)) {
+          const data = (response as { data: unknown }).data;
+          if (Array.isArray(data)) items = data;
+        }
+
+        if (items.length > 0) {
+          const mapCategorie = (cat: string): NotifCategory => {
+            const c = (cat || "").toUpperCase();
+            if (c === "PUBLICATION") return "publication_ao";
+            if (c === "DEPOT") return "depot_confirme";
+            if (c === "OUVERTURE") return "ouverture_plis";
+            if (c === "EVALUATION") return "evaluation_resultat";
+            if (c === "ATTRIBUTION") return "attribution_provisoire";
+            if (c === "RECOURS") return "recours_update";
+            if (c.startsWith("IA")) return "systeme";
+            return "systeme";
+          };
+
+          setNotifs(
+            items.map((n) => ({
+              id: n.id,
+              titre: n.titre || n.title || "Notification",
+              contenu: n.contenu || n.content || "",
+              categorie: mapCategorie(n.categorie || n.type || "SYSTEME"),
+              dateEnvoi: n.dateEnvoi || n.date_envoi || n.sentAt || new Date().toISOString(),
+              lu: n.lu ?? n.is_lue ?? n.isRead ?? false,
+            })),
+          );
+        } else {
+          setNotifs([]);
+        }
+      })
+      .catch(() => {
+        // On API failure, show empty state (not mocks)
+        setNotifs([]);
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
   const [selected, setSelected]     = useState<NotifItem | null>(null);
 
   const unreadCount = useMemo(() => notifs.filter((n) => !n.lu).length, [notifs]);
@@ -128,10 +180,14 @@ export default function NotificationsPage() {
     setNotifs((prev) => prev.map((n) => n.id === id ? { ...n, lu: true } : n));
     const notif = notifs.find((n) => n.id === id);
     if (notif) setSelected({ ...notif, lu: true });
+    // Call API to mark as read
+    apiClient(`/api/v1/notifications/${id}/lire`, { method: "PATCH" }).catch(() => {});
   }
 
   function markAllRead() {
     setNotifs((prev) => prev.map((n) => ({ ...n, lu: true })));
+    // Call API to mark all as read
+    apiClient("/api/v1/notifications/marquer-toutes-lues", { method: "PATCH" }).catch(() => {});
   }
 
   function dismiss(id: string) {

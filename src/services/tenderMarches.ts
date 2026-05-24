@@ -22,7 +22,8 @@ export interface ServiceContractantMarcheDetail extends ServiceContractantMarche
   description: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "");
+const API_BASE_URL = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "");
+const USE_REAL_API = typeof window !== "undefined" || Boolean(process.env.NEXT_PUBLIC_API_BASE_URL);
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -156,11 +157,9 @@ function ensureMarcheStore(): Map<string, ServiceContractantMarcheDetail> {
 }
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  if (!API_BASE_URL) {
-    throw new Error("API base URL is not configured");
-  }
+  const url = API_BASE_URL ? `${API_BASE_URL}${path}` : path;
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(url, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -174,15 +173,22 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(message || `Request failed with status ${response.status}`);
   }
 
-  return (await response.json()) as T;
+  const json = await response.json();
+
+  // Unwrap paginated responses { data: [...] }
+  if (json && typeof json === "object" && "data" in json && Array.isArray(json.data)) {
+    return json.data as T;
+  }
+
+  return json as T;
 }
 
 export async function listServiceContractantMarches(): Promise<
   ServiceContractantMarcheListItem[]
 > {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     return requestJson<ServiceContractantMarcheListItem[]>(
-      "/service-contractant/marches",
+      "/api/v1/appels-offres/marches",
       {
         method: "GET",
       },
@@ -205,10 +211,10 @@ export async function listServiceContractantMarches(): Promise<
 export async function getServiceContractantMarcheById(
   id: string,
 ): Promise<ServiceContractantMarcheDetail | null> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     try {
       return await requestJson<ServiceContractantMarcheDetail>(
-        `/service-contractant/marches/${id}`,
+        `/api/v1/appels-offres/marches/${id}`,
         {
           method: "GET",
         },
@@ -227,9 +233,9 @@ export async function updateServiceContractantMarcheStatus(
   id: string,
   status: TenderMarcheNextStatus,
 ): Promise<ServiceContractantMarcheDetail> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     return requestJson<ServiceContractantMarcheDetail>(
-      `/service-contractant/marches/${id}/status`,
+      `/api/v1/appels-offres/marches/${id}`,
       {
         method: "PATCH",
         body: JSON.stringify({ status }),

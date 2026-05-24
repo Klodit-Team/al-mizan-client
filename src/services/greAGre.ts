@@ -70,7 +70,8 @@ export interface ServiceContractantGreAGreRequestDetail extends ServiceContracta
   controllerDecision: GreAGreControllerDecision | null;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "");
+const API_BASE_URL = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "");
+const USE_REAL_API = typeof window !== "undefined" || Boolean(process.env.NEXT_PUBLIC_API_BASE_URL);
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -325,11 +326,9 @@ function cloneDetail(
 }
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  if (!API_BASE_URL) {
-    throw new Error("API base URL is not configured");
-  }
+  const url = API_BASE_URL ? `${API_BASE_URL}${path}` : path;
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(url, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -343,32 +342,56 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(message || `Request failed with status ${response.status}`);
   }
 
-  return (await response.json()) as T;
+  const json = await response.json();
+
+  // Unwrap paginated responses { data: [...] }
+  if (json && typeof json === "object" && "data" in json && Array.isArray(json.data)) {
+    return json.data as T;
+  }
+
+  return json as T;
 }
 
 export async function listServiceContractantGreAGreRequests(): Promise<
   ServiceContractantGreAGreRequestItem[]
 > {
-  if (API_BASE_URL) {
-    return requestJson<ServiceContractantGreAGreRequestItem[]>(
-      "/service-contractant/gre-a-gre/requests",
-      {
-        method: "GET",
-      },
+  if (USE_REAL_API) {
+    const raw = await requestJson<{ id: string; reference?: string; objet?: string; montantEstime?: number | string; statut?: string; createdAt?: string }[]>(
+      "/api/v1/appels-offres?typeProcedure=GRE_A_GRE&page=1&limit=100",
+      { method: "GET" },
     );
+    return (Array.isArray(raw) ? raw : []).map((ao) => ({
+      id: ao.id,
+      reference: ao.reference || ao.id,
+      object: ao.objet || "",
+      estimatedAmount: String(ao.montantEstime || "0"),
+      status: mapAoStatusToGreAGre(ao.statut),
+      submittedAt: ao.createdAt || new Date().toISOString(),
+      iaComplianceScore: null,
+    }));
   }
 
   await sleep(250);
   return [...mockedGreAGreRequests];
 }
 
+function mapAoStatusToGreAGre(statut?: string): GreAGreRequestStatus {
+  const s = (statut || "").toUpperCase();
+  if (s === "BROUILLON") return "brouillon";
+  if (s === "PUBLIE" || s === "SOUMISE") return "soumise";
+  if (s === "EN_COURS" || s === "EVALUATION") return "en_analyse_ia";
+  if (s === "ATTRIBUE") return "acceptee";
+  if (s === "ANNULE") return "rejetee";
+  return "soumise";
+}
+
 export async function getServiceContractantGreAGreRequestById(
   id: string,
 ): Promise<ServiceContractantGreAGreRequestDetail | null> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     try {
       return await requestJson<ServiceContractantGreAGreRequestDetail>(
-        `/service-contractant/gre-a-gre/requests/${id}`,
+        `/api/v1/appels-offres/${id}`,
         {
           method: "GET",
         },
@@ -386,9 +409,9 @@ export async function getServiceContractantGreAGreRequestById(
 export async function submitServiceContractantGreAGreRequest(
   payload: SubmitGreAGreRequestPayload,
 ): Promise<ServiceContractantGreAGreRequestDetail> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     return requestJson<ServiceContractantGreAGreRequestDetail>(
-      "/service-contractant/gre-a-gre/requests",
+      "/api/v1/appels-offres?typeProcedure=GRE_A_GRE&page=1&limit=100",
       {
         method: "POST",
         body: JSON.stringify(payload),
@@ -433,9 +456,9 @@ export async function resubmitServiceContractantGreAGreRequest(
   id: string,
   payload: SubmitGreAGreRequestPayload,
 ): Promise<ServiceContractantGreAGreRequestDetail> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     return requestJson<ServiceContractantGreAGreRequestDetail>(
-      `/service-contractant/gre-a-gre/requests/${id}/resubmit`,
+      `/api/v1/appels-offres/${id}`,
       {
         method: "PATCH",
         body: JSON.stringify(payload),

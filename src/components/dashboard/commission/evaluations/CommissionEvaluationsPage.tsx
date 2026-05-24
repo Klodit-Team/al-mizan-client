@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { commissionTranslations } from "@/i18n/commission-translations";
 
@@ -61,6 +62,30 @@ export default function CommissionEvaluationsPage({ locale }: Props) {
   const t = commissionTranslations[isAr ? "ar" : "fr"];
   const td = t.dashboard;
 
+  const [ao, setAo] = useState(AO_MOCK);
+
+  // Fetch real evaluation data from API
+  useEffect(() => {
+    (async () => {
+      try {
+        const { apiClient } = await import("@/services/client");
+        const evaluations = await apiClient<{ id?: string; appelOffreId?: string; reference?: string; objet?: string; statut?: string }[]>(
+          "/api/v1/evaluations?page=1&limit=1",
+          { method: "GET" },
+        ).catch(() => []);
+        if (Array.isArray(evaluations) && evaluations.length > 0) {
+          const ev = evaluations[0];
+          setAo({
+            id: ev.appelOffreId || ev.id || AO_MOCK.id,
+            reference: ev.reference || AO_MOCK.reference,
+            objet: ev.objet || AO_MOCK.objet,
+            progressGlobal: AO_MOCK.progressGlobal,
+          });
+        }
+      } catch { /* keep mock fallback */ }
+    })();
+  }, []);
+
   return (
     <div style={{ minHeight: "100%", direction: isAr ? "rtl" : "ltr" }}>
       {/* AO Header */}
@@ -79,14 +104,14 @@ export default function CommissionEvaluationsPage({ locale }: Props) {
       >
         <div>
           <h1 style={{ fontSize: 20, fontWeight: 700, color: "#1B1C1C", margin: "0 0 4px" }}>
-            {td.titre(AO_MOCK.reference)}
+            {td.titre(ao.reference)}
           </h1>
           <p style={{ fontSize: 13, color: "#6F7A6B", margin: 0 }}>
-            {AO_MOCK.objet} · {td.phase}
+            {ao.objet} · {td.phase}
           </p>
         </div>
         <Link
-          href={`/${locale}/dashboard/commission/classement/${AO_MOCK.id}`}
+          href={`/${locale}/dashboard/commission/classement/${ao.id}`}
           style={{
             display: "flex",
             alignItems: "center",
@@ -106,7 +131,7 @@ export default function CommissionEvaluationsPage({ locale }: Props) {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
             <path d="M7 17V13H11V17H7ZM13 17V7H17V17H13Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
-          {td.globalProgress(AO_MOCK.progressGlobal)}
+          {td.globalProgress(ao.progressGlobal)}
         </Link>
       </div>
 
@@ -117,7 +142,7 @@ export default function CommissionEvaluationsPage({ locale }: Props) {
           const { statut, progress, detailArgs, actionKey } = phaseData;
           const isVerrouillee = statut === "verrouillee";
           const isEnCours = statut === "en_cours";
-          const href = phaseData.actionHref ?? `/${locale}/dashboard/commission/evaluations/${AO_MOCK.id}`;
+          const href = phaseData.actionHref ?? `/${locale}/dashboard/commission/evaluations/${ao.id}`;
           const detail = isVerrouillee
             ? td.detail.verrouillee
             : isEnCours

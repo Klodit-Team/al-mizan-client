@@ -435,3 +435,31 @@ export async function getContractantDashboardData(): Promise<ContractantDashboar
     deadlines: upcomingDeadlines,
   };
 }
+
+/**
+ * Fetch activity feed from the audit service.
+ * Falls back to mocked activities if the audit service is unavailable.
+ */
+export async function getContractantActivityFeed(): Promise<ContractantActivityItem[]> {
+  try {
+    const raw = await apiClient<unknown>("/api/v1/audit/activities?limit=10", { method: "GET" });
+
+    if (raw && typeof raw === "object" && "data" in (raw as Record<string, unknown>)) {
+      const items = (raw as { data: unknown }).data;
+      if (Array.isArray(items)) {
+        return items.map((item: { id?: string; type?: string; title?: string; subtitle?: string; timestamp?: string }) => ({
+          id: item.id || crypto.randomUUID(),
+          type: (item.type || "STATUS") as ContractantActivityItem["type"],
+          title: item.title || "Activite",
+          subtitle: item.subtitle || "",
+          timestamp: item.timestamp || new Date().toISOString(),
+        }));
+      }
+    }
+
+    return [];
+  } catch {
+    // Fallback to empty - the dashboard already shows mocked activities from getContractantDashboardData
+    return [];
+  }
+}

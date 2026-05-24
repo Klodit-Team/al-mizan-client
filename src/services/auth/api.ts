@@ -102,3 +102,38 @@ export function listCurrentUserRoles(userId: string): Promise<UserRoleAssignment
     method: 'GET',
   });
 }
+
+// ─── Password Reset ─────────────────────────────────────────────────────────
+
+export interface ResetPasswordRequestPayload {
+  email: string;
+}
+
+export interface ResetPasswordRequestResponse {
+  message: string;
+  token?: string;
+}
+
+export interface ResetPasswordConfirmPayload {
+  token: string;
+  newPassword: string;
+  confirmeNewPassword: string;
+}
+
+export interface ResetPasswordConfirmResponse {
+  message: string;
+}
+
+export function requestPasswordReset(payload: ResetPasswordRequestPayload): Promise<ResetPasswordRequestResponse> {
+  return apiClient<ResetPasswordRequestResponse>(`${AUTH_BASE_PATH}/forgot-password`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function confirmPasswordReset(payload: ResetPasswordConfirmPayload): Promise<ResetPasswordConfirmResponse> {
+  return apiClient<ResetPasswordConfirmResponse>(`${AUTH_BASE_PATH}/reset-password`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
