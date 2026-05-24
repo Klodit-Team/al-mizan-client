@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import type { SoumissionRetenue, CommissionRole, OuverturePlisSelectedAO } from "./types";
 
@@ -80,6 +80,26 @@ export default function OffreDechiffrementPage({ locale, offreId, userId, dict, 
     const [keysUnlocked, setKeysUnlocked] = useState<number>(0);
     const [isUnlocking, setIsUnlocking] = useState(false);
 
+    const [ao, setAo] = useState<OuverturePlisSelectedAO>(MOCK_AO);
+    const [soumissionsData, setSoumissionsData] = useState<SoumissionRetenue[]>(MOCK_SOUMISSIONS);
+
+    // Fetch real data from API
+    useEffect(() => {
+      (async () => {
+        try {
+          const { apiClient } = await import("@/services/client");
+          const seance = await apiClient<{ aoId?: string; reference?: string; objet?: string; submissions?: SoumissionRetenue[] }>(
+            `/api/v1/seances-ouverture/${offreId}`,
+            { method: "GET" },
+          ).catch(() => null);
+          if (seance) {
+            if (seance.reference) setAo({ id: seance.aoId || offreId, reference: seance.reference, objet: seance.objet || "" });
+            if (Array.isArray(seance.submissions) && seance.submissions.length > 0) setSoumissionsData(seance.submissions);
+          }
+        } catch { /* keep mock fallback */ }
+      })();
+    }, [offreId]);
+
     const isFullyUnlocked = keysUnlocked >= 3;
 
     const handleUnlockClick = async () => {
@@ -136,7 +156,7 @@ export default function OffreDechiffrementPage({ locale, offreId, userId, dict, 
             <div>
                 <h1 className="text-2xl font-bold text-gray-800">{to.pageTitle}</h1>
                 <p className="text-gray-500 mt-1 font-medium">
-                    {to.pageSubTitle.replace("{{reference}}", MOCK_AO.reference).replace("{{objet}}", MOCK_AO.objet)}
+                    {to.pageSubTitle.replace("{{reference}}", ao.reference).replace("{{objet}}", ao.objet)}
                 </p>
             </div>
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-start gap-3">
@@ -235,7 +255,7 @@ export default function OffreDechiffrementPage({ locale, offreId, userId, dict, 
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {MOCK_SOUMISSIONS.map((s) => (
+                            {soumissionsData.map((s) => (
                                 <tr key={s.id} className="text-sm font-medium">
                                     <td className="py-4 px-3">
                                         <div className="flex items-center gap-3">

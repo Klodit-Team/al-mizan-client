@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   User, Building2, Briefcase, Pencil, CheckCircle2, XCircle,
   BadgeCheck, AlertTriangle, ChevronDown, Save, X,
@@ -9,6 +9,7 @@ import {
   MOCK_PERSONAL, MOCK_ORGANISATION, MOCK_OE_PROFILE, WILAYAS,
   type PersonalInfo, type OrganisationInfo, type OeProfileInfo,
 } from "./types";
+import { apiClient } from "@/services/client";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -148,8 +149,65 @@ export default function MyProfilePage({ dict }: { dict?: any }) {
   const [editingO, setEditingO]     = useState(false);
   const [savingO, setSavingO]       = useState(false);
 
+  // Fetch real profile from API
+  useEffect(() => {
+    (async () => {
+      try {
+        const me = await apiClient<{ user?: { userId?: string; email?: string } }>("/api/v1/auth/me", { method: "GET" });
+        const userId = me?.user?.userId;
+        if (!userId) return;
+
+        const profile = await apiClient<{ nom?: string; prenom?: string; telephone?: string; langue?: string }>(`/api/v1/users/profiles/user/${userId}`, { method: "GET" }).catch(() => null);
+        if (profile) {
+          const p: PersonalInfo = {
+            nom: profile.nom || "",
+            prenom: profile.prenom || "",
+            telephone: profile.telephone || "",
+            email: me.user?.email || "",
+            langue: (profile.langue as "fr" | "ar") || "fr",
+          };
+          setPersonal(p);
+          setPDraft(p);
+        }
+
+        // Fetch operateur + organisation data
+        const oeListRaw = await apiClient<unknown>("/api/v1/users/operateurs-economiques?page=1&limit=100", { method: "GET" }).catch(() => null);
+        if (oeListRaw) {
+          const list = Array.isArray(oeListRaw) ? oeListRaw : (oeListRaw as { data?: unknown[] })?.data || [];
+          const normalizedUserId = userId.trim().toLowerCase();
+          const current = (list as { id?: string; userId?: string; user_id?: string; organisationId?: string; qualifications?: string | string[]; categories?: string | string[]; isEligible?: boolean; isBlacklisted?: boolean; organisation?: { denomination?: string; nif?: string; nis?: string; registreCommerce?: string; adresse?: string; wilaya?: string; type?: string; isVerified?: boolean } }[]).find(
+            (item) => (item.userId || item.user_id || "").trim().toLowerCase() === normalizedUserId,
+          );
+          if (current?.organisation) {
+            const o: OrganisationInfo = {
+              denomination: current.organisation.denomination || "",
+              nif: current.organisation.nif || "",
+              nis: current.organisation.nis || "",
+              rc: current.organisation.registreCommerce || "",
+              adresse: current.organisation.adresse || "",
+              wilaya: current.organisation.wilaya || "",
+              type: (current.organisation.type as OrganisationInfo["type"]) || "Autre",
+              is_verified: current.organisation.isVerified ?? false,
+            };
+            setOrg(o);
+            setODraft(o);
+          }
+
+          // OE-specific fields
+          const oeData: OeProfileInfo = {
+            qualifications: current.qualifications ? (Array.isArray(current.qualifications) ? current.qualifications : String(current.qualifications).split(",").map((s: string) => s.trim())) : [],
+            categoriesProfessionnelles: current.categories ? (Array.isArray(current.categories) ? current.categories : String(current.categories).split(",").map((s: string) => s.trim())) : [],
+            is_eligible: current.isEligible ?? true,
+            is_blacklisted: current.isBlacklisted ?? false,
+          };
+          setOe(oeData);
+        }
+      } catch { /* keep mock fallback */ }
+    })();
+  }, []);
+
   // OE profile (read-only display)
-  const oe: OeProfileInfo = MOCK_OE_PROFILE;
+  const [oe, setOe] = useState<OeProfileInfo>(MOCK_OE_PROFILE);
 
   async function savePersonal() {
     setSavingP(true);

@@ -15,7 +15,8 @@ export interface MfaSetupData {
   manualKey: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "");
+const API_BASE_URL = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "");
+const USE_REAL_API = typeof window !== "undefined" || Boolean(process.env.NEXT_PUBLIC_API_BASE_URL);
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -52,11 +53,9 @@ function cloneOverview(): ServiceContractantSecurityOverview {
 }
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  if (!API_BASE_URL) {
-    throw new Error("API base URL is not configured");
-  }
+  const url = API_BASE_URL ? `${API_BASE_URL}${path}` : path;
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(url, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -70,13 +69,20 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(message || `Request failed with status ${response.status}`);
   }
 
-  return (await response.json()) as T;
+  const json = await response.json();
+
+  // Unwrap paginated responses { data: [...] }
+  if (json && typeof json === "object" && "data" in json && Array.isArray(json.data)) {
+    return json.data as T;
+  }
+
+  return json as T;
 }
 
 export async function getServiceContractantSecurityOverview(): Promise<ServiceContractantSecurityOverview> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     return requestJson<ServiceContractantSecurityOverview>(
-      "/service-contractant/security/overview",
+      "/api/v1/auth/sessions",
       {
         method: "GET",
       },
@@ -88,9 +94,9 @@ export async function getServiceContractantSecurityOverview(): Promise<ServiceCo
 }
 
 export async function startServiceContractantMfaSetup(): Promise<MfaSetupData> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     return requestJson<MfaSetupData>(
-      "/service-contractant/security/mfa/setup",
+      "/api/v1/auth/mfa/setup",
       {
         method: "POST",
       },
@@ -102,9 +108,9 @@ export async function startServiceContractantMfaSetup(): Promise<MfaSetupData> {
 }
 
 export async function confirmServiceContractantMfaSetup(): Promise<ServiceContractantSecurityOverview> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     return requestJson<ServiceContractantSecurityOverview>(
-      "/service-contractant/security/mfa/confirm",
+      "/api/v1/auth/mfa/confirm",
       {
         method: "POST",
       },
@@ -119,9 +125,9 @@ export async function confirmServiceContractantMfaSetup(): Promise<ServiceContra
 export async function disableServiceContractantMfa(
   password: string,
 ): Promise<ServiceContractantSecurityOverview> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     return requestJson<ServiceContractantSecurityOverview>(
-      "/service-contractant/security/mfa/disable",
+      "/api/v1/auth/mfa/disable",
       {
         method: "POST",
         body: JSON.stringify({ password }),
@@ -142,11 +148,11 @@ export async function disableServiceContractantMfa(
 export async function revokeServiceContractantSession(
   sessionId: string,
 ): Promise<ServiceContractantSecurityOverview> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     return requestJson<ServiceContractantSecurityOverview>(
-      `/service-contractant/security/sessions/${sessionId}/revoke`,
+      `/api/v1/auth/sessions/${sessionId}`,
       {
-        method: "POST",
+        method: "DELETE",
       },
     );
   }
@@ -157,9 +163,9 @@ export async function revokeServiceContractantSession(
 }
 
 export async function revokeAllOtherServiceContractantSessions(): Promise<ServiceContractantSecurityOverview> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     return requestJson<ServiceContractantSecurityOverview>(
-      "/service-contractant/security/sessions/revoke-others",
+      "/api/v1/auth/logout-all",
       {
         method: "POST",
       },

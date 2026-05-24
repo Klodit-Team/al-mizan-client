@@ -147,6 +147,21 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [validated, setValidated] = useState(false);
 
+  // Fetch real classement from API
+  useEffect(() => {
+    (async () => {
+      try {
+        const { apiClient } = await import("@/services/client");
+        const evaluations = await apiClient<{ id: string }[]>(`/api/v1/evaluations?appelOffreId=${aoId}`, { method: "GET" }).catch(() => []);
+        if (!Array.isArray(evaluations) || !evaluations.length) return;
+        const classement = await apiClient<LigneClassement[]>(`/api/v1/evaluations/${evaluations[0].id}/classement`, { method: "GET" }).catch(() => []);
+        if (Array.isArray(classement) && classement.length > 0) {
+          setLignes(classement);
+        }
+      } catch { /* keep mock fallback */ }
+    })();
+  }, [aoId]);
+
   const handleDecision = (idx: number, d: DecType) => setLignes((prev) => prev.map((l, i) => i === idx ? { ...l, decisionFinale: d } : l));
 
   const recLabel = (rec: RecType) =>

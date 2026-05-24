@@ -321,3 +321,40 @@ export async function getOperateurAppelOffreById(id: string): Promise<OeAoItem |
   const submissionStatusByAoId = pickLatestSubmissionStatusByAo(submissions);
   return mapAoRecord(ao, submissionStatusByAoId);
 }
+
+// ─── Eligibility Criteria & Documents ────────────────────────────────────────
+
+export interface OeAoEligibilityCriterion {
+  id: string;
+  label: string;
+  description?: string;
+  isRequired: boolean;
+}
+
+export interface OeAoDocument {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  url: string;
+}
+
+export async function getOperateurAoEligibilityCriteria(aoId: string): Promise<OeAoEligibilityCriterion[]> {
+  const raw = await apiClient<unknown>(
+    `/api/v1/appels-offres/${aoId}/criteres-eligibilite`,
+    { method: "GET" },
+  ).catch(() => []);
+
+  const items = unwrapEnvelope<unknown>(raw);
+  return Array.isArray(items) ? items as OeAoEligibilityCriterion[] : [];
+}
+
+export async function getOperateurAoDocuments(aoId: string): Promise<OeAoDocument[]> {
+  const raw = await apiClient<unknown>(
+    `/api/v1/documents/administrative/${aoId}`,
+    { method: "GET" },
+  ).catch(() => []);
+
+  const items = unwrapEnvelope<unknown>(raw);
+  return Array.isArray(items) ? items as OeAoDocument[] : [];
+}

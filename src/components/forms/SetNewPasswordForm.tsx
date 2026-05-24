@@ -48,29 +48,31 @@ export default function SetNewPasswordForm({ dict }: SetNewPasswordFormProps) {
     const handleSubmit = async () => {
         if (password !== confirmPassword || code.join("").length < CODE_LENGTH) return;
         setIsSubmitting(true);
-        /*
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/reset-password`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/reset-password`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: "include",
                 body: JSON.stringify({
-                    code: code.join(""),
-                    password: password,
+                    token: code.join(""),
+                    newPassword: password,
+                    confirmeNewPassword: confirmPassword,
                 }),
             });
             
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || "Password reset failed");
+                const errorData = await response.json().catch(() => ({}));
+                console.error("Reset password error:", errorData.message || "Password reset failed");
+                setIsSubmitting(false);
+                return;
             }
             
             router.push(`/${locale}/auth/login`);
         } catch (error) {
             console.error("Reset password error:", error);
-            
+            setIsSubmitting(false);
+            return;
         }
-        */
-        await new Promise((r) => setTimeout(r, 1000));
         setIsSubmitting(false);
         router.push(`/${locale}/auth/login`);
     };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { commissionTranslations } from "@/i18n/commission-translations";
 
@@ -104,6 +104,7 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
   const t = commissionTranslations[isAr ? "ar" : "fr"];
   const te = t.evaluation;
 
+  const [soumissions, setSoumissions] = useState(SOUMISSIONS_MOCK);
   const [activeSoumissionIdx, setActiveSoumissionIdx] = useState(0);
   const [criteresByS, setCriteresByS] = useState<Record<string, Critere[]>>(
     Object.fromEntries(SOUMISSIONS_MOCK.map((s) => [s.id, CRITERES_INIT.map((c) => ({ ...c }))]))
@@ -111,8 +112,28 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
   const [saved, setSaved] = useState(false);
   const [iaExpandedMap, setIaExpandedMap] = useState<Record<string, boolean>>({});
 
-  const currentSoumission = SOUMISSIONS_MOCK[activeSoumissionIdx];
-  const criteres = criteresByS[currentSoumission.id] ?? [];
+  // Fetch real submissions and criteria from API
+  useEffect(() => {
+    (async () => {
+      try {
+        const { apiClient } = await import("@/services/client");
+        const subs = await apiClient<{ id: string; reference?: string }[]>(`/api/v1/soumissions/appel-offre/${aoId}`, { method: "GET" }).catch(() => []);
+        if (Array.isArray(subs) && subs.length > 0) {
+          const mapped = subs.map((s, i) => ({ id: s.id, reference: s.reference || `S-${i + 1}`, lot: "Lot 1" }));
+          setSoumissions(mapped);
+          setCriteresByS(Object.fromEntries(mapped.map((s) => [s.id, CRITERES_INIT.map((c) => ({ ...c }))])));
+        }
+
+        const criteria = await apiClient<{ id: string; label?: string; ponderation?: number }[]>(`/api/v1/appels-offres/${aoId}/criteres-evaluation`, { method: "GET" }).catch(() => []);
+        if (Array.isArray(criteria) && criteria.length > 0) {
+          // Could map real criteria here in the future
+        }
+      } catch { /* keep mock fallback */ }
+    })();
+  }, [aoId]);
+
+  const currentSoumission = soumissions[activeSoumissionIdx];
+  const criteres = criteresByS[currentSoumission?.id] ?? [];
 
   const scoreActuel = criteres.reduce((acc, c) => {
     if (c.note === null) return acc;
@@ -129,7 +150,7 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
   };
   const goNext = () => {
     setSaved(true);
-    if (activeSoumissionIdx < SOUMISSIONS_MOCK.length - 1) { setActiveSoumissionIdx((i) => i + 1); setSaved(false); }
+    if (activeSoumissionIdx < soumissions.length - 1) { setActiveSoumissionIdx((i) => i + 1); setSaved(false); }
   };
   const goPrev = () => {
     if (activeSoumissionIdx > 0) { setActiveSoumissionIdx((i) => i - 1); setSaved(false); }
@@ -165,7 +186,7 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
             <span style={{ fontWeight: 400, fontSize: 13, color: "#6F7A6B" }}>{te.anonymisee}</span>
           </p>
           <p style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2 }}>
-            {currentSoumission.lot} · {activeSoumissionIdx + 1}/{SOUMISSIONS_MOCK.length}
+            {currentSoumission.lot} · {activeSoumissionIdx + 1}/{soumissions.length}
           </p>
         </div>
         <span style={{ fontSize: 14, fontWeight: 700, color: "#4CAF50" }}>
@@ -262,7 +283,7 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
             </button>
             <button onClick={goNext}
               style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 28px", borderRadius: 999, fontSize: 13, fontWeight: 600, background: "#4CAF50", color: "#fff", border: "none", cursor: "pointer" }}>
-              {saved && activeSoumissionIdx === SOUMISSIONS_MOCK.length - 1 ? (
+              {saved && activeSoumissionIdx === soumissions.length - 1 ? (
                 <><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>{t.enregistre}</>
               ) : t.enregistrerSuivant}
             </button>

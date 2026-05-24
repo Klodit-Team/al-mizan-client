@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Smartphone, Monitor, Lock, Trash2, LogOut,
   CheckCircle2, XCircle, Eye, EyeOff, AlertTriangle, Key,
 } from "lucide-react";
 import { MOCK_SESSIONS, type Session } from "./types";
+import { apiClient } from "@/services/client";
 
 // ─── MFA Section ──────────────────────────────────────────────────────────────
 
@@ -156,6 +157,28 @@ function MfaSection() {
 function SessionsSection() {
   const [sessions, setSessions] = useState<Session[]>(MOCK_SESSIONS);
 
+  // Fetch real sessions from API
+  useEffect(() => {
+    apiClient<{ sessions?: { id: string; deviceInfo?: string; ipAddress?: string; createdAt?: string }[] }>(
+      "/api/v1/auth/sessions",
+      { method: "GET" },
+    )
+      .then((data) => {
+        if (data?.sessions && data.sessions.length > 0) {
+          setSessions(
+            data.sessions.map((s, i) => ({
+              id: s.id,
+              device: s.deviceInfo || "Unknown device",
+              ip: s.ipAddress || "0.0.0.0",
+              lastActive: s.createdAt || new Date().toISOString(),
+              current: i === 0,
+            })),
+          );
+        }
+      })
+      .catch(() => { /* keep mock fallback */ });
+  }, []);
+
   function revokeSession(id: string) {
     setSessions((prev) => prev.filter((s) => s.id !== id));
   }
@@ -242,11 +265,24 @@ function PasswordSection() {
   async function handleSubmit() {
     if (!validate()) return;
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setSaving(false);
-    setSuccess(true);
-    setForm({ current: "", next: "", confirm: "" });
-    setTimeout(() => setSuccess(false), 3000);
+    try {
+      await apiClient<{ message: string }>("/api/v1/auth/change-password", {
+        method: "POST",
+        body: JSON.stringify({
+          currentPassword: form.current,
+          newPassword: form.next,
+          confirmeNewPassword: form.confirm,
+        }),
+      });
+      setSuccess(true);
+      setForm({ current: "", next: "", confirm: "" });
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erreur lors du changement de mot de passe";
+      setErrors({ current: message });
+    } finally {
+      setSaving(false);
+    }
   }
 
   function PasswordField({ id, label, value, showVal, onToggle, onChange, error }: {

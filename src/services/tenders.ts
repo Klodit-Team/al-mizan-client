@@ -515,6 +515,21 @@ export async function getServiceContractantTenderById(
     return null;
   }
 
+  // Fetch CDC documents separately
+  const cdcRaw = await apiClient<unknown>(`/api/v1/appels-offres/${id}/cdc`, { method: "GET" }).catch(() => null);
+  if (cdcRaw) {
+    const cdcData = unwrapEnvelope<unknown>(cdcRaw);
+    if (cdcData && typeof cdcData === "object") {
+      const cdcArray = Array.isArray(cdcData) ? cdcData : [cdcData];
+      record.documentsCdc = cdcArray.map((item: any) => ({
+        id: item.id || item.documentId || "cdc-1",
+        documentId: item.documentId || item.id || "cdc-1",
+        prixRetrait: item.prixRetrait || item.withdrawalPrice || null,
+        publieAt: item.publieAt || item.publishedAt || item.createdAt || null,
+      }));
+    }
+  }
+
   return mapRecordToTenderDetail(record);
 }
 
@@ -627,11 +642,15 @@ export async function publishServiceContractantTender(
   });
 
   const aoId = persisted.id;
+  const identity = await resolveCurrentContractantIdentity();
+  const ownerId = identity.serviceContractantId || identity.userId || aoId;
 
   // 1. Upload and link the CDC Document
   if (payload.cdcFile) {
     const formData = new FormData();
     formData.append("file", payload.cdcFile);
+    formData.append("ownerId", ownerId);
+    formData.append("ownerType", "ORGANISATION");
     try {
       const uploadRaw = await apiClient<any>("/api/v1/documents/upload", {
         method: "POST",
