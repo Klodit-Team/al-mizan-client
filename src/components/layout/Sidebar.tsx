@@ -159,7 +159,7 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
     switch (role) {
       case "admin":       return `/${locale}/dashboard/admin/${userId}/tableau-de-bord`;
       case "contractant": return `/${locale}/dashboard/contractant/tableau-de-bord`;
-      case "commission":  return `/${locale}/dashboard/commission`;
+      case "commission": return `/${locale}/dashboard/commission/${userId}/tableau-de-bord`;
       default:            return `/${locale}/dashboard/operateur/tableau-de-bord`;
     }
   })();

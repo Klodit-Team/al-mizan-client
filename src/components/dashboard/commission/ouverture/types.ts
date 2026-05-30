@@ -4,7 +4,7 @@ export interface SoumissionRetenue {
         nom: string;
         acronyme: string;
     };
-    scoreTechnique: number;
+    scoreTechnique: number | null;
     montantFinancier: number | null; // null if not yet decrypted
 }
 
