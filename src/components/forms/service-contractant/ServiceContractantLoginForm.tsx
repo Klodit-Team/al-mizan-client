@@ -113,7 +113,7 @@ export default function ServiceContractantLoginForm({
         <p className="text-sm text-gray-500 mt-1">{dict.subtitle}</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+      <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
         <LoginField
           label={dict.email}
           placeholder={dict.emailPlaceholder}
