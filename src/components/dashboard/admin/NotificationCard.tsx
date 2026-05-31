@@ -1,12 +1,13 @@
 "use client";
 
-import { type Notification, type NotificationCategory } from "@/components/dashboard/admin/notif/Notificationspage";
+import { type NotificationEntity } from "@/components/dashboard/admin/notif/Notificationspage";
+import type { NotificationCategorie } from "@/services/admin/notifications";
 import type { getDictionary } from "@/i18n/get-dictionaries";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
 
 const categoryStyles: Record<string, { color: string; bg: string; dot: string; icon: React.ReactNode }> = {
-    publication_ao: {
+    PUBLICATION: {
         color: "text-blue-600",
         bg: "bg-blue-50",
         dot: "bg-blue-500",
@@ -18,7 +19,7 @@ const categoryStyles: Record<string, { color: string; bg: string; dot: string; i
             </div>
         ),
     },
-    depot_confirme: {
+    DEPOT: {
         color: "text-green-600",
         bg: "bg-green-50",
         dot: "bg-green-500",
@@ -30,7 +31,7 @@ const categoryStyles: Record<string, { color: string; bg: string; dot: string; i
             </div>
         ),
     },
-    ouverture_plis: {
+    OUVERTURE: {
         color: "text-purple-600",
         bg: "bg-purple-50",
         dot: "bg-purple-500",
@@ -42,7 +43,7 @@ const categoryStyles: Record<string, { color: string; bg: string; dot: string; i
             </div>
         ),
     },
-    evaluation_resultat: {
+    EVALUATION: {
         color: "text-yellow-600",
         bg: "bg-yellow-50",
         dot: "bg-yellow-500",
@@ -54,7 +55,7 @@ const categoryStyles: Record<string, { color: string; bg: string; dot: string; i
             </div>
         ),
     },
-    attribution_provisoire: {
+    ATTRIBUTION: {
         color: "text-orange-600",
         bg: "bg-orange-50",
         dot: "bg-orange-500",
@@ -66,19 +67,7 @@ const categoryStyles: Record<string, { color: string; bg: string; dot: string; i
             </div>
         ),
     },
-    attribution_definitive: {
-        color: "text-green-700",
-        bg: "bg-green-50",
-        dot: "bg-green-700",
-        icon: (
-            <div className="w-9 h-9 rounded-full bg-green-50 flex items-center justify-center">
-                <svg className="w-4 h-4 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-            </div>
-        ),
-    },
-    recours_update: {
+    RECOURS: {
         color: "text-red-600",
         bg: "bg-red-50",
         dot: "bg-red-500",
@@ -90,7 +79,7 @@ const categoryStyles: Record<string, { color: string; bg: string; dot: string; i
             </div>
         ),
     },
-    systeme: {
+    SYSTEME: {
         color: "text-gray-600",
         bg: "bg-gray-100",
         dot: "bg-gray-400",
@@ -102,37 +91,108 @@ const categoryStyles: Record<string, { color: string; bg: string; dot: string; i
             </div>
         ),
     },
+    IA_DIVERGENCE: {
+        color: "text-amber-600",
+        bg: "bg-amber-50",
+        dot: "bg-amber-500",
+        icon: (
+            <div className="w-9 h-9 rounded-full bg-amber-50 flex items-center justify-center">
+                <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+            </div>
+        ),
+    },
+    IA_ERREUR: {
+        color: "text-rose-600",
+        bg: "bg-rose-50",
+        dot: "bg-rose-500",
+        icon: (
+            <div className="w-9 h-9 rounded-full bg-rose-50 flex items-center justify-center">
+                <svg className="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+        ),
+    },
+};
+
+// Fallback style for unknown categories
+const defaultStyle = {
+    color: "text-gray-500",
+    bg: "bg-gray-50",
+    dot: "bg-gray-300",
+    icon: (
+        <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+        </div>
+    ),
 };
 
 interface NotificationCardProps {
-    notification: Notification;
+    notification: NotificationEntity;
     onMarkRead: (id: string) => void;
     dict: CommonDict["dashboard"]["admin"]["notificationsPage"];
 }
 
+function formatNotificationTime(dateEnvoi: string): string {
+    const date = new Date(dateEnvoi);
+    if (Number.isNaN(date.getTime())) return "";
+
+    const now = Date.now();
+    const diffMs = now - date.getTime();
+    const diffMin = Math.floor(diffMs / 60_000);
+
+    if (diffMin < 1) return "À l'instant";
+    if (diffMin < 60) return `Il y a ${diffMin} min`;
+    const diffHours = Math.floor(diffMin / 60);
+    if (diffHours < 24) return `Il y a ${diffHours}h`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `Il y a ${diffDays}j`;
+
+    return date.toLocaleDateString("fr-DZ", { day: "numeric", month: "short" });
+}
+
 export default function NotificationCard({ notification, onMarkRead, dict }: NotificationCardProps) {
-    const style = categoryStyles[notification.category];
-    const categoryLabel = dict.categories[notification.category] || "Notification";
+    const style = categoryStyles[notification.categorie] ?? defaultStyle;
+
+    // Try to get a translated label, fall back to raw categorie string
+    const categoryLabelMap: Record<string, string> = {
+        PUBLICATION: dict.categories.publication_ao ?? "Publication",
+        DEPOT: dict.categories.depot_confirme ?? "Dépôt",
+        OUVERTURE: dict.categories.ouverture_plis ?? "Ouverture",
+        EVALUATION: dict.categories.evaluation_resultat ?? "Évaluation",
+        ATTRIBUTION: dict.categories.attribution_provisoire ?? "Attribution",
+        RECOURS: dict.categories.recours_update ?? "Recours",
+        SYSTEME: dict.categories.systeme ?? "Système",
+        IA_DIVERGENCE: "IA Divergence",
+        IA_ERREUR: "IA Erreur",
+    };
+    const categoryLabel = categoryLabelMap[notification.categorie] ?? notification.categorie;
 
     return (
         <div
-            className={`flex items-start gap-4 px-5 py-4 border-b border-gray-100 transition-colors cursor-pointer hover:bg-gray-50 ${!notification.read ? "border-l-4 border-l-[#4CAF50]" : "border-l-4 border-l-transparent"}`}
+            className={`flex items-start gap-4 px-5 py-4 border-b border-gray-100 transition-colors cursor-pointer hover:bg-gray-50 ${!notification.isLue ? "border-l-4 border-l-[#4CAF50]" : "border-l-4 border-l-transparent"}`}
             onClick={() => onMarkRead(notification.id)}
         >
             {style.icon}
             <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-4">
-                    <p className={`text-sm font-semibold ${notification.read ? "text-gray-600" : "text-gray-800"}`}>
-                        {notification.title}
+                    <p className={`text-sm font-semibold ${notification.isLue ? "text-gray-600" : "text-gray-800"}`}>
+                        {notification.titre}
                     </p>
-                    <span className="text-xs text-gray-400 whitespace-nowrap">{notification.time}</span>
+                    <span className="text-xs text-gray-400 whitespace-nowrap">
+                        {formatNotificationTime(notification.dateEnvoi)}
+                    </span>
                 </div>
-                <p className="text-xs text-gray-400 mt-0.5 leading-snug">{notification.description}</p>
+                <p className="text-xs text-gray-400 mt-0.5 leading-snug">{notification.contenu}</p>
                 <div className="mt-2 flex items-center gap-1.5">
                     <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${style.bg} ${style.color}`}>
                         {categoryLabel}
                     </span>
-                    {!notification.read && (
+                    {!notification.isLue && (
                         <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
                     )}
                 </div>

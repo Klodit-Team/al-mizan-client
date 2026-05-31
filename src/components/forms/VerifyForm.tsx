@@ -126,7 +126,7 @@ export default function VerifyForm({ dict }: VerifyFormProps) {
                 if (routeUserId) {
                     setAdminId(routeUserId);
                 }
-                router.push(`/${locale}/dashboard/admin/id/tableau-de-bord`);
+                router.push(`/${locale}/dashboard/admin/tableau-de-bord`);
             } else if (resolvedUserType === "operateur") {
                 router.push(`/${locale}/dashboard/operateur/tableau-de-bord`);
             } else if (resolvedUserType === "contractant") {

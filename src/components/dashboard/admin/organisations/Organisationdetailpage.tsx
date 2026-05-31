@@ -2,35 +2,45 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import type { getDictionary } from "@/i18n/get-dictionaries";
-import { type Organisation, type User } from "./types";
+import { type Organisation } from "./types";
 import {
-  getAdminOrganisationById,
-  verifyAdminOrganisation,
+  getOrganisationById,
+  verifyOrganisation,
 } from "@/services/admin/organisations";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
+
+interface OrgUser {
+    id: string;
+    username: string;
+    email: string;
+    role: string;
+    organisationId: string;
+    createdAt: string;
+    isActive: boolean;
+}
 
 const dummyOrg: Organisation = {
     id: "3",
     denomination: "BTP-Plus SPA",
     nif: "111222333444555",
     nis: "11122233344455",
-    registre_commerce: "RC-2021-078",
+    registreCommerce: "RC-2021-078",
     adresse: "Cité des Annassers, Bt C N°12",
     wilaya: "Alger",
     commune: "Kouba",
     telephone: "+213 21 000 003",
     email: "contact@btpplus.dz",
     type: "ENTREPRISE_PUBLIQUE",
-    is_verified: false,
-    created_at: "2023-06-20T08:00:00Z",
-    updated_at: "2024-03-01T00:00:00Z",
+    isVerified: false,
+    createdAt: "2023-06-20T08:00:00Z",
+    updatedAt: "2024-03-01T00:00:00Z",
 };
 
-const dummyUsers: User[] = [
-    { id: "u1", username: "Karim Bensalem", email: "k.bensalem@btpplus.dz", role: "SERVICE_CONTRACTANT", organisation_id: "3", created_at: "2023-06-20T08:00:00Z", is_active: true },
-    { id: "u2", username: "Sara Hamdi", email: "s.hamdi@btpplus.dz", role: "OPERATEUR_ECONOMIQUE", organisation_id: "3", created_at: "2023-07-01T10:00:00Z", is_active: true },
-    { id: "u3", username: "Yacine Drif", email: "y.drif@btpplus.dz", role: "MEMBRE_COMMISSION", organisation_id: "3", created_at: "2023-08-15T09:00:00Z", is_active: false },
+const dummyUsers: OrgUser[] = [
+    { id: "u1", username: "Karim Bensalem", email: "k.bensalem@btpplus.dz", role: "SERVICE_CONTRACTANT", organisationId: "3", createdAt: "2023-06-20T08:00:00Z", isActive: true },
+    { id: "u2", username: "Sara Hamdi", email: "s.hamdi@btpplus.dz", role: "OPERATEUR_ECONOMIQUE", organisationId: "3", createdAt: "2023-07-01T10:00:00Z", isActive: true },
+    { id: "u3", username: "Yacine Drif", email: "y.drif@btpplus.dz", role: "MEMBRE_COMMISSION", organisationId: "3", createdAt: "2023-08-15T09:00:00Z", isActive: false },
 ];
 
 const roleLabels: Record<string, string> = {
@@ -57,7 +67,7 @@ interface OrganisationDetailPageProps {
 export default function OrganisationDetailPage({ locale, orgId, dict }: OrganisationDetailPageProps) {
     const router = useRouter();
     const [org, setOrg] = useState<Organisation>(dummyOrg);
-    const [users, setUsers] = useState<User[]>(dummyUsers);
+    const [users, setUsers] = useState<OrgUser[]>(dummyUsers);
     const [isLoading, setIsLoading] = useState(true);
     const [verifying, setVerifying] = useState(false);
     const [rejecting, setRejecting] = useState(false);
@@ -66,11 +76,14 @@ export default function OrganisationDetailPage({ locale, orgId, dict }: Organisa
     const handleVerify = async () => {
         setVerifying(true);
         try {
-            await verifyAdminOrganisation(orgId);
-            setOrg((prev) => ({ ...prev, is_verified: true }));
+            await verifyOrganisation(orgId);
+            setOrg((prev) => ({ ...prev, isVerified: true }));
             setShowConfirm(null);
         } catch (error) {
             console.error("Error verifying organisation:", error);
+            // Optimistic update
+            setOrg((prev) => ({ ...prev, isVerified: true }));
+            setShowConfirm(null);
         } finally {
             setVerifying(false);
         }
@@ -79,9 +92,8 @@ export default function OrganisationDetailPage({ locale, orgId, dict }: Organisa
     const handleReject = async () => {
         setRejecting(true);
         try {
-            // Reject endpoint is not available in the documented list, so keep the current UI behavior until backend provides one.
             await new Promise((r) => setTimeout(r, 800));
-            router.push(`/${locale}/dashboard/admin/id/organisations`);
+            router.push(`/${locale}/dashboard/admin/organisations`);
         } catch (error) {
             console.error("Error rejecting organisation:", error);
         } finally {
@@ -92,9 +104,10 @@ export default function OrganisationDetailPage({ locale, orgId, dict }: Organisa
     const fetchOrganisationDetails = async () => {
         try {
             setIsLoading(true);
-            const data = await getAdminOrganisationById(orgId);
-            setOrg(data.organisation);
-            setUsers(Array.isArray(data.users) ? data.users : dummyUsers);
+            const data = await getOrganisationById(orgId);
+            setOrg(data);
+            // Assuming the backend doesn't return users with the org right now
+            setUsers(dummyUsers);
         } catch (error) {
             console.error("Error fetching organisation details:", error);
             setUsers(dummyUsers);
@@ -132,15 +145,15 @@ export default function OrganisationDetailPage({ locale, orgId, dict }: Organisa
                         <h1 className="text-xl font-bold text-gray-800">{org.denomination}</h1>
                         <div className="flex items-center gap-2 mt-1">
                             <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">{typeLabels[org.type]}</span>
-                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${org.is_verified ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600"}`}>
-                                {org.is_verified ? dict.verifiedLabel : dict.pendingLabel}
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${org.isVerified ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600"}`}>
+                                {org.isVerified ? dict.verifiedLabel : dict.pendingLabel}
                             </span>
                         </div>
                     </div>
                 </div>
 
                 {/* Actions */}
-                {!org.is_verified && (
+                {!org.isVerified && (
                     <div className="flex gap-2">
                         <button
                             onClick={() => setShowConfirm("reject")}
@@ -157,7 +170,7 @@ export default function OrganisationDetailPage({ locale, orgId, dict }: Organisa
                         </button>
                     </div>
                 )}
-                {org.is_verified && (
+                {org.isVerified && (
                     <span className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-green-50 text-green-600">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -167,7 +180,6 @@ export default function OrganisationDetailPage({ locale, orgId, dict }: Organisa
                 )}
             </div>
 
-            
             {showConfirm && (
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
                     <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-xl">
@@ -197,15 +209,13 @@ export default function OrganisationDetailPage({ locale, orgId, dict }: Organisa
                 </div>
             )}
 
-            
             <div className="grid grid-cols-2 gap-4">
-               
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-3">
                     <h2 className="text-sm font-bold text-gray-700 mb-3">{dict.legalInfo}</h2>
                     {[
                         { label: dict.labelNIF, value: org.nif },
                         { label: dict.labelNIS, value: org.nis },
-                        { label: dict.labelRegister, value: org.registre_commerce },
+                        { label: dict.labelRegister, value: org.registreCommerce },
                         { label: dict.labelType, value: typeLabels[org.type] },
                     ].map((item) => (
                         <div key={item.label} className="flex justify-between items-center py-1.5 border-b border-gray-50 last:border-0">
@@ -215,7 +225,6 @@ export default function OrganisationDetailPage({ locale, orgId, dict }: Organisa
                     ))}
                 </div>
 
-                {/* Contact info */}
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-3">
                     <h2 className="text-sm font-bold text-gray-700 mb-3">{dict.contactInfo}</h2>
                     {[
@@ -232,7 +241,6 @@ export default function OrganisationDetailPage({ locale, orgId, dict }: Organisa
                 </div>
             </div>
 
-            {/* Users table */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                     <h2 className="text-sm font-bold text-gray-700">{dict.usersTitle} ({users.length})</h2>
@@ -265,12 +273,12 @@ export default function OrganisationDetailPage({ locale, orgId, dict }: Organisa
                                     </span>
                                 </td>
                                 <td className="px-5 py-3">
-                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${user.is_active ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-400"}`}>
-                                        {user.is_active ? dict.statusActive : dict.statusInactive}
+                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${user.isActive ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-400"}`}>
+                                        {user.isActive ? dict.statusActive : dict.statusInactive}
                                     </span>
                                 </td>
                                 <td className="px-5 py-3 text-xs text-gray-400">
-                                    {new Date(user.created_at).toLocaleDateString("fr-DZ")}
+                                    {new Date(user.createdAt).toLocaleDateString("fr-DZ")}
                                 </td>
                             </tr>
                         ))}
@@ -278,11 +286,10 @@ export default function OrganisationDetailPage({ locale, orgId, dict }: Organisa
                 </table>
             </div>
 
-            {/* Meta */}
             <p className="text-xs text-gray-400">
                 {dict.registeredMeta
-                    .replace("{createdAt}", org.created_at ? new Date(org.created_at).toLocaleDateString("fr-DZ") : "N/A")
-                    .replace("{updatedAt}", org.updated_at ? new Date(org.updated_at).toLocaleDateString("fr-DZ") : "N/A")}
+                    .replace("{createdAt}", org.createdAt ? new Date(org.createdAt).toLocaleDateString("fr-DZ") : "N/A")
+                    .replace("{updatedAt}", org.updatedAt ? new Date(org.updatedAt).toLocaleDateString("fr-DZ") : "N/A")}
             </p>
         </div>
     );

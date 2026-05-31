@@ -40,8 +40,6 @@ const ICONS = {
 
 export default function Sidebar({ locale, role, dict }: SidebarProps) {
   const pathname = usePathname();
-  const params = useParams();
-  const userId = (params?.id as string) ?? "id";
 
   // ── Nav items by role ────────────────────────────────────────────────────────
   const navItems = (() => {
@@ -117,37 +115,37 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
         return [
           {
             label: dict.admin?.organisation ?? "Organisations",
-            href: `/${locale}/dashboard/admin/${userId}/organisations`,
+            href: `/${locale}/dashboard/admin/organisations`,
             icon: <Icon d={ICONS.building} />,
           },
           {
             label: dict.admin?.utilisateurs ?? "Utilisateurs",
-            href: `/${locale}/dashboard/admin/${userId}/utilisateurs`,
+            href: `/${locale}/dashboard/admin/utilisateurs`,
             icon: <Icon d={ICONS.users} />,
           },
           {
             label: dict.admin?.operateurs ?? "Opérateurs",
-            href: `/${locale}/dashboard/admin/${userId}/operateurs`,
+            href: `/${locale}/dashboard/admin/operateurs`,
             icon: <Icon d={ICONS.briefcase} />,
           },
           {
             label: dict.admin?.commission ?? "Commissions",
-            href: `/${locale}/dashboard/admin/${userId}/commissions`,
+            href: `/${locale}/dashboard/admin/commissions`,
             icon: <Icon d={ICONS.checklist} />,
           },
           {
             label: dict.admin?.audit ?? "Journal d'audit",
-            href: `/${locale}/dashboard/admin/${userId}/journal-audit`,
+            href: `/${locale}/dashboard/admin/journal-audit`,
             icon: <Icon d={ICONS.audit} />,
           },
           {
             label: dict.admin?.sessions ?? "Connexions",
-            href: `/${locale}/dashboard/admin/${userId}/sessions`,
+            href: `/${locale}/dashboard/admin/sessions`,
             icon: <Icon d={ICONS.clock} />,
           },
           {
             label: dict.admin?.incidents ?? "Incidents IA",
-            href: `/${locale}/dashboard/admin/${userId}/incidents`,
+            href: `/${locale}/dashboard/admin/incidents`,
             icon: <Icon d={ICONS.warning} />,
           },
         ];
@@ -157,7 +155,7 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
   // ── Dashboard home href ────────────────────────────────────────────────────
   const dashboardHref = (() => {
     switch (role) {
-      case "admin":       return `/${locale}/dashboard/admin/${userId}/tableau-de-bord`;
+      case "admin":       return `/${locale}/dashboard/admin/tableau-de-bord`;
       case "contractant": return `/${locale}/dashboard/contractant/tableau-de-bord`;
       case "commission":  return `/${locale}/dashboard/commission`;
       default:            return `/${locale}/dashboard/operateur/tableau-de-bord`;
@@ -167,7 +165,7 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
   // ── Settings href ──────────────────────────────────────────────────────────
   const settingsHref = (() => {
     switch (role) {
-      case "admin":       return `/${locale}/dashboard/admin/${userId}/profile`;
+      case "admin":       return `/${locale}/dashboard/admin/profile`;
       case "contractant": return `/${locale}/dashboard/contractant/profil`;
       case "commission":  return `/${locale}/dashboard/commission/profil`;
       default:            return `/${locale}/dashboard/operateur/profil`;

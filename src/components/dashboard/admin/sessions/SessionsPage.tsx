@@ -18,27 +18,24 @@ interface SessionsPageProps {
 const FALLBACK_SESSIONS: ActiveSession[] = [
   {
     id: "session-001",
-    userId: "admin-demo",
-    ip: "196.20.12.45",
-    userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/121.0.0.0",
+    deviceInfo: "Chrome Windows",
+    ipAddress: "196.20.12.45",
     createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    lastActivity: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+    expiresAt: new Date(Date.now() + 22 * 60 * 60 * 1000).toISOString(),
   },
   {
     id: "session-002",
-    userId: "controleur-01",
-    ip: "41.110.8.73",
-    userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Safari/605.1.15",
+    deviceInfo: "Safari macOS",
+    ipAddress: "41.110.8.73",
     createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-    lastActivity: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+    expiresAt: new Date(Date.now() + 20 * 60 * 60 * 1000).toISOString(),
   },
   {
     id: "session-003",
-    userId: "service-contractant-12",
-    ip: "102.39.144.18",
-    userAgent: "Mozilla/5.0 (X11; Linux x86_64) Gecko/20100101 Firefox/122.0",
+    deviceInfo: "Firefox Linux",
+    ipAddress: "102.39.144.18",
     createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-    lastActivity: new Date(Date.now() - 1 * 60 * 1000).toISOString(),
+    expiresAt: new Date(Date.now() + 23 * 60 * 60 * 1000).toISOString(),
   },
 ];
 
@@ -101,7 +98,7 @@ export default function SessionsPage({ locale, dict }: SessionsPageProps) {
   }, [fetchSessions]);
 
   const handleRevoke = async (session: ActiveSession) => {
-    const confirmed = window.confirm(labels.confirmRevoke.replace("{{ip}}", session.ip));
+    const confirmed = window.confirm(labels.confirmRevoke.replace("{{ip}}", session.ipAddress));
     if (!confirmed) return;
 
     const previous = sessions;
@@ -125,33 +122,15 @@ export default function SessionsPage({ locale, dict }: SessionsPageProps) {
     const query = search.trim().toLowerCase();
     if (!query) return true;
 
-    return [session.id, session.userId, session.ip, session.userAgent].some((value) =>
+    return [session.id, session.deviceInfo, session.ipAddress].some((value) =>
       value.toLowerCase().includes(query),
     );
   });
 
-  const getDeviceName = (userAgent: string): string => {
-    if (userAgent.includes("iPhone")) return "iPhone";
-    if (userAgent.includes("Android")) return "Android";
-    if (userAgent.includes("Windows")) return "Windows";
-    if (userAgent.includes("Mac")) return "macOS";
-    if (userAgent.includes("Linux")) return "Linux";
-    return labels.unknown;
-  };
-
-  const getBrowserName = (userAgent: string): string => {
-    if (userAgent.includes("Edg") || userAgent.includes("Edge")) return "Edge";
-    if (userAgent.includes("Firefox")) return "Firefox";
-    if (userAgent.includes("Chrome")) return "Chrome";
-    if (userAgent.includes("Safari")) return "Safari";
-    return labels.unknown;
-  };
-
-  const isRecentActivity = (lastActivity: string): boolean => {
-    const timestamp = new Date(lastActivity).getTime();
+  const isSessionActive = (expiresAt: string): boolean => {
+    const timestamp = new Date(expiresAt).getTime();
     if (Number.isNaN(timestamp)) return false;
-
-    return Date.now() - timestamp < 5 * 60 * 1000;
+    return Date.now() < timestamp;
   };
 
   const formatDateTime = (value: string): string => {
@@ -205,24 +184,23 @@ export default function SessionsPage({ locale, dict }: SessionsPageProps) {
           <table className="w-full min-w-[1040px]">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50/50">
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{dict.columns.user}</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{dict.columns.userAgent ?? "Appareil"}</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{dict.columns.ip}</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{dict.columns.userAgent}</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{dict.columns.connected}</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{dict.columns.lastActivity}</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{"Expiration"}</th>
                 <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{labels.actionsColumn}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-sm text-gray-500">
+                  <td colSpan={5} className="py-8 text-center text-sm text-gray-500">
                     {labels.loading}
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-sm text-gray-500">
+                  <td colSpan={5} className="py-8 text-center text-sm text-gray-500">
                     {dict.noSessions}
                   </td>
                 </tr>
@@ -230,36 +208,25 @@ export default function SessionsPage({ locale, dict }: SessionsPageProps) {
                 filtered.map((session) => (
                   <tr key={session.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-5 py-4">
-                      <p className="text-sm font-semibold text-gray-800">{session.userId}</p>
-                    </td>
-                    <td className="px-5 py-4">
-                      <code className="text-xs font-mono bg-gray-50 text-gray-700 px-2 py-1 rounded">{session.ip}</code>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="max-w-[360px] space-y-2">
-                        <div className="flex flex-wrap gap-2">
-                          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600">
-                            {getDeviceName(session.userAgent)}
-                          </span>
-                          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600">
-                            {getBrowserName(session.userAgent)}
-                          </span>
-                        </div>
-                        <p className="break-words font-mono text-xs leading-relaxed text-gray-500">
-                          {session.userAgent}
-                        </p>
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
+                          {session.deviceInfo}
+                        </span>
                       </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <code className="text-xs font-mono bg-gray-50 text-gray-700 px-2 py-1 rounded">{session.ipAddress}</code>
                     </td>
                     <td className="px-5 py-4 text-sm text-gray-500">
                       {formatDateTime(session.createdAt)}
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
-                        {isRecentActivity(session.lastActivity) && (
+                        {isSessionActive(session.expiresAt) && (
                           <span className="inline-block w-2 h-2 bg-green-500 rounded-full"></span>
                         )}
                         <span className="text-sm text-gray-600">
-                          {formatDateTime(session.lastActivity)}
+                          {formatDateTime(session.expiresAt)}
                         </span>
                       </div>
                     </td>

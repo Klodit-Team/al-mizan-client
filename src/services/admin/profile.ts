@@ -1,43 +1,72 @@
 import { apiClient } from "@/services/client";
 
+// ─── Entity ────────────────────────────────────────────────────────────────────
+
+/** Matches backend ProfileEntity exactly */
+export interface AdminProfileEntity {
+  id: string;
+  userId: string;
+  nom: string;
+  prenom: string;
+  telephone: string | null;
+  langue: "ar" | "fr";
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
+}
+
+/** Partial update DTO for admin profile */
 export interface UpdateAdminProfileInput {
-  username: string;
-  email: string;
-  currentPassword?: string;
-  newPassword?: string;
-  avatar?: File;
+  nom?: string;
+  prenom?: string;
+  telephone?: string;
+  langue?: "ar" | "fr";
 }
 
-export interface AdminProfile {
-  id?: string;
-  username: string;
-  email: string;
-  avatarUrl?: string;
+const BASE = "/api/v1/profiles";
+
+// ─── Endpoints ─────────────────────────────────────────────────────────────────
+
+/**
+ * GET /api/v1/profiles/user/{userId}
+ * Get admin's profile by auth user ID.
+ */
+export async function getAdminProfile(userId: string): Promise<AdminProfileEntity> {
+  return apiClient<AdminProfileEntity>(`${BASE}/user/${userId}`, { method: "GET" });
 }
 
+/**
+ * PATCH /api/v1/profiles/user/{userId}
+ * Update admin's profile by auth user ID.
+ * Body: { nom?, prenom?, telephone?, langue? }
+ */
 export async function updateAdminProfile(
-  payload: UpdateAdminProfileInput,
-  id: string
-): Promise<AdminProfile> {
-  const formData = new FormData();
-
-  formData.append("username", payload.username);
-  formData.append("email", payload.email);
-
-  if (payload.currentPassword) {
-    formData.append("currentPassword", payload.currentPassword);
-  }
-
-  if (payload.newPassword) {
-    formData.append("newPassword", payload.newPassword);
-  }
-
-  if (payload.avatar) {
-    formData.append("avatar", payload.avatar);
-  }
-  const Base_URL = "/api/v1/users/profiles";
-  return apiClient<AdminProfile>(`${Base_URL}/${id}`, {
+  userId: string,
+  payload: UpdateAdminProfileInput
+): Promise<AdminProfileEntity> {
+  return apiClient<AdminProfileEntity>(`${BASE}/user/${userId}`, {
     method: "PATCH",
-    body: formData,
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * GET /api/v1/profiles/{id}
+ * Get admin's profile by profile ID.
+ */
+export async function getAdminProfileById(profileId: string): Promise<AdminProfileEntity> {
+  return apiClient<AdminProfileEntity>(`${BASE}/${profileId}`, { method: "GET" });
+}
+
+/**
+ * PATCH /api/v1/profiles/{id}
+ * Update admin's profile by profile ID.
+ */
+export async function updateAdminProfileById(
+  profileId: string,
+  payload: UpdateAdminProfileInput
+): Promise<AdminProfileEntity> {
+  return apiClient<AdminProfileEntity>(`${BASE}/${profileId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
   });
 }

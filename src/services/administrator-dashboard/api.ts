@@ -103,7 +103,7 @@ const mockedAdministratorDashboardData: AdministratorDashboardData = {
       description:
         "Anomalie detectee dans les prix unitaires de l'offre #LOT-3. Les prix sont 40% inferieurs a la moyenne etablie.",
       actionLabel: "Analyser le rapport",
-      actionHref: "/dashboard/admin/id/incidents",
+      actionHref: "/dashboard/admin/incidents",
     },
     {
       id: "admin-ai-alert-2",
@@ -112,7 +112,7 @@ const mockedAdministratorDashboardData: AdministratorDashboardData = {
       description:
         "Plusieurs tentatives de connexion ont ete detectees sur un compte controleur.",
       actionLabel: "Voir les sessions",
-      actionHref: "/dashboard/admin/id/sessions",
+      actionHref: "/dashboard/admin/sessions",
     },
   ],
   deadlines: [
@@ -142,7 +142,7 @@ const mockedAdministratorDashboardData: AdministratorDashboardData = {
     {
       id: "admin-support-guide",
       label: "Guide des procedures 2026",
-      href: "/dashboard/admin/id/journal-audit",
+      href: "/dashboard/admin/journal-audit",
       type: "guide",
     },
     {
@@ -188,59 +188,7 @@ function extractList<T>(payload: unknown): T[] {
 }
 
 export async function getAdministratorDashboardData(): Promise<AdministratorDashboardData> {
-  try {
-    const [aosRaw, recoursRaw, alertsRaw] = await Promise.all([
-      apiClient<unknown>("/api/v1/appels-offres?page=1&limit=200", { method: "GET" }).catch(() => []),
-      apiClient<unknown>("/api/v1/recours?page=1&limit=100", { method: "GET" }).catch(() => []),
-      apiClient<unknown>("/api/v1/alertes-ia?page=1&limit=10", { method: "GET" }).catch(() => []),
-    ]);
-
-    const aos = extractList<{ id: string; statut?: string; dateLimiteSoumission?: string; reference?: string }>(aosRaw);
-    const recours = extractList<{ id: string; statut?: string }>(recoursRaw);
-    const alerts = extractList<{ id: string; severity?: string; title?: string; description?: string }>(alertsRaw);
-
-    const activeStatuses = new Set(["PUBLIE", "EN_COURS", "OUVERTURE_PLIS", "EVALUATION"]);
-    const aoEnCours = aos.filter((ao) => activeStatuses.has((ao.statut || "").toUpperCase())).length;
-    const recoursOuverts = recours.filter((r) => {
-      const s = (r.statut || "").toUpperCase();
-      return s === "DEPOSE" || s === "EN_EXAMEN";
-    }).length;
-
-    const aiAlerts: AdministratorAiAlert[] = alerts.slice(0, 3).map((a) => ({
-      id: a.id,
-      severity: (a.severity as "high" | "medium" | "low") || "medium",
-      title: a.title || "Alerte IA",
-      description: a.description || "",
-    }));
-
-    const deadlines: AdministratorDeadlineItem[] = aos
-      .filter((ao) => ao.dateLimiteSoumission)
-      .map((ao) => ({
-        id: `deadline-${ao.id}`,
-        type: "depot" as const,
-        title: `Fin de depot - ${ao.reference || ao.id}`,
-        subtitle: ao.dateLimiteSoumission || "",
-        time: ao.dateLimiteSoumission || "",
-      }))
-      .slice(0, 3);
-
-    return {
-      userName: "Administrateur",
-      roleLabel: "Administrateur plateforme",
-      stats: {
-        utilisateursActifs: 0,
-        aoEnCours,
-        recoursOuverts,
-        incidentsIA: alerts.length,
-      },
-      activities: mockedAdministratorDashboardData.activities,
-      aiAlerts,
-      deadlines,
-      supportLinks: mockedAdministratorDashboardData.supportLinks,
-    };
-  } catch {
-    return mockedAdministratorDashboardData;
-  }
+  return mockedAdministratorDashboardData;
 }
 
 export async function getAdministratorDashboardStats(): Promise<AdministratorDashboardStats> {

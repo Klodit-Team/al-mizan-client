@@ -44,7 +44,7 @@ export default function SupportGuide({ locale,dict, links }: SupportGuideProps) 
         {
             id: "default-guide",
             label: dict.guide,
-            href: "/dashboard/admin/id/journal-audit",
+            href: "/dashboard/admin/journal-audit",
             type: "guide" as const,
         },
         {

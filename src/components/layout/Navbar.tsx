@@ -80,7 +80,7 @@ export default function Navbar({
 
   const notificationsHref = (() => {
     switch (userRole) {
-      case "ADMIN":        return `/${locale}/dashboard/admin/${currentAdminId}/notif`;
+      case "ADMIN":        return `/${locale}/dashboard/admin/notif`;
       case "CONTRACTANT":  return `/${locale}/dashboard/contractant/notifications`;
       case "COMMISSION":   return `/${locale}/dashboard/commission`;
       default:             return `/${locale}/dashboard/operateur/notifications`;
@@ -89,7 +89,7 @@ export default function Navbar({
 
   const profileHref = (() => {
     switch (userRole) {
-      case "ADMIN":        return `/${locale}/dashboard/admin/${currentAdminId}/profile`;
+      case "ADMIN":        return `/${locale}/dashboard/admin/profile`;
       case "CONTRACTANT":  return `/${locale}/dashboard/contractant/profil`;
       case "COMMISSION":   return `/${locale}/dashboard/commission/profil`;
       default:             return `/${locale}/dashboard/operateur/profil`;
