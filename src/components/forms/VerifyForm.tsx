@@ -8,6 +8,11 @@ import { useAdminId } from "@/hooks/useAdminId";
 
 
 const CODE_LENGTH = 6;
+const PENDING_VERIFICATION_EMAIL_KEY = "pendingVerificationEmail";
+
+function getErrorMessage(error: unknown, fallback: string) {
+    return error instanceof Error && error.message ? error.message : fallback;
+}
 
 type AuthDict = Awaited<ReturnType<typeof getAuthDictionary>>;
 
@@ -19,14 +24,27 @@ export default function VerifyForm({ dict }: VerifyFormProps) {
     const params = useParams();
     const router = useRouter();
     const searchParams = useSearchParams(); 
-    const email = searchParams.get("email");
     const locale = (params?.locale as Locale) || "fr";
     const { setAdminId } = useAdminId();
+    const [email, setEmail] = useState<string | null>(null);
     const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(""));
     const [timeLeft, setTimeLeft] = useState(119);
     const [isVerifying, setIsVerifying] = useState(false);
     const [error, setError] = useState("");
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+    useEffect(() => {
+        const emailFromUrl = searchParams.get("email");
+
+        if (emailFromUrl) {
+            sessionStorage.setItem(PENDING_VERIFICATION_EMAIL_KEY, emailFromUrl);
+            setEmail(emailFromUrl);
+            router.replace(`/${locale}/auth/verify`, { scroll: false });
+            return;
+        }
+
+        setEmail(sessionStorage.getItem(PENDING_VERIFICATION_EMAIL_KEY));
+    }, [locale, router, searchParams]);
 
     // Countdown timer
     useEffect(() => {
@@ -99,6 +117,7 @@ export default function VerifyForm({ dict }: VerifyFormProps) {
 
 
             const result = await response.json();
+            sessionStorage.removeItem(PENDING_VERIFICATION_EMAIL_KEY);
             const effectiveRole = result.role || result.user?.role || result.user?.userType;
             const resolvedUserType = mapRoleToDashboardUserType(effectiveRole);
             const routeUserId = result.user?.userId || result.userId || result.id || result.user?.id;
@@ -117,10 +136,10 @@ export default function VerifyForm({ dict }: VerifyFormProps) {
             }
 
 
-        } catch (error: any) {
+        } catch (error) {
             console.error("Verification error:", error);
             // Display backend error message
-            setError(error.message || "Verification failed");
+            setError(getErrorMessage(error, "Verification failed"));
         } finally {
             setIsVerifying(false);
         }
@@ -151,10 +170,10 @@ export default function VerifyForm({ dict }: VerifyFormProps) {
             setCode(Array(CODE_LENGTH).fill(""));
             setError("");
             inputRefs.current[0]?.focus();
-        } catch (error: any) {
+        } catch (error) {
             console.error("Resend error:", error);
             // Display backend error message
-            setError(error.message || "Failed to resend code");
+            setError(getErrorMessage(error, "Failed to resend code"));
         }
     };
 
