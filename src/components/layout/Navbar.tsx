@@ -2,12 +2,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { type Locale } from "@/i18n/config";
+import { locales, type Locale } from "@/i18n/config";
 import type { getDictionary } from "@/i18n/get-dictionaries";
 import { logout } from "@/services/auth/api";
 import { useAdminId } from "@/hooks/useAdminId";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
+const localeLabels: Record<Locale, string> = {
+  fr: "FR",
+  ar: "AR",
+  en: "EN",
+};
 
 interface NavbarProps {
   isLoggedIn?: boolean;
@@ -35,12 +40,35 @@ export default function Navbar({
   const { adminId: storedAdminId } = useAdminId();
   const currentAdminId = adminId || storedAdminId || "id";
 
-  const toggleLang = () => {
-    const nextLocale = locale === "fr" ? "ar" : "fr";
+  const switchLocale = (nextLocale: Locale) => {
+    if (nextLocale === locale) {
+      return;
+    }
+
     const segments = pathname.split("/");
     segments[1] = nextLocale;
-    window.location.href = segments.join("/");
+    router.push(segments.join("/") || `/${nextLocale}`);
   };
+
+  const languageSelector = (
+    <div className="flex overflow-hidden rounded-lg border border-gray-600">
+      {locales.map((option) => (
+        <button
+          key={option}
+          type="button"
+          onClick={() => switchLocale(option)}
+          className={`px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+            option === locale
+              ? "bg-[#4CAF50] text-white"
+              : "text-gray-300 hover:bg-gray-700 hover:text-white"
+          }`}
+          aria-pressed={option === locale}
+        >
+          {localeLabels[option]}
+        </button>
+      ))}
+    </div>
+  );
 
   const navLinks = [
     { label: dict.links.home, href: `/${locale}` },
@@ -112,13 +140,7 @@ export default function Navbar({
 
         {/* Actions */}
         <div className="flex items-center gap-4">
-          {/* Lang toggle */}
-          <button
-            onClick={toggleLang}
-            className="text-sm text-gray-300 hover:text-white border border-gray-600 rounded-lg px-3 py-1.5 transition-colors hover:border-gray-400"
-          >
-            {locale === "fr" ? "FR / AR" : "AR / FR"}
-          </button>
+          {languageSelector}
 
           {/* Notifications */}
           <button
@@ -194,12 +216,7 @@ export default function Navbar({
       </div>
 
       <div className="flex items-center gap-3">
-        <button
-          onClick={toggleLang}
-          className="text-sm text-gray-300 hover:text-white border border-gray-600 rounded-lg px-3 py-1.5 transition-colors hover:border-gray-400"
-        >
-          {locale === "fr" ? "FR / AR" : "AR / FR"}
-        </button>
+        {languageSelector}
         <Link
           href={`/${locale}/auth/login`}
           className="text-sm font-semibold text-white px-4 py-2 rounded-lg transition-colors"
