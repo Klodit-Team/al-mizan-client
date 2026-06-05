@@ -2,313 +2,429 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import type { SoumissionRetenue, CommissionRole, OuverturePlisSelectedAO } from "./types";
+import type { SoumissionRetenue, CommissionRole } from "./types";
+import {
+  useSeancesOuvertureQuery,
+  useDemarrerSeanceMutation,
+  useTerminerSeanceMutation,
+  useGeneratePVMutation,
+  useResultatsOuvertureQuery,
+} from "@/services/commission-dashboard/queries";
+import { downloadPV } from "@/services/commission-dashboard/api";
 
 interface OffreDechiffrementPageProps {
-    locale: string;
-    offreId: string;
-    userId: string;
-    dict: {
-        roleHint: string;
-        memberButton: string;
-        presidentButton: string;
-        pageTitle: string;
-        pageSubTitle: string;
-        infoBanner: string;
-        cardTitle: string;
-        cardDescription: string;
-        steps: string[];
-        unlockButton: string;
-        unlocking: string;
-        unlocked: string;
-        waitingPresident: string;
-        waitingMembers: string;
-        retainedSubmissionsTitle: string;
-        retainedBadge: string;
-        tableSoumissionnaire: string;
-        tableScoreTechnique: string;
-        tableMontantFinancier: string;
-        waitingDecryption: string;
-        waitingDecryptionDescription: string;
-        proceedToDeliberation: string;
-        downloadPV: string;
-    };
-    roles: {
-        president: string;
-        rapporteur: string;
-        evaluateur: string;
-        membre: string;
-    };
+  locale: string;
+  offreId: string;
+  roles?: Partial<Record<CommissionRole, string>>;
+  dict: {
+    roleHint: string;
+    memberButton: string;
+    presidentButton: string;
+    pageTitle: string;
+    pageSubTitle: string;
+    infoBanner: string;
+    cardTitle: string;
+    cardDescription: string;
+    steps: string[];
+    unlockButton: string;
+    unlocking: string;
+    unlocked: string;
+    waitingPresident: string;
+    waitingMembers: string;
+    retainedSubmissionsTitle: string;
+    retainedBadge: string;
+    tableSoumissionnaire: string;
+    tableScoreTechnique: string;
+    tableMontantFinancier: string;
+    waitingDecryption: string;
+    waitingDecryptionDescription: string;
+    proceedToDeliberation: string;
+    downloadPV: string;
+  };
 }
 
-const MOCK_AO: OuverturePlisSelectedAO = {
-    id: "AO-2023-089",
-    reference: "AO-2023-089",
-    objet: "Acquisition Matériel IT"
-};
+function formatMoney(amount: number, isAr: boolean) {
+  return new Intl.NumberFormat(isAr ? "ar-DZ" : "fr-DZ", {
+    style: "currency",
+    currency: "DZD",
+    minimumFractionDigits: 2,
+  }).format(amount);
+}
 
-const MOCK_SOUMISSIONS: SoumissionRetenue[] = [
-    {
-        id: "s-1",
-        soumissionnaire: { nom: "TechSolutions SA", acronyme: "TS" },
-        scoreTechnique: 85,
-        montantFinancier: 145000000,
-    },
-    {
-        id: "s-2",
-        soumissionnaire: { nom: "Global IT Services", acronyme: "GI" },
-        scoreTechnique: 78,
-        montantFinancier: 152500000,
-    },
-    {
-        id: "s-3",
-        soumissionnaire: { nom: "Systèmes Avancés", acronyme: "SA" },
-        scoreTechnique: 82,
-        montantFinancier: 148200000,
-    },
-];
+// ── État vide : aucune séance trouvée ─────────────────────────────────────────
+function NoSeanceState({ isAr }: { isAr: boolean }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 gap-4">
+      <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="11" width="18" height="11" rx="2" stroke="#CBD5E1" strokeWidth="1.5" />
+          <path d="M7 11V7a5 5 0 0110 0v4" stroke="#CBD5E1" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      </div>
+      <div className="text-center">
+        <p className="text-sm font-semibold text-slate-500">
+          {isAr ? "لا توجد جلسة نشطة" : "Aucune séance active"}
+        </p>
+        <p className="text-xs text-slate-400 mt-1">
+          {isAr
+            ? "لم يتم برمجة جلسة فتح الأظرفة لهذا الطلب بعد"
+            : "Aucune séance d'ouverture n'a encore été programmée pour cet appel d'offre"}
+        </p>
+      </div>
+    </div>
+  );
+}
 
-export default function OffreDechiffrementPage({ locale, offreId, userId, dict, roles }: OffreDechiffrementPageProps) {
-    const isAr = locale === "ar";
-    const to = dict;
-    const roleDict = roles;
-
-    // ── Simulation State ────────────────────────────────────────────────────────
-    const [simulatedRole, setSimulatedRole] = useState<CommissionRole>("membre");
-
-    // keysUnlocked: 0 = start, 1 = first member, 2 = second member, 3 = president unlocks all
-    const [keysUnlocked, setKeysUnlocked] = useState<number>(0);
-    const [isUnlocking, setIsUnlocking] = useState(false);
-
-    const [ao, setAo] = useState<OuverturePlisSelectedAO>(MOCK_AO);
-    const [soumissionsData, setSoumissionsData] = useState<SoumissionRetenue[]>(MOCK_SOUMISSIONS);
-
-    // Fetch real data from API
-    useEffect(() => {
-      (async () => {
-        try {
-          const { apiClient } = await import("@/services/client");
-          const seance = await apiClient<{ aoId?: string; reference?: string; objet?: string; submissions?: SoumissionRetenue[] }>(
-            `/api/v1/seances-ouverture/${offreId}`,
-            { method: "GET" },
-          ).catch(() => null);
-          if (seance) {
-            if (seance.reference) setAo({ id: seance.aoId || offreId, reference: seance.reference, objet: seance.objet || "" });
-            if (Array.isArray(seance.submissions) && seance.submissions.length > 0) setSoumissionsData(seance.submissions);
-          }
-        } catch { /* keep mock fallback */ }
-      })();
-    }, [offreId]);
-
-    const isFullyUnlocked = keysUnlocked >= 3;
-
-    const handleUnlockClick = async () => {
-        setIsUnlocking(true);
-        await new Promise((resolve) => setTimeout(resolve, 800));
-
-        if (simulatedRole === "membre" && keysUnlocked < 2) {
-            setKeysUnlocked((prev) => prev + 1);
-        } else if (simulatedRole === "president" && keysUnlocked === 2) {
-            setKeysUnlocked(3);
-        }
-
-        setIsUnlocking(false);
-    };
-
-    const canUnlock =
-        (simulatedRole === "membre" && keysUnlocked < 2) ||
-        (simulatedRole === "president" && keysUnlocked === 2);
-
-    const buttonLabel = isUnlocking
-        ? to.unlocking
-        : isFullyUnlocked
-            ? to.unlocked
-            : to.unlockButton;
-
-    const formatMoney = (amount: number) => {
-        return new Intl.NumberFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", {
-            style: "currency",
-            currency: "DZD",
-            minimumFractionDigits: 2,
-        }).format(amount);
-    };
-
+// ── Tableau des soumissions (données live ou vide) ────────────────────────────
+function SoumissionsTable({
+  soumissions,
+  isFullyUnlocked,
+  isAr,
+  dict,
+}: {
+  soumissions: SoumissionRetenue[];
+  isFullyUnlocked: boolean;
+  isAr: boolean;
+  dict: OffreDechiffrementPageProps["dict"];
+}) {
+  if (soumissions.length === 0) {
     return (
-        <div className="p-6 max-w-5xl mx-auto space-y-6" style={{ direction: isAr ? "rtl" : "ltr" }}>
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center justify-between shadow-sm">
-                <span className="text-sm font-medium text-yellow-800">🔧 {to.roleHint}</span>
-                <div className="flex bg-white rounded-lg p-0.5 border border-yellow-200 shadow-sm">
-                    <button
-                        onClick={() => setSimulatedRole("membre")}
-                        className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${simulatedRole === "membre" ? "bg-yellow-100 text-yellow-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-                    >
-                        {to.memberButton}
-                    </button>
-                    <button
-                        onClick={() => setSimulatedRole("president")}
-                        className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${simulatedRole === "president" ? "bg-yellow-100 text-yellow-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-                    >
-                        {to.presidentButton}
-                    </button>
-                </div>
-            </div>
-
-            <div>
-                <h1 className="text-2xl font-bold text-gray-800">{to.pageTitle}</h1>
-                <p className="text-gray-500 mt-1 font-medium">
-                    {to.pageSubTitle.replace("{{reference}}", ao.reference).replace("{{objet}}", ao.objet)}
-                </p>
-            </div>
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-start gap-3">
-                <svg className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-sm text-blue-800 font-medium">{to.infoBanner}</p>
-            </div>
-
-            <div className="bg-[#2D333B] rounded-2xl p-8 shadow-lg text-center relative overflow-hidden">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full border border-emerald-500/30 bg-emerald-500/10 mb-5">
-                    {isFullyUnlocked ? (
-                        <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                        </svg>
-                    ) : (
-                        <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
-                    )}
-                </div>
-
-                <h2 className="text-xl font-bold text-white mb-2">{to.cardTitle}</h2>
-                <p className="text-gray-400 text-sm max-w-md mx-auto mb-10">{to.cardDescription}</p>
-
-                <div className="flex items-center justify-center gap-2 mb-10 text-xs font-semibold">
-                    {to.steps.map((label, idx, arr) => {
-                        const state = idx === 0 ? (keysUnlocked >= 1 ? "done" : "pending")
-                            : idx === 1 ? (keysUnlocked >= 2 ? "done" : "pending")
-                            : idx === 2 ? (keysUnlocked >= 3 ? "done" : "pending")
-                            : "pending";
-                        const nextState = idx === 0 ? (keysUnlocked >= 2 ? "done" : "pending")
-                            : idx === 1 ? (keysUnlocked >= 3 ? "done" : "pending")
-                            : "pending";
-                        return (
-                            <div key={idx} className="flex items-center">
-                                <div className="flex flex-col items-center relative">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center z-10 transition-colors duration-500 ${state === "done" ? "bg-emerald-500 text-white" : "bg-[#1E2329] border-2 border-gray-600 text-gray-500"}`}>
-                                        {state === "done" ? (
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        ) : (
-                                            <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                            </svg>
-                                        )}
-                                    </div>
-                                    <span className={`absolute -bottom-6 whitespace-nowrap ${state === "done" ? "text-emerald-400" : "text-gray-500"}`}>{label}</span>
-                                </div>
-
-                                {idx < arr.length - 1 && (
-                                    <div className={`w-12 h-0.5 mx-2 transition-colors duration-500 ${nextState === "done" ? "bg-emerald-500" : "bg-gray-700"}`} />
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-
-                <div className="pt-4">
-                    <button
-                        onClick={handleUnlockClick}
-                        disabled={!canUnlock || isUnlocking || isFullyUnlocked}
-                        className={`inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-bold transition-all duration-300 ${isFullyUnlocked ? "bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 cursor-default" : canUnlock && !isUnlocking ? "bg-emerald-500 text-white hover:bg-emerald-600 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/20" : "bg-gray-700 text-gray-500 cursor-not-allowed"}`}
-                    >
-                        {!isFullyUnlocked && (
-                            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                            </svg>
-                        )}
-                        {buttonLabel}
-                    </button>
-                    {!canUnlock && !isFullyUnlocked && (
-                        <p className="text-xs text-red-400 mt-3 font-medium">
-                            {simulatedRole === "membre" && keysUnlocked >= 2 ? to.waitingPresident : simulatedRole === "president" && keysUnlocked < 2 ? to.waitingMembers : ""}
-                        </p>
-                    )}
-                </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 relative">
-                <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-bold text-gray-800">{to.retainedSubmissionsTitle}</h3>
-                    <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-semibold">
-                        {to.retainedBadge}
-                    </span>
-                </div>
-
-                <div className="relative">
-                    <table className={`w-full ${!isFullyUnlocked ? "filter blur-sm select-none opacity-40 transition-all duration-700" : "transition-all duration-700"}`}>
-                        <thead>
-                            <tr className="border-b border-gray-100 text-left text-sm font-semibold text-gray-400">
-                                <th className="pb-3 px-3">{to.tableSoumissionnaire}</th>
-                                <th className="pb-3 px-3 text-center">{to.tableScoreTechnique}</th>
-                                <th className="pb-3 px-3 text-right">{to.tableMontantFinancier}</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {soumissionsData.map((s) => (
-                                <tr key={s.id} className="text-sm font-medium">
-                                    <td className="py-4 px-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
-                                                {s.soumissionnaire.acronyme}
-                                            </div>
-                                            <span className="text-gray-800">{s.soumissionnaire.nom}</span>
-                                        </div>
-                                    </td>
-                                    <td className="py-4 px-3 text-center">
-                                        <span className="text-gray-600">{s.scoreTechnique} / 100</span>
-                                    </td>
-                                    <td className="py-4 px-3 text-right">
-                                        {isFullyUnlocked ? (
-                                            <span className="text-gray-900 font-bold">{formatMoney(s.montantFinancier!)}</span>
-                                        ) : (
-                                            <span className="text-gray-300 tracking-widest text-lg font-mono">* * *  * * * , * *</span>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-
-                    {!isFullyUnlocked && (
-                        <div className="absolute inset-0 flex items-center justify-center z-20">
-                            <div className="bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl shadow-xl p-8 max-w-sm text-center transform -translate-y-4">
-                                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 text-gray-500 mb-4">
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                    </svg>
-                                </div>
-                                <h4 className="text-gray-800 font-bold text-lg mb-2">{to.waitingDecryption}</h4>
-                                <p className="text-sm text-gray-500">{to.waitingDecryptionDescription}</p>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {isFullyUnlocked && (
-                <div className="flex justify-end pt-4">
-                    <Link
-                        href={`/${locale}/dashboard/commission/evaluations/${offreId}`}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-[#4CAF50] text-white rounded-xl font-bold hover:bg-[#43A047] transition-all shadow-md hover:-translate-y-0.5"
-                    >
-                        {to.proceedToDeliberation}
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                        </svg>
-                    </Link>
-                </div>
-            )}
-        </div>
+      <div className="flex flex-col items-center justify-center py-12 gap-3">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+        <p className="text-sm text-slate-400">
+          {isAr ? "لا توجد عروض بعد" : "Aucune soumission disponible"}
+        </p>
+      </div>
     );
+  }
+
+  return (
+    <div className="relative">
+      <table
+        className={`w-full ${
+          !isFullyUnlocked
+            ? "filter blur-sm select-none opacity-40 transition-all duration-700"
+            : "transition-all duration-700"
+        }`}
+      >
+        <thead>
+          <tr className="border-b border-gray-100 text-left text-sm font-semibold text-gray-400">
+            <th className="pb-3 px-3">{dict.tableSoumissionnaire}</th>
+            <th className="pb-3 px-3 text-center">{dict.tableScoreTechnique}</th>
+            <th className="pb-3 px-3 text-right">{dict.tableMontantFinancier}</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-50">
+          {soumissions.map((s) => (
+            <tr key={s.id} className="text-sm font-medium">
+              <td className="py-4 px-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
+                    {s.soumissionnaire.acronyme ?? s.soumissionnaire.nom.slice(0, 2).toUpperCase()}
+                  </div>
+                  <span className="text-gray-800">{s.soumissionnaire.nom}</span>
+                </div>
+              </td>
+              <td className="py-4 px-3 text-center">
+                <span className="text-gray-600">
+                  {s.scoreTechnique != null ? `${s.scoreTechnique} / 100` : "—"}
+                </span>
+              </td>
+              <td className="py-4 px-3 text-right">
+                {isFullyUnlocked ? (
+                  <span className="text-gray-900 font-bold">
+                    {s.montantFinancier != null ? formatMoney(s.montantFinancier, isAr) : "—"}
+                  </span>
+                ) : (
+                  <span className="text-gray-300 tracking-widest text-lg font-mono">
+                    * * *  * * * , * *
+                  </span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {!isFullyUnlocked && (
+        <div className="absolute inset-0 flex items-center justify-center z-20">
+          <div className="bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl shadow-xl p-8 max-w-sm text-center transform -translate-y-4">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 text-gray-500 mb-4">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h4 className="text-gray-800 font-bold text-lg mb-2">{dict.waitingDecryption}</h4>
+            <p className="text-sm text-gray-500">{dict.waitingDecryptionDescription}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function OffreDechiffrementPage({
+  locale,
+  offreId,
+  roles,
+  dict,
+}: OffreDechiffrementPageProps) {
+  const isAr = locale === "ar";
+
+  // ── Données live ────────────────────────────────────────────────────────────
+  const { data: seances, isLoading: loadingSeances } = useSeancesOuvertureQuery();
+  const seanceActive = seances?.find((s) => s.appelOffreId === offreId);
+  const seanceId = seanceActive?.id ?? "";
+
+  const demarrerMutation = useDemarrerSeanceMutation(seanceId);
+  const terminerMutation = useTerminerSeanceMutation(seanceId);
+  const generatePVMutation = useGeneratePVMutation(seanceId);
+  const { data: resultats } = useResultatsOuvertureQuery(seanceId);
+
+  // Soumissions extraites des résultats live (quand la séance existe)
+  const soumissionsLive: SoumissionRetenue[] = (resultats ?? []).map((r) => ({
+    id: r.soumissionId,
+    soumissionnaire: { nom: r.soumissionId, acronyme: r.soumissionId.slice(0, 2).toUpperCase() },
+    scoreTechnique: null,
+    montantFinancier: r.montantFinancier ?? null,
+  }));
+
+  // Statut backend → nb clés débloquées
+  const backendKeysUnlocked =
+    seanceActive?.statut === "TERMINEE" ? 3 :
+    seanceActive?.statut === "EN_COURS" ? 2 : 0;
+
+  // ── UI state ────────────────────────────────────────────────────────────────
+  const [simulatedRole, setSimulatedRole] = useState<CommissionRole>("membre");
+  const [localKeys, setLocalKeys] = useState(0);
+  const [isUnlocking, setIsUnlocking] = useState(false);
+
+  const keysUnlocked = seanceId ? backendKeysUnlocked : localKeys;
+  const isFullyUnlocked = keysUnlocked >= 3;
+
+  const canUnlock =
+    (simulatedRole === "membre" && keysUnlocked < 2) ||
+    (simulatedRole === "president" && keysUnlocked === 2);
+
+  const handleUnlockClick = async () => {
+    setIsUnlocking(true);
+    try {
+      if (seanceId) {
+        if (simulatedRole === "membre" && keysUnlocked < 2) {
+          await demarrerMutation.mutateAsync();
+        } else if (simulatedRole === "president" && keysUnlocked === 2) {
+          await terminerMutation.mutateAsync();
+        }
+      } else {
+        // Pas de séance backend : simulation locale uniquement
+        if (simulatedRole === "membre" && localKeys < 2) setLocalKeys((p) => p + 1);
+        else if (simulatedRole === "president" && localKeys === 2) setLocalKeys(3);
+      }
+    } finally {
+      setIsUnlocking(false);
+    }
+  };
+
+  const handleDownloadPV = async () => {
+    if (!seanceId) return;
+    if (seanceActive?.pvUrl) { window.open(seanceActive.pvUrl, "_blank"); return; }
+    await generatePVMutation.mutateAsync().catch(() => null);
+    await downloadPV(seanceId);
+  };
+
+  const buttonLabel = isUnlocking ? dict.unlocking : isFullyUnlocked ? dict.unlocked : dict.unlockButton;
+
+  // ── Loading ─────────────────────────────────────────────────────────────────
+  if (loadingSeances) {
+    return (
+      <div className="p-6 max-w-5xl mx-auto space-y-6" style={{ direction: isAr ? "rtl" : "ltr" }}>
+        <div className="h-10 w-64 bg-gray-100 rounded-xl animate-pulse" />
+        <div className="h-48 bg-gray-100 rounded-2xl animate-pulse" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 max-w-5xl mx-auto space-y-6" style={{ direction: isAr ? "rtl" : "ltr" }}>
+
+      {/* Role simulator banner */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center justify-between shadow-sm">
+        <span className="text-sm font-medium text-yellow-800">
+          🔧 {dict.roleHint}
+          {seanceActive && (
+            <span className="ms-2 text-yellow-700 font-mono text-xs">[{seanceActive.statut}]</span>
+          )}
+        </span>
+        <div className="flex bg-white rounded-lg p-0.5 border border-yellow-200 shadow-sm">
+          {(["membre", "president"] as CommissionRole[]).map((role) => (
+            <button
+              key={role}
+              onClick={() => setSimulatedRole(role)}
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
+                simulatedRole === role
+                  ? "bg-yellow-100 text-yellow-800 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              {role === "membre"
+                ? roles?.membre ?? dict.memberButton
+                : roles?.president ?? dict.presidentButton}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-800">{dict.pageTitle}</h1>
+        {seanceActive ? (
+          <p className="text-gray-500 mt-1 font-medium">
+            {dict.pageSubTitle
+              .replace("{{reference}}", seanceActive.appelOffreId)
+              .replace("{{objet}}", seanceActive.appelOffreId)}
+          </p>
+        ) : (
+          <p className="text-gray-400 mt-1 text-sm">
+            {isAr ? `رقم الطلب: ${offreId}` : `Appel d'offre : ${offreId}`}
+          </p>
+        )}
+      </div>
+
+      {/* Info banner */}
+      <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-start gap-3">
+        <svg className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p className="text-sm text-blue-800 font-medium">{dict.infoBanner}</p>
+      </div>
+
+      {/* Pas de séance */}
+      {!seanceActive ? (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <NoSeanceState isAr={isAr} />
+        </div>
+      ) : (
+        <>
+          {/* Dark unlock card */}
+          <div className="bg-[#2D333B] rounded-2xl p-8 shadow-lg text-center relative overflow-hidden">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full border border-emerald-500/30 bg-emerald-500/10 mb-5">
+              <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d={isFullyUnlocked
+                    ? "M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
+                    : "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"}
+                />
+              </svg>
+            </div>
+
+            <h2 className="text-xl font-bold text-white mb-2">{dict.cardTitle}</h2>
+            <p className="text-gray-400 text-sm max-w-md mx-auto mb-10">{dict.cardDescription}</p>
+
+            {/* Steps */}
+            <div className="flex items-center justify-center gap-2 mb-10 text-xs font-semibold">
+              {dict.steps.map((label, idx, arr) => {
+                const thresholds = [1, 2, 3];
+                const done = keysUnlocked >= thresholds[idx];
+                const connectorDone = idx < arr.length - 1 && keysUnlocked >= thresholds[idx + 1];
+                return (
+                  <div key={idx} className="flex items-center">
+                    <div className="flex flex-col items-center relative">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center z-10 transition-colors duration-500 ${done ? "bg-emerald-500 text-white" : "bg-[#1E2329] border-2 border-gray-600 text-gray-500"}`}>
+                        {done ? (
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                          </svg>
+                        )}
+                      </div>
+                      <span className={`absolute -bottom-6 whitespace-nowrap ${done ? "text-emerald-400" : "text-gray-500"}`}>{label}</span>
+                    </div>
+                    {idx < arr.length - 1 && (
+                      <div className={`w-12 h-0.5 mx-2 transition-colors duration-500 ${connectorDone ? "bg-emerald-500" : "bg-gray-700"}`} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* CTA */}
+            <div className="pt-4">
+              <button
+                onClick={handleUnlockClick}
+                disabled={!canUnlock || isUnlocking || isFullyUnlocked}
+                className={`inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-bold transition-all duration-300 ${
+                  isFullyUnlocked
+                    ? "bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 cursor-default"
+                    : canUnlock && !isUnlocking
+                    ? "bg-emerald-500 text-white hover:bg-emerald-600 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/20"
+                    : "bg-gray-700 text-gray-500 cursor-not-allowed"
+                }`}
+              >
+                {!isFullyUnlocked && (
+                  <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                  </svg>
+                )}
+                {buttonLabel}
+              </button>
+              {!canUnlock && !isFullyUnlocked && (
+                <p className="text-xs text-red-400 mt-3 font-medium">
+                  {simulatedRole === "membre" && keysUnlocked >= 2 ? dict.waitingPresident
+                    : simulatedRole === "president" && keysUnlocked < 2 ? dict.waitingMembers
+                    : ""}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Soumissions */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-gray-800">{dict.retainedSubmissionsTitle}</h3>
+              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-semibold">
+                {dict.retainedBadge}
+              </span>
+            </div>
+            <SoumissionsTable
+              soumissions={soumissionsLive}
+              isFullyUnlocked={isFullyUnlocked}
+              isAr={isAr}
+              dict={dict}
+            />
+          </div>
+
+          {/* Footer actions */}
+          {isFullyUnlocked && (
+            <div className="flex items-center justify-between pt-2">
+              <button
+                onClick={handleDownloadPV}
+                disabled={generatePVMutation.isPending}
+                className="inline-flex items-center gap-2 px-5 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition disabled:opacity-50"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V19a2 2 0 002 2h14a2 2 0 002-2v-2" />
+                </svg>
+                {generatePVMutation.isPending ? (isAr ? "جارٍ التوليد…" : "Génération…") : dict.downloadPV}
+              </button>
+
+              <Link
+                href={`/${locale}/dashboard/commission/evaluations/${offreId}`}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-[#4CAF50] text-white rounded-xl font-bold hover:bg-[#43A047] transition-all shadow-md hover:-translate-y-0.5"
+              >
+                {dict.proceedToDeliberation}
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </Link>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
 }
