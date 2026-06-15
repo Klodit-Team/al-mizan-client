@@ -20,9 +20,18 @@ export interface AdministratorAiAlert {
   severity: "high" | "medium" | "low";
   title: string;
   description: string;
+  typeAlerte?: string;
+  emittedAt?: string;
   actionLabel?: string;
   actionHref?: string;
 }
+
+const URGENCE_TO_SEVERITY: Record<string, "high" | "medium" | "low"> = {
+  CRITIQUE: "high",
+  ELEVEE: "high",
+  MOYENNE: "medium",
+  FAIBLE: "low",
+};
 
 export interface AdministratorDeadlineItem {
   id: string;
@@ -197,7 +206,18 @@ export async function getAdministratorDashboardData(): Promise<AdministratorDash
 
     const aos = extractList<{ id: string; statut?: string; dateLimiteSoumission?: string; reference?: string }>(aosRaw);
     const recours = extractList<{ id: string; statut?: string }>(recoursRaw);
-    const alerts = extractList<{ id: string; severity?: string; title?: string; description?: string }>(alertsRaw);
+    const alerts = extractList<{
+      id: string;
+      niveauUrgence?: string;
+      typeAlerte?: string;
+      message?: string;
+      titre?: string;
+      createdAt?: string;
+      // legacy fallbacks
+      severity?: string;
+      title?: string;
+      description?: string;
+    }>(alertsRaw);
 
     const activeStatuses = new Set(["PUBLIE", "EN_COURS", "OUVERTURE_PLIS", "EVALUATION"]);
     const aoEnCours = aos.filter((ao) => activeStatuses.has((ao.statut || "").toUpperCase())).length;
@@ -208,9 +228,11 @@ export async function getAdministratorDashboardData(): Promise<AdministratorDash
 
     const aiAlerts: AdministratorAiAlert[] = alerts.slice(0, 3).map((a) => ({
       id: a.id,
-      severity: (a.severity as "high" | "medium" | "low") || "medium",
-      title: a.title || "Alerte IA",
-      description: a.description || "",
+      severity: URGENCE_TO_SEVERITY[a.niveauUrgence ?? ""] ?? (a.severity as "high" | "medium" | "low") ?? "medium",
+      title: a.titre || a.title || "Alerte IA",
+      description: a.message || a.description || "",
+      typeAlerte: a.typeAlerte,
+      emittedAt: a.createdAt,
     }));
 
     const deadlines: AdministratorDeadlineItem[] = aos

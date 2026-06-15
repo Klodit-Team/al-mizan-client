@@ -972,6 +972,23 @@ export default function AoCreationWizard({
       }
     }
 
+    if (step === 2 && !draftId) {
+      const autoSaveThenAdvance = async () => {
+        setIsSubmittingAction(true);
+        try {
+          const result = await saveServiceContractantTenderDraft(buildDraftPayload());
+          setDraftId(result.id);
+        } catch {
+          // non-blocking: advance anyway, the panel will stay disabled if id is still missing
+        } finally {
+          setIsSubmittingAction(false);
+        }
+        setStep(3);
+      };
+      void autoSaveThenAdvance();
+      return;
+    }
+
     if (step === 3) {
       const isValid = validateStep3();
       if (!isValid) {
@@ -1780,6 +1797,7 @@ export default function AoCreationWizard({
     scoringSummary,
     totalEvaluationWeight,
     activeEvaluationWeight,
+    draftId,
   };
 
   return (

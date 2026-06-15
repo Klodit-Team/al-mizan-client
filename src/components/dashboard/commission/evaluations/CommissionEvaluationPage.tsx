@@ -288,7 +288,7 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
             <EmptySoumissions isAr={isAr} />
           </div>
 
-          {/* IA panel — affiché même sans soumissions pour montrer la grille */}
+          {/* IA panel — affiché même sans soumissions */}
           <div style={{ width: 270, flexShrink: 0 }}>
             <div style={{ background: "#1E293B", borderRadius: 16, overflow: "hidden", position: "sticky", top: 16 }}>
               <div style={{ padding: "16px 18px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
@@ -298,9 +298,13 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
                 </div>
                 <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.4 }}>{te.iaPanel.sousTitre}</p>
               </div>
-              <div style={{ padding: "20px 18px", textAlign: "center" }}>
-                <p style={{ fontSize: 12, color: "#475569" }}>
-                  {isAr ? "في انتظار العروض…" : "En attente des soumissions…"}
+              <div style={{ padding: "24px 18px", textAlign: "center" }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style={{ margin: "0 auto 10px" }}>
+                  <circle cx="12" cy="12" r="9" stroke="#334155" strokeWidth="2" />
+                  <path d="M12 7v5l3 3" stroke="#475569" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+                <p style={{ fontSize: 12, color: "#475569", lineHeight: 1.5 }}>
+                  {isAr ? "لم يحلّل مساعد الذكاء الاصطناعي هذه العروض بعد" : "L'assistant IA n'a pas encore analysé ces offres"}
                 </p>
               </div>
             </div>
@@ -433,24 +437,46 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
                   </div>
                   <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.4 }}>{te.iaPanel.sousTitre}</p>
                 </div>
-                <div style={{ padding: "14px", display: "flex", flexDirection: "column", gap: 10 }}>
-                  {criteres.map((c, idx) => {
-                    const label = isAr ? c.labelAr : c.labelFr;
-                    const justif = isAr ? c.ia.justifAr : c.ia.justifFr;
-                    return (
-                      <div key={c.id} style={{ background: "rgba(255,255,255,0.04)", border: c.ia.alerteFr ? "1px solid rgba(234,179,8,0.4)" : "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "12px 14px" }}>
-                        <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: c.ia.alerteFr ? "#EAB308" : "#64748B", marginBottom: 6 }}>
-                          {te.iaPanel.critereLabel(idx + 1, label.split(" ").slice(0, 2).join(" "))}
-                        </p>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: c.ia.alerteFr ? "#EAB308" : "#4CAF50", marginBottom: 6 }}>
-                          {te.iaPanel.noteSuggeree(c.ia.noteSuggeree)}
-                        </p>
-                        <p style={{ fontSize: 11, color: "#CBD5E1", marginBottom: 6, lineHeight: 1.45 }}>{justif}</p>
-                        <p style={{ fontSize: 11, color: "#475569" }}>{te.iaPanel.confianceLabel(c.ia.confiance)}</p>
-                      </div>
-                    );
-                  })}
-                </div>
+                {/* No-AI-data state: all notes are 0 / null */}
+                {criteres.length > 0 && criteres.every((c) => c.ia.noteSuggeree === 0) ? (
+                  <div style={{ padding: "24px 18px", textAlign: "center" }}>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style={{ margin: "0 auto 10px" }}>
+                      <circle cx="12" cy="12" r="9" stroke="#334155" strokeWidth="2" />
+                      <path d="M12 7v5l3 3" stroke="#475569" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                    <p style={{ fontSize: 12, color: "#475569", lineHeight: 1.5 }}>
+                      {isAr ? "لم يحلّل مساعد الذكاء الاصطناعي هذه العروض بعد" : "L'assistant IA n'a pas encore analysé ces offres"}
+                    </p>
+                  </div>
+                ) : (
+                  <div style={{ padding: "14px", display: "flex", flexDirection: "column", gap: 10 }}>
+                    {criteres.map((c, idx) => {
+                      const label = isAr ? c.labelAr : c.labelFr;
+                      const justif = isAr ? c.ia.justifAr : c.ia.justifFr;
+                      const hasAlert = Boolean(c.ia.alerteFr);
+                      return (
+                        <div key={c.id} style={{ background: "rgba(255,255,255,0.04)", border: hasAlert ? "1px solid rgba(234,179,8,0.4)" : "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "12px 14px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                            <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: hasAlert ? "#EAB308" : "#64748B", margin: 0 }}>
+                              {te.iaPanel.critereLabel(idx + 1, label.split(" ").slice(0, 2).join(" "))}
+                            </p>
+                            {hasAlert && (
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                                <path d="M12 8v4M12 16h.01" stroke="#EAB308" strokeWidth="2.5" strokeLinecap="round" />
+                                <circle cx="12" cy="12" r="9" stroke="#EAB308" strokeWidth="2" />
+                              </svg>
+                            )}
+                          </div>
+                          <p style={{ fontSize: 13, fontWeight: 700, color: hasAlert ? "#EAB308" : "#4CAF50", marginBottom: 6 }}>
+                            {te.iaPanel.noteSuggeree(c.ia.noteSuggeree)}
+                          </p>
+                          <p style={{ fontSize: 11, color: "#CBD5E1", marginBottom: 6, lineHeight: 1.45 }}>{justif}</p>
+                          <p style={{ fontSize: 11, color: "#475569" }}>{te.iaPanel.confianceLabel(c.ia.confiance)}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </div>

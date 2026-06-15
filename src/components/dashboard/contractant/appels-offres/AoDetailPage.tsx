@@ -31,6 +31,7 @@ import AvisListTab from "./avis/AvisListTab";
 import EvaluationOverviewTab from "./evaluation/EvaluationOverviewTab";
 import RecoursListTab from "./recours/RecoursListTab";
 import SoumissionsListTab from "./soumissions/SoumissionsListTab";
+import AnomalyDetectionCard from "./AnomalyDetectionCard";
 
 type WorkflowStage =
   | "brouillon"
@@ -335,15 +336,19 @@ export default function AoDetailPage({
     }
 
     if (effectiveActiveTab === "soumissions") {
+      const isPostOuverture = getStageIndex(stage) >= getStageIndex("ouverture_plis");
       return (
-        <SoumissionsListTab
-          locale={locale}
-          aoId={aoId}
-          isRtl={isRtl}
-          canViewDetail={
-            getStageIndex(stage) >= getStageIndex("ouverture_plis")
-          }
-        />
+        <div className="space-y-4">
+          <SoumissionsListTab
+            locale={locale}
+            aoId={aoId}
+            isRtl={isRtl}
+            canViewDetail={isPostOuverture}
+          />
+          {isPostOuverture && (
+            <AnomalyDetectionCard aoId={aoId} locale={locale} />
+          )}
+        </div>
       );
     }
 

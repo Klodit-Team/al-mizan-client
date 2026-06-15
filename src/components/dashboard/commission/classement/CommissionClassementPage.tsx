@@ -39,7 +39,7 @@ const REC_STYLES: Record<RecType, { bg: string; color: string }> = {
   Eliminer: { bg: "rgba(239,68,68,0.08)", color: "#991b1b" },
 };
 
-const COL_TEMPLATE = "60px minmax(120px,1fr) 140px 120px 130px 130px 140px";
+const COL_TEMPLATE = "60px minmax(120px,1fr) 140px 120px 130px minmax(140px,auto) 140px";
 
 // Ligne squelette pendant le chargement
 function SkeletonRow() {
@@ -302,12 +302,28 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
               </div>
               <span style={{ fontSize: 14, fontWeight: 600, color: ligne.elimine ? "#9CA3AF" : "#364150", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ligne.operateur}</span>
               <span style={{ fontSize: 14, fontWeight: 700, color: ligne.elimine ? "#9CA3AF" : "#364150", textDecoration: ligne.elimine ? "line-through" : "none" }}>{ligne.scoreCommission.toFixed(1)} / 100</span>
-              <span style={{ fontSize: 13, color: "#6F7A6B" }}>{ligne.scoreIA.toFixed(1)} / 100</span>
+              {/* Score IA — dash when agent hasn't run */}
+              <span style={{ fontSize: 13, color: "#6F7A6B" }}>
+                {ligne.scoreIA ? `${ligne.scoreIA.toFixed(1)} / 100` : "—"}
+              </span>
               <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: ligne.ecart > 0 ? "#EAB308" : "#6F7A6B" }}>{ligne.ecart > 0 ? `+${ligne.ecart.toFixed(1)}` : ligne.ecart.toFixed(1)}</span>
-                {ligne.divergence && <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 999, background: "#EAB308", color: "#fff" }}>{tc.divergence}</span>}
+                {/* Divergence indicator: flag when >15 pts OR explicit divergence flag */}
+                {(ligne.divergence || Math.abs(ligne.scoreCommission - ligne.scoreIA) > 15) && (
+                  <span title="Divergence IA/Commission > 15 pts" style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 999, background: "#EAB308", color: "#fff" }}>
+                    {tc.divergence}
+                  </span>
+                )}
               </div>
-              <span style={{ display: "inline-block", fontSize: 12, fontWeight: 600, padding: "4px 10px", borderRadius: 999, background: REC_STYLES[ligne.recommandationIA].bg, color: REC_STYLES[ligne.recommandationIA].color }}>{recLabel(ligne.recommandationIA)}</span>
+              {/* recommandationIA with IA superscript */}
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span style={{ display: "inline-block", fontSize: 12, fontWeight: 600, padding: "4px 10px", borderRadius: 999, background: REC_STYLES[ligne.recommandationIA].bg, color: REC_STYLES[ligne.recommandationIA].color }}>
+                  {recLabel(ligne.recommandationIA)}
+                </span>
+                <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 999, background: "rgba(139,92,246,0.12)", color: "#7c3aed", border: "1px solid rgba(139,92,246,0.25)" }}>
+                  IA
+                </span>
+              </div>
               {ligne.elimine ? (
                 <span style={{ fontSize: 12, fontWeight: 600, color: "#EF4444" }}>{isAr ? ligne.motifEliminationAr : ligne.motifElimination}</span>
               ) : validated ? (

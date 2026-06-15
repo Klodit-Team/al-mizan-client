@@ -1,106 +1,113 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
 import type { getDictionary } from "@/i18n/get-dictionaries";
-import { getAdminIncidents, resolveAdminIncident, type AIIncident } from "@/services/admin/incidents";
+import { getAdminIncidents, resolveAdminIncident, type AIIncident, type ResolveIncidentInput } from "@/services/admin/incidents";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
 
-const defaultIncidents: AIIncident[] = [
-    { incidentId: "INC-2024-001", utilisateursCibles: ["user-1", "user-2"], titre: "Anomalie détectée", message: "Anomalie détectée dans les prix unitaires de l'offre #LOT-3.", niveauUrgence: "CRITICAL", typeAlerte: "DIVERGENCE_GRE_A_GRE", donneesContexte: { lotId: "LOT-3" }, statut: "EMISE", created_at: "2024-03-10T10:30:00Z" },
-    { incidentId: "INC-2024-002", utilisateursCibles: ["user-3"], titre: "Comportement suspect", message: "Comportement suspect lors de la soumission de l'opérateur X.", niveauUrgence: "WARNING", typeAlerte: "DIVERGENCE_GRE_A_GRE", donneesContexte: { operateurId: "X" }, statut: "EMISE", created_at: "2024-03-11T14:15:00Z" },
-    { incidentId: "INC-2024-003", utilisateursCibles: ["user-4"], titre: "Écart mineur", message: "Écart mineur dans les délais de soumission.", niveauUrgence: "INFO", typeAlerte: "DIVERGENCE_GRE_A_GRE", donneesContexte: { delai: "2h" }, statut: "EMISE", created_at: "2024-03-09T09:00:00Z" },
-];
+const TYPE_ICONS: Record<string, string> = {
+  ANOMALY: "⚠",
+  DIVERGENCE_EVALUATION: "⚖",
+  DIVERGENCE_GRE_A_GRE: "🔀",
+  LOW_CONFIDENCE_OCR: "🔍",
+};
 
 interface IncidentsPageProps {
     locale: string;
     dict: CommonDict['dashboard']['admin']['incidentsPage'];
 }
 
+function getSeverityStyles(gravite: string) {
+  switch (gravite) {
+    case "CRITIQUE": return "bg-red-50 text-red-700 border-red-200";
+    case "ELEVEE":   return "bg-orange-50 text-orange-700 border-orange-200";
+    case "MOYENNE":  return "bg-yellow-50 text-yellow-700 border-yellow-200";
+    case "FAIBLE":   return "bg-blue-50 text-blue-700 border-blue-200";
+    default:         return "bg-gray-50 text-gray-700 border-gray-200";
+  }
+}
+
+function getStatusStyles(statut: string) {
+  switch (statut) {
+    case "EMISE":    return "bg-blue-100 text-blue-800";
+    case "EN_COURS": return "bg-yellow-100 text-yellow-800";
+    case "RESOLU":   return "bg-green-100 text-green-800";
+    case "FERME":    return "bg-gray-100 text-gray-800";
+    default:         return "bg-gray-100 text-gray-800";
+  }
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  EMISE: "Émise", EN_COURS: "En cours", RESOLU: "Résolu", FERME: "Fermé",
+};
+
+const GRAVITE_LABELS: Record<string, string> = {
+  CRITIQUE: "Critique", ELEVEE: "Élevée", MOYENNE: "Moyenne", FAIBLE: "Faible",
+};
+
 export default function IncidentsPage({ locale, dict }: IncidentsPageProps) {
     const [incidents, setIncidents] = useState<AIIncident[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
-    
-    // Modal states
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedIncident, setSelectedIncident] = useState<AIIncident | null>(null);
+    const [decisionHumaine, setDecisionHumaine] = useState("");
     const [resolutionNotes, setResolutionNotes] = useState("");
-    const [newStatus, setNewStatus] = useState<string>("RESOLVED");
+    const [newStatus, setNewStatus] = useState<ResolveIncidentInput["statut"]>("RESOLU");
 
     const fetchIncidents = async () => {
         try {
             setIsLoading(true);
             const data = await getAdminIncidents();
-            setIncidents(Array.isArray(data) ? data : defaultIncidents);
-        } catch (error) {
-            console.error("Error fetching incidents:", error);
-            setIncidents(defaultIncidents);
+            setIncidents(Array.isArray(data) ? data : []);
+        } catch {
+            setIncidents([]);
         } finally {
             setIsLoading(false);
         }
     };
 
-    useEffect(() => {
-        fetchIncidents();
-    }, []);
+    useEffect(() => { fetchIncidents(); }, []);
 
     const filteredIncidents = useMemo(() => {
         return incidents.filter((inc) => {
-            const matchSearch = inc.titre.toLowerCase().includes(search.toLowerCase()) || 
-                                inc.message.toLowerCase().includes(search.toLowerCase()) ||
-                                inc.incidentId.toLowerCase().includes(search.toLowerCase());
+            const q = search.toLowerCase();
+            const matchSearch =
+                inc.id.toLowerCase().includes(q) ||
+                inc.type_incident.toLowerCase().includes(q) ||
+                inc.entite_source.toLowerCase().includes(q) ||
+                inc.entite_id.toLowerCase().includes(q);
             const matchStatus = statusFilter === "" || inc.statut === statusFilter;
             return matchSearch && matchStatus;
         });
     }, [incidents, search, statusFilter]);
 
-    const getSeverityStyles = (niveauUrgence: string) => {
-        switch (niveauUrgence) {
-            case "CRITICAL": return "bg-red-50 text-red-700 border-red-200";
-            case "ERROR": return "bg-red-50 text-red-700 border-red-200";
-            case "WARNING": return "bg-yellow-50 text-yellow-700 border-yellow-200";
-            case "INFO": return "bg-blue-50 text-blue-700 border-blue-200";
-            default: return "bg-gray-50 text-gray-700 border-gray-200";
-        }
-    };
-
-    const getStatusStyles = (statut: string) => {
-        switch (statut) {
-            case "EMISE": return "bg-blue-100 text-blue-800";
-            default: return "bg-gray-100 text-gray-800";
-        }
-    };
-
     const openResolveModal = (incident: AIIncident) => {
         setSelectedIncident(incident);
+        setDecisionHumaine("");
         setResolutionNotes("");
-        setNewStatus("RESOLVED");
+        setNewStatus("RESOLU");
         setIsModalOpen(true);
     };
 
     const handleSaveResolve = async () => {
         if (!selectedIncident) return;
-
-        const payload = {
-            statut: newStatus,
-            resolutionNotes,
-        };
-
         try {
-            await resolveAdminIncident(selectedIncident.incidentId, payload);
-        } catch (error) {
-            console.error("Error resolving incident:", error);
+            await resolveAdminIncident(selectedIncident.id, {
+                statut: newStatus,
+                decision_humaine: decisionHumaine || undefined,
+                notes_resolution: resolutionNotes || undefined,
+            });
+        } catch (e) {
+            console.error("Error resolving incident:", e);
         }
-
-        const updatedIncidents = incidents.map((inc) => {
-            if (inc.incidentId === selectedIncident.incidentId) {
-                return { ...inc, statut: newStatus };
-            }
-            return inc;
-        });
-
-        setIncidents(updatedIncidents);
+        setIncidents((prev) =>
+            prev.map((inc) =>
+                inc.id === selectedIncident.id ? { ...inc, statut: newStatus } : inc
+            )
+        );
         setIsModalOpen(false);
         setSelectedIncident(null);
     };
@@ -137,7 +144,10 @@ export default function IncidentsPage({ locale, dict }: IncidentsPageProps) {
                         className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-green-100 focus:border-[#4CAF50] bg-white text-gray-700"
                     >
                         <option value="">{dict.statusFilterPlaceholder}</option>
-                        <option value="EMISE">{dict.status.EMISE}</option>
+                        <option value="EMISE">Émise</option>
+                        <option value="EN_COURS">En cours</option>
+                        <option value="RESOLU">Résolu</option>
+                        <option value="FERME">Fermé</option>
                     </select>
                 </div>
             </div>
@@ -148,39 +158,49 @@ export default function IncidentsPage({ locale, dict }: IncidentsPageProps) {
                     <table className="w-full text-left text-sm whitespace-nowrap">
                         <thead className="bg-gray-50/50 text-gray-500 font-medium">
                             <tr>
-                                <th className="px-6 py-4">{dict.columns.id}</th>
-                                <th className="px-6 py-4">{dict.columns.severity}</th>
-                                <th className="px-6 py-4">{dict.columns.date}</th>
-                                <th className="px-6 py-4">{dict.columns.title}</th>
-                                <th className="px-6 py-4">{dict.columns.message}</th>
-                                <th className="px-6 py-4">{dict.columns.status}</th>
-                                <th className="px-6 py-4">{dict.columns.actions}</th>
+                                <th className="px-4 py-4">ID</th>
+                                <th className="px-4 py-4">Type</th>
+                                <th className="px-4 py-4">Entité concernée</th>
+                                <th className="px-4 py-4">Gravité</th>
+                                <th className="px-4 py-4">Détection</th>
+                                <th className="px-4 py-4">Statut</th>
+                                <th className="px-4 py-4">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 text-gray-700">
                             {isLoading ? (
-                                <tr><td colSpan={7} className="px-6 py-8 text-center text-gray-400">Loading...</td></tr>
+                                <tr><td colSpan={7} className="px-6 py-8 text-center text-gray-400">Chargement…</td></tr>
                             ) : filteredIncidents.length === 0 ? (
                                 <tr><td colSpan={7} className="px-6 py-8 text-center text-gray-400">Aucun incident trouvé.</td></tr>
                             ) : (
                                 filteredIncidents.map((inc) => (
-                                    <tr key={inc.incidentId} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4 font-mono text-xs">{inc.incidentId}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${getSeverityStyles(inc.niveauUrgence)}`}>
-                                                {dict.severity[inc.niveauUrgence as keyof typeof dict.severity] || inc.niveauUrgence}
+                                    <tr key={inc.id} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-4 py-4 font-mono text-xs text-gray-500">{inc.id.slice(0, 8)}…</td>
+                                        <td className="px-4 py-4">
+                                            <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-700">
+                                                <span className="text-base">{TYPE_ICONS[inc.type_incident] ?? "•"}</span>
+                                                {inc.type_incident}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4">{inc.created_at ? new Date(inc.created_at).toLocaleString(locale) : 'N/A'}</td>
-                                        <td className="px-6 py-4 truncate max-w-[200px]" title={inc.titre}>{inc.titre}</td>
-                                        <td className="px-6 py-4 truncate max-w-[300px]" title={inc.message}>{inc.message}</td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-4 py-4 text-xs">
+                                            <div className="font-medium text-gray-800">{inc.entite_source}</div>
+                                            <div className="text-gray-400 font-mono">{inc.entite_id?.slice(0, 12)}…</div>
+                                        </td>
+                                        <td className="px-4 py-4">
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${getSeverityStyles(inc.gravite)}`}>
+                                                {GRAVITE_LABELS[inc.gravite] ?? inc.gravite}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-4 text-xs">
+                                            {inc.date_detection ? new Date(inc.date_detection).toLocaleString(locale) : "N/A"}
+                                        </td>
+                                        <td className="px-4 py-4">
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusStyles(inc.statut)}`}>
-                                                {dict.status[inc.statut as keyof typeof dict.status] || inc.statut}
+                                                {STATUS_LABELS[inc.statut] ?? inc.statut}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <button 
+                                        <td className="px-4 py-4">
+                                            <button
                                                 onClick={() => openResolveModal(inc)}
                                                 className="text-[#4CAF50] hover:text-green-700 font-medium text-xs transition-colors"
                                             >
@@ -195,50 +215,79 @@ export default function IncidentsPage({ locale, dict }: IncidentsPageProps) {
                 </div>
             </div>
 
-            {/* Modal */}
+            {/* Resolve Modal */}
             {isModalOpen && selectedIncident && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-                        <h2 className="text-xl font-bold text-gray-900 mb-4">{dict.modal.title}</h2>
-                        
-                        <div className="space-y-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+                        <h2 className="text-lg font-bold text-gray-900">Incident : {selectedIncident.type_incident}</h2>
+
+                        {/* Read-only AI context */}
+                        <div className="bg-slate-50 rounded-xl p-4 space-y-2 border border-slate-100">
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Contexte IA (lecture seule)</p>
+                            {selectedIncident.decision_ia && (
+                                <div className="text-xs text-slate-700"><span className="font-medium">Décision IA :</span> {selectedIncident.decision_ia}</div>
+                            )}
+                            {selectedIncident.ecart_score !== undefined && selectedIncident.ecart_score !== null && (
+                                <div className="text-xs text-slate-700"><span className="font-medium">Écart score :</span> {selectedIncident.ecart_score} pts</div>
+                            )}
+                            {selectedIncident.confiance_ia !== undefined && selectedIncident.confiance_ia !== null && (
+                                <div className="text-xs text-slate-700"><span className="font-medium">Confiance IA :</span> {(selectedIncident.confiance_ia * 100).toFixed(0)}%</div>
+                            )}
+                            <div className="text-xs text-slate-700">
+                                <span className="font-medium">Entité :</span> {selectedIncident.entite_source} / <span className="font-mono">{selectedIncident.entite_id}</span>
+                            </div>
+                        </div>
+
+                        {/* Editable fields */}
+                        <div className="space-y-3">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">{dict.modal.status}</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Nouveau statut</label>
                                 <select
                                     value={newStatus}
-                                    onChange={(e) => setNewStatus(e.target.value)}
-                                    className="w-full px-3 py-2 rounded-lg border border-gray-200 outline-none focus:border-[#4CAF50] bg-white"
+                                    onChange={(e) => setNewStatus(e.target.value as ResolveIncidentInput["statut"])}
+                                    className="w-full px-3 py-2 rounded-lg border border-gray-200 outline-none focus:border-[#4CAF50] bg-white text-sm"
                                 >
-                                    <option value="EMISE">{dict.status.EMISE}</option>
-                                    <option value="RESOLVED">Résolu</option>
+                                    <option value="EN_COURS">En cours</option>
+                                    <option value="RESOLU">Résolu</option>
+                                    <option value="FERME">Fermé</option>
                                 </select>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">{dict.modal.notes}</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Décision humaine</label>
                                 <textarea
-                                    className="w-full px-3 py-2 rounded-lg border border-gray-200 outline-none focus:border-[#4CAF50] min-h-[100px]"
-                                    value={resolutionNotes}
-                                    onChange={e => setResolutionNotes(e.target.value)}
-                                    placeholder={dict.modal.notesPlaceholder}
-                                ></textarea>
+                                    className="w-full px-3 py-2 rounded-lg border border-gray-200 outline-none focus:border-[#4CAF50] min-h-[80px] text-sm"
+                                    value={decisionHumaine}
+                                    onChange={(e) => setDecisionHumaine(e.target.value)}
+                                    placeholder="Indiquez votre décision ou justification…"
+                                />
                             </div>
 
-                            <div className="pt-4 flex gap-3">
-                                <button
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-xl transition-colors"
-                                >
-                                    {dict.modal.cancel}
-                                </button>
-                                <button
-                                    onClick={handleSaveResolve}
-                                    className="flex-1 px-4 py-2 font-medium rounded-xl transition-colors text-white"
-                                    style={{ backgroundColor: "#4CAF50" }}
-                                >
-                                    {dict.modal.save}
-                                </button>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Notes de résolution</label>
+                                <textarea
+                                    className="w-full px-3 py-2 rounded-lg border border-gray-200 outline-none focus:border-[#4CAF50] min-h-[70px] text-sm"
+                                    value={resolutionNotes}
+                                    onChange={(e) => setResolutionNotes(e.target.value)}
+                                    placeholder="Observations complémentaires…"
+                                />
                             </div>
+                        </div>
+
+                        <div className="flex gap-3 pt-2">
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-xl transition-colors text-sm"
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                onClick={handleSaveResolve}
+                                className="flex-1 px-4 py-2 font-medium rounded-xl transition-colors text-white text-sm"
+                                style={{ backgroundColor: "#4CAF50" }}
+                            >
+                                Enregistrer
+                            </button>
                         </div>
                     </div>
                 </div>

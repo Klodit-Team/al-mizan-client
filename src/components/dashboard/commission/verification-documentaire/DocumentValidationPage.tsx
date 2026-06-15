@@ -7,6 +7,7 @@ import {
   useAddResultatMutation,
   useUpdateResultatMutation,
 } from "@/services/commission-dashboard/queries";
+import HumanVsAiDivergenceFeedback from "./HumanVsAiDivergenceFeedback";
 
 interface Props {
   locale: string;
@@ -289,45 +290,75 @@ export default function DocumentValidationPage({
                       {isAr ? "تحليل الذكاء الاصطناعي" : "Analyse IA"}
                       <br />{"(OCR & NLP)"}
                     </h3>
-                    <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 999, background: activeDoc.ocr.isConforme ? "rgba(76,175,80,0.12)" : "rgba(239,68,68,0.08)", color: activeDoc.ocr.isConforme ? "#2e7d32" : "#dc2626", whiteSpace: "nowrap", flexShrink: 0 }}>
-                      {isAr ? `نسبة المطابقة: ${activeDoc.ocr.scoreConformite}%` : `Score: ${activeDoc.ocr.scoreConformite}%`}
-                    </span>
+                    {/* Conformity badge — three states */}
+                    {activeDoc.ocr.scoreConformite === 0 && activeDoc.ocr.anomalies.length === 0 && activeDoc.ocr.donneesExtraites.length === 0 ? (
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 999, background: "rgba(156,163,175,0.12)", color: "#6B7280", whiteSpace: "nowrap", flexShrink: 0 }}>
+                        {isAr ? "في انتظار تحليل OCR" : "En attente d'analyse OCR"}
+                      </span>
+                    ) : activeDoc.ocr.isConforme ? (
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 999, background: "rgba(76,175,80,0.12)", color: "#2e7d32", whiteSpace: "nowrap", flexShrink: 0 }}>
+                        {isAr ? `مطابق ${activeDoc.ocr.scoreConformite}%` : `Conforme — ${activeDoc.ocr.scoreConformite}%`}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 999, background: "rgba(239,68,68,0.08)", color: "#dc2626", whiteSpace: "nowrap", flexShrink: 0 }}>
+                        {isAr ? `غير مطابق ${activeDoc.ocr.scoreConformite}%` : `Non conforme — ${activeDoc.ocr.scoreConformite}%`}
+                      </span>
+                    )}
                   </div>
 
-                  {/* Données extraites */}
-                  <div style={{ background: "#F8FAFC", border: "1px solid #F0EDED", borderRadius: 10, padding: "12px 14px", marginBottom: 12 }}>
-                    <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "#9CA3AF", marginBottom: 10 }}>{td.donneesExtraites}</p>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-                      {activeDoc.ocr.donneesExtraites.map((row, i) => (
-                        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                          <span style={{ fontSize: 12, color: "#9CA3AF", flexShrink: 0 }}>{isAr ? row.keyAr : row.keyFr}:</span>
-                          <span style={{ fontSize: 12, fontWeight: row.highlight ? 700 : 500, color: row.highlight ? "#4CAF50" : "#364150", textAlign: isAr ? "left" : "right" }}>{row.value}</span>
-                        </div>
+                  {/* Loading skeleton for OCR data not yet available */}
+                  {activeDoc.ocr.scoreConformite === 0 && activeDoc.ocr.donneesExtraites.length === 0 ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
+                      {[80, 60, 70].map((w, i) => (
+                        <div key={i} className="animate-pulse" style={{ height: 14, background: "#F1F5F9", borderRadius: 6, width: `${w}%` }} />
                       ))}
-                    </div>
-                  </div>
-
-                  {/* Anomalies / Conformité */}
-                  {activeDoc.ocr.isConforme ? (
-                    <div style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "10px 12px", borderRadius: 10, background: "rgba(76,175,80,0.06)", border: "1px solid rgba(76,175,80,0.2)", color: "#2e7d32", fontSize: 12, lineHeight: 1.5 }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ marginTop: 1, flexShrink: 0 }}>
-                        <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-                      </svg>
-                      {td.anomalieAucune}
                     </div>
                   ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      {activeDoc.ocr.anomalies.map((a, i) => (
-                        <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 12px", borderRadius: 10, background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", color: "#dc2626", fontSize: 12, lineHeight: 1.5 }}>
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ marginTop: 1, flexShrink: 0 }}>
-                            <path d="M12 8v4M12 16h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                            <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-                          </svg>
-                          {isAr ? a.ar : a.fr}
-                        </div>
-                      ))}
+                    /* Données extraites */
+                    <div style={{ background: "#F8FAFC", border: "1px solid #F0EDED", borderRadius: 10, padding: "12px 14px", marginBottom: 12 }}>
+                      <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "#9CA3AF", marginBottom: 10 }}>{td.donneesExtraites}</p>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                        {activeDoc.ocr.donneesExtraites.map((row, i) => (
+                          <div
+                            key={i}
+                            style={{
+                              display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8,
+                              background: row.highlight ? "rgba(234,179,8,0.08)" : "transparent",
+                              borderRadius: row.highlight ? 6 : 0,
+                              padding: row.highlight ? "3px 6px" : 0,
+                            }}
+                          >
+                            <span style={{ fontSize: 12, color: "#9CA3AF", flexShrink: 0 }}>{isAr ? row.keyAr : row.keyFr}:</span>
+                            <span style={{ fontSize: 12, fontWeight: row.highlight ? 700 : 500, color: row.highlight ? "#92400e" : "#364150", textAlign: isAr ? "left" : "right" }}>{row.value}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
+                  )}
+
+                  {/* Anomalies section */}
+                  {activeDoc.ocr.scoreConformite > 0 && (
+                    activeDoc.ocr.anomalies.length === 0 ? (
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "10px 12px", borderRadius: 10, background: "rgba(76,175,80,0.06)", border: "1px solid rgba(76,175,80,0.2)", color: "#2e7d32", fontSize: 12, lineHeight: 1.5 }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ marginTop: 1, flexShrink: 0 }}>
+                          <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+                        </svg>
+                        {td.anomalieAucune}
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        {activeDoc.ocr.anomalies.map((a, i) => (
+                          <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 12px", borderRadius: 10, background: "rgba(234,179,8,0.07)", border: "1px solid rgba(234,179,8,0.3)", color: "#92400e", fontSize: 12, lineHeight: 1.5 }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ marginTop: 1, flexShrink: 0 }}>
+                              <path d="M12 8v4M12 16h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+                            </svg>
+                            {isAr ? a.ar : a.fr}
+                          </div>
+                        ))}
+                      </div>
+                    )
                   )}
                 </div>
 
@@ -357,6 +388,15 @@ export default function DocumentValidationPage({
                     placeholder={td.commentairePlaceholder}
                     style={{ width: "100%", padding: "9px 12px", borderRadius: 10, fontSize: 13, outline: "none", resize: "none", background: "#F5F7FA", border: "1px solid #E5E7EB", color: "#364150", boxSizing: "border-box", marginBottom: 12, textAlign: isAr ? "right" : "left" }}
                   />
+                  {/* Human vs AI divergence feedback */}
+                  {activeDoc.decision && (
+                    <HumanVsAiDivergenceFeedback
+                      isAr={isAr}
+                      humanDecision={activeDoc.decision}
+                      aiVerdict={activeDoc.ocr.isConforme ? "conforme" : activeDoc.ocr.scoreConformite > 0 ? "non_conforme" : null}
+                    />
+                  )}
+
                   <button
                     onClick={handleSave}
                     disabled={isSaving}

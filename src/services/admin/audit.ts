@@ -26,7 +26,10 @@ export async function getAdminAuditLogs(): Promise<AuditLog[]> {
 }
 
 export async function verifyAdminAuditIntegrity(): Promise<AuditIntegrityResult> {
-  return apiClient<AuditIntegrityResult>(`${AUDIT_BASE_PATH}/integrity`, {
-    method: "GET",
-  });
+  const raw = await apiClient<{ data?: { valid?: boolean; invalidCount?: number }; valid?: boolean }>(
+    `${AUDIT_BASE_PATH}/integrity/verify`,
+    { method: "GET" },
+  );
+  const payload = (raw as any)?.data ?? raw;
+  return { valid: Boolean(payload?.valid ?? payload?.invalidCount === 0) };
 }

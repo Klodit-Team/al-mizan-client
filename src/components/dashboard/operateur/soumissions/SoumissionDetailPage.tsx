@@ -23,6 +23,7 @@ import {
   BarChart2,
   XCircle,
 } from "lucide-react";
+import OcrAnalysisSection from "./OcrAnalysisSection";
 
 type DetailTab = "apercu" | "documents" | "financier" | "timeline";
 
@@ -339,6 +340,7 @@ export default function SoumissionDetailPage({ subId, dict, locale }: { subId: s
           {tab === "documents" && (
             <div className="space-y-3">
               <p className="text-xs text-slate-500">{dict.documents.desc}</p>
+              <OcrAnalysisSection soumissionId={sub.id} />
               {[
                 {
                   icon: <FileText className="h-4 w-4" />,

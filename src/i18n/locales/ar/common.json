@@ -2049,6 +2049,87 @@
           "of": "من أصل"
         }
       }
+    },
+    "ia": {
+      "commission": {
+        "evaluation": {
+          "iaPanel": {
+            "noDataState": "لم يحلّل مساعد الذكاء الاصطناعي هذه العروض بعد",
+            "loadingState": "جارٍ تحميل اقتراحات الذكاء الاصطناعي…"
+          }
+        },
+        "verificationDoc": {
+          "humanVsAiDivergence": "قرارك يختلف عن تحليل الذكاء الاصطناعي. سيتم إنشاء تقرير التباين تلقائيًا.",
+          "aiClassified": "صنّف الذكاء الاصطناعي هذه الوثيقة على أنها :"
+        }
+      },
+      "contractant": {
+        "greAGre": {
+          "aiVerdictPanel": {
+            "title": "تحليل الذكاء الاصطناعي",
+            "scoreLabel": "نتيجة الامتثال",
+            "justificationLabel": "مبرر الذكاء الاصطناعي",
+            "confidenceLabel": "الثقة:",
+            "loading": "تحليل جارٍ…",
+            "conforme": "مقبول ✓",
+            "nonConforme": "مرفوض ✗",
+            "revisionRequise": "مراجعة مطلوبة ⚠"
+          }
+        },
+        "ao": {
+          "cdcAssist": {
+            "title": "مساعدة الذكاء الاصطناعي — صياغة دفتر الشروط",
+            "optional": "اختياري",
+            "sectionTypeLabel": "نوع الفصل",
+            "sectionTypePlaceholder": "اختر نوع الفصل…",
+            "promptLabel": "السياق أو التعليمات (اختياري)",
+            "promptPlaceholder": "صِف السياق أو أضف تعليمات للذكاء الاصطناعي…",
+            "generateButton": "توليد المسودة",
+            "generatingButton": "جارٍ التوليد…",
+            "draftLabel": "المسودة المقترحة",
+            "insertButton": "إدراج في دفتر الشروط",
+            "biasWarning": "اكتشف الذكاء الاصطناعي بنودًا تمييزية محتملة — تم توليد نسخة معدّلة تلقائيًا."
+          },
+          "anomalyDetection": {
+            "title": "تحليل الشذوذات بالذكاء الاصطناعي",
+            "loading": "جارٍ الكشف عن الشذوذات…",
+            "noneDetected": "لم يتم اكتشاف أي شذوذ",
+            "detectedCount": "شذوذ(ات) مكتشفة",
+            "collusion": "التواطؤ",
+            "pricePattern": "نمط الأسعار",
+            "saucissonnage": "التجزئة التعسفية",
+            "flaggedBids": "العروض المُبلَّغ عنها",
+            "viewIncidents": "عرض حوادث الذكاء الاصطناعي ←",
+            "confidenceRange": "الثقة:"
+          }
+        }
+      },
+      "operateur": {
+        "soumission": {
+          "ocrSection": {
+            "title": "تحليل OCR",
+            "pending": "تحليل OCR في انتظار المعالجة",
+            "conforme": "مطابق",
+            "nonConforme": "غير مطابق",
+            "confidence": "الثقة:",
+            "analysedAt": "تاريخ التحليل:",
+            "noAnomaly": "لا توجد شذوذات مكتشفة",
+            "extractedFields": "الحقول المكتشفة"
+          }
+        }
+      },
+      "admin": {
+        "aiActivityWidget": {
+          "title": "نشاط وكلاء الذكاء الاصطناعي",
+          "noActivity": "لا يوجد نشاط حديث للوكلاء",
+          "viewAllLogs": "عرض جميع سجلات الذكاء الاصطناعي ←",
+          "status": {
+            "SUCCES": "نجاح",
+            "ALERTE": "تنبيه",
+            "ERREUR": "خطأ"
+          }
+        }
+      }
     }
   }
 }

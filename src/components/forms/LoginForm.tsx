@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { loginSchema, type LoginFormData } from "@/lib/validations/loginSchema";
 import { useLoginMutation } from "@/services/auth/queries";
 import { ApiClientError } from "@/services/client";
-import { getCurrentUser } from "@/services/auth/api";
+import { getCurrentUser, listCurrentUserRoles } from "@/services/auth/api";
 import { useAdminId } from "@/hooks/useAdminId";
 import {
     getDashboardHomePath,
@@ -84,6 +84,20 @@ export default function LoginForm({ dict }: LoginFormProps) {
                     userId = userId || meResponse.user?.userId;
                 } catch {
                     // Ignore role resolution failure and handle below.
+                }
+            }
+
+            // Last-resort: query the user-roles endpoint directly when the
+            // login and /me responses both omit the role.
+            if (!userType && userId) {
+                try {
+                    const roleAssignments = await listCurrentUserRoles(userId);
+                    const primaryRoleName = roleAssignments[0]?.role?.name;
+                    if (primaryRoleName) {
+                        userType = mapRoleToDashboardUserType(primaryRoleName);
+                    }
+                } catch {
+                    // Ignore; handled below.
                 }
             }
 

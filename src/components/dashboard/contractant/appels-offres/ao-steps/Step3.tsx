@@ -5,16 +5,16 @@ import {
   ChevronRight,
   Download,
   FileText,
-  Sparkles,
   Trash2,
   Upload,
 } from "lucide-react";
+import CdcAiAssistPanel from "./CdcAiAssistPanel";
 export default function Step3({ props }: { props: WizardStepProps }) {
   const {
     dict,
     stepTitles,
     getSwitchThumbClass,
-   
+    draftId,
     cdcForm,
     setCdcForm,
     updateCdcField,
@@ -78,27 +78,15 @@ export default function Step3({ props }: { props: WizardStepProps }) {
           {dict.stepPrefix} 3: {stepTitles[2]}
         </h2>
       </div>
-      <div className="rounded-lg border border-[#D8EFD9] bg-[#EFF9EF] p-3">
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5 rounded-md bg-white/80 p-1.5 text-[#2F9E44]">
-            <Sparkles className="h-4 w-4" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-slate-800">
-              {dict.step3.aiTitle}
-            </p>
-            <p className="mt-0.5 text-xs text-slate-600">
-              {dict.step3.aiDescription}
-            </p>
-            <button
-              type="button"
-              className="mt-2 inline-flex h-8 items-center justify-center rounded-md bg-[#4CAF50] px-3 text-xs font-semibold text-white hover:opacity-95"
-            >
-              {dict.step3.aiButton}
-            </button>
-          </div>
-        </div>
-      </div>
+      <CdcAiAssistPanel
+        aoId={draftId}
+        dict={{
+          aiTitle: dict.step3.aiTitle,
+          aiDescription: dict.step3.aiDescription,
+          aiButton: dict.step3.aiButton,
+        }}
+        onInsert={(text) => updateCdcField("title", text.split("\n")[0].slice(0, 200))}
+      />
       <div className="mt-4 grid grid-cols-1 gap-4">
         <div>
           <label className="mb-1.5 block text-[11px] font-semibold text-slate-600">

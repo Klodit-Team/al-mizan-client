@@ -39,7 +39,7 @@ export function middleware(request: NextRequest) {
 
     if (userType === "admin" && !isAdminPath) {
       return NextResponse.redirect(
-        new URL(`/${locale}/dashboard/admin/tableau-de-bord`, request.url)
+        new URL(`/${locale}/dashboard/admin/id/tableau-de-bord`, request.url)
       );
     }
 

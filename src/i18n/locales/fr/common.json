@@ -2049,6 +2049,87 @@
           "of": "sur"
         }
       }
+    },
+    "ia": {
+      "commission": {
+        "evaluation": {
+          "iaPanel": {
+            "noDataState": "L'assistant IA n'a pas encore analysé ces offres",
+            "loadingState": "Chargement des suggestions IA…"
+          }
+        },
+        "verificationDoc": {
+          "humanVsAiDivergence": "Votre décision diverge de l'analyse IA. Un rapport de divergence sera généré.",
+          "aiClassified": "L'IA avait classé ce document comme :"
+        }
+      },
+      "contractant": {
+        "greAGre": {
+          "aiVerdictPanel": {
+            "title": "Analyse IA",
+            "scoreLabel": "Score de conformité",
+            "justificationLabel": "Justification IA",
+            "confidenceLabel": "Confiance :",
+            "loading": "Analyse en cours…",
+            "conforme": "Conforme ✓",
+            "nonConforme": "Non conforme ✗",
+            "revisionRequise": "Révision requise ⚠"
+          }
+        },
+        "ao": {
+          "cdcAssist": {
+            "title": "Assistance IA — Rédaction CDC",
+            "optional": "Optionnel",
+            "sectionTypeLabel": "Type de section",
+            "sectionTypePlaceholder": "Sélectionner le type de section…",
+            "promptLabel": "Contexte ou instructions (optionnel)",
+            "promptPlaceholder": "Décrivez le contexte ou ajoutez des instructions pour l'IA…",
+            "generateButton": "Générer le brouillon",
+            "generatingButton": "Génération en cours…",
+            "draftLabel": "Brouillon généré",
+            "insertButton": "Insérer dans le CDC",
+            "biasWarning": "L'IA a détecté des clauses potentiellement discriminatoires — une version corrigée a été générée automatiquement."
+          },
+          "anomalyDetection": {
+            "title": "Analyse d'anomalies IA",
+            "loading": "Détection d'anomalies en cours…",
+            "noneDetected": "Aucune anomalie détectée",
+            "detectedCount": "anomalie(s) détectée(s)",
+            "collusion": "Collusion",
+            "pricePattern": "Pattern de prix",
+            "saucissonnage": "Saucissonnage",
+            "flaggedBids": "Offres signalées",
+            "viewIncidents": "Voir les incidents IA →",
+            "confidenceRange": "Confiance :"
+          }
+        }
+      },
+      "operateur": {
+        "soumission": {
+          "ocrSection": {
+            "title": "Analyse OCR",
+            "pending": "Analyse OCR en attente",
+            "conforme": "Conforme",
+            "nonConforme": "Non conforme",
+            "confidence": "Confiance :",
+            "analysedAt": "Analysé le",
+            "noAnomaly": "Aucune anomalie détectée",
+            "extractedFields": "Champs détectés"
+          }
+        }
+      },
+      "admin": {
+        "aiActivityWidget": {
+          "title": "Activité des agents IA",
+          "noActivity": "Aucune exécution d'agent récente",
+          "viewAllLogs": "Voir tous les logs IA →",
+          "status": {
+            "SUCCES": "Succès",
+            "ALERTE": "Alerte",
+            "ERREUR": "Erreur"
+          }
+        }
+      }
     }
   }
 }

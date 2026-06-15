@@ -67,6 +67,20 @@ function getStatusClass(status: GreAGreRequestStatus) {
   }
 }
 
+function getIaScoreClass(score: number | undefined | null): string {
+  if (score === undefined || score === null) return "text-slate-400";
+  if (score >= 70) return "text-emerald-700 font-semibold";
+  if (score >= 40) return "text-amber-700 font-semibold";
+  return "text-red-700 font-semibold";
+}
+
+function getRecommendationBadge(score: number | undefined | null): { label: string; className: string } | null {
+  if (score === undefined || score === null) return null;
+  if (score >= 70) return { label: "Conforme", className: "border-emerald-200 bg-emerald-50 text-emerald-700" };
+  if (score >= 40) return { label: "Révision requise", className: "border-amber-200 bg-amber-50 text-amber-700" };
+  return { label: "Non conforme", className: "border-red-200 bg-red-50 text-red-700" };
+}
+
 function formatDate(dateValue: string, locale: string) {
   const parsedDate = new Date(dateValue);
   if (Number.isNaN(parsedDate.getTime())) {
@@ -148,7 +162,10 @@ export default function GreAGreTable({
               {tableDict.submissionDate || "Date soumission"}
             </TableHead>
             <TableHead className="h-10 whitespace-nowrap px-4 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
-              {tableDict.iaComplianceScore || "IA Score"}
+              {tableDict.iaComplianceScore || "Score IA"}
+            </TableHead>
+            <TableHead className="h-10 whitespace-nowrap px-4 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
+              {tableDict.iaRecommendation || "Recommandation IA"}
             </TableHead>
             <TableHead
               className={cn(
@@ -177,23 +194,36 @@ export default function GreAGreTable({
                 {formatAmount(row.estimatedAmount, dict)}
               </TableCell>
               <TableCell className="px-4 py-3">
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "h-6 rounded-full px-2 text-[10px] font-semibold",
-                    getStatusClass(row.status),
+                <div className="flex items-center gap-1.5">
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "h-6 rounded-full px-2 text-[10px] font-semibold",
+                      getStatusClass(row.status),
+                    )}
+                  >
+                    {getStatusLabel(row.status, dict)}
+                  </Badge>
+                  {row.status === "en_analyse_ia" && (
+                    <Loader2 className="h-3 w-3 animate-spin text-purple-500" />
                   )}
-                >
-                  {getStatusLabel(row.status, dict)}
-                </Badge>
+                </div>
               </TableCell>
               <TableCell className="whitespace-nowrap px-4 py-3 text-xs text-slate-600">
                 {formatDate(row.submittedAt, locale)}
               </TableCell>
-              <TableCell className="whitespace-nowrap px-4 py-3 text-xs text-slate-700">
-                {typeof row.iaComplianceScore === "number"
-                  ? `${row.iaComplianceScore}/100`
-                  : "-"}
+              <TableCell className={cn("whitespace-nowrap px-4 py-3 text-xs", getIaScoreClass(row.iaComplianceScore))}>
+                {typeof row.iaComplianceScore === "number" ? `${row.iaComplianceScore}/100` : "—"}
+              </TableCell>
+              <TableCell className="whitespace-nowrap px-4 py-3">
+                {(() => {
+                  const rec = getRecommendationBadge(row.iaComplianceScore);
+                  return rec ? (
+                    <Badge variant="outline" className={cn("h-6 rounded-full px-2 text-[10px] font-semibold", rec.className)}>
+                      {rec.label}
+                    </Badge>
+                  ) : <span className="text-xs text-slate-400">—</span>;
+                })()}
               </TableCell>
               <TableCell
                 className={cn("px-4 py-3", isRtl ? "text-left" : "text-right")}
