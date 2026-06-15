@@ -53,13 +53,13 @@ export default function ModifierProfilPage() {
         if (!validate()) return;
         setSaving(true);
         try {
-            await updateAdminProfile({
+            await updateAdminProfile("me",{
                 username: form.username,
                 email: form.email,
                 currentPassword: form.currentPassword || undefined,
                 newPassword: form.newPassword || undefined,
                 avatar: fileInputRef.current?.files?.[0],
-            });
+            }as any);
             setSuccessMessage("Profil mis à jour avec succès.");
             setForm((prev) => ({ ...prev, currentPassword: "", newPassword: "", confirmPassword: "" }));
         } catch {

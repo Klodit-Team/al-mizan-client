@@ -12,7 +12,7 @@ import type { getDictionary } from "@/i18n/get-dictionaries";
 import {
   updateAdminCommission,
   type CreateCommissionInput,
-} from "@/services/admin/commissions";
+} from "@/services/admin/commissions/api";
 import {
   useCommissionsQuery,
   useCreateCommissionMutation,

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   listOrganisations,
+  getOrganisationById,
   verifyOrganisation,
   updateOrganisation,
   deleteOrganisation,
@@ -16,7 +17,13 @@ export function useOrganisationsQuery(params: ListOrganisationsParams) {
     queryFn: () => listOrganisations(params),
   });
 }
-
+export function useOrganisationDetailQuery(id: string) {
+  return useQuery<OrganisationEntity, Error>({
+    queryKey: organisationsKeys.detail(id),
+    queryFn: () => getOrganisationById(id),
+    enabled: Boolean(id),
+  });
+}
 export function useVerifyOrganisationMutation() {
   const queryClient = useQueryClient();
 

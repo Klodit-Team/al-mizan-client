@@ -2,7 +2,7 @@ import MarchesListContainer from "@/components/dashboard/contractant/marches/Mar
 import { type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionaries";
 import { listServiceContractantMarches } from "@/services/tenderMarches";
-
+import Link from "next/link";
 interface ContractantMarchesPageProps {
   params: Promise<{ locale: string }>;
 }
