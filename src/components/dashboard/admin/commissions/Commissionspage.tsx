@@ -10,13 +10,16 @@ import type {
 } from "./types";
 import type { getDictionary } from "@/i18n/get-dictionaries";
 import {
-  changeAdminCommissionStatus,
-  createAdminCommission,
-  deleteAdminCommission,
-  getAdminCommissions,
   updateAdminCommission,
   type CreateCommissionInput,
 } from "@/services/admin/commissions";
+import {
+  useCommissionsQuery,
+  useCreateCommissionMutation,
+  useUpdateCommissionStatusMutation,
+  useUpdateCommissionMutation,
+  useDeleteCommissionMutation,
+} from "@/services/admin";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
 
@@ -87,36 +90,29 @@ export default function CommissionsPage({ locale, dict }: CommissionsPageProps) 
     };
   }, [dict]);
 
-  const [commissions, setCommissions] = useState<Commission[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCommission, setEditingCommission] = useState<Commission | null>(null);
   const [formData, setFormData] = useState<CommissionFormData>(emptyForm);
 
-  const fetchCommissions = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+  const { data: response, isLoading, isError } = useCommissionsQuery();
+  const { mutateAsync: createMutate } = useCreateCommissionMutation();
+  const { mutateAsync: updateMutate } = useUpdateCommissionMutation();
+  const { mutateAsync: updateStatusMutate } = useUpdateCommissionStatusMutation();
+  const { mutateAsync: deleteMutate } = useDeleteCommissionMutation();
 
-    try {
-      const res = await getAdminCommissions();
-      const data = Array.isArray(res) ? res : res?.data || [];
-      setCommissions(data.length > 0 ? data.map(mapToCommission) : [FALLBACK_COMMISSION]);
-    } catch (err) {
-      console.error("Error fetching commissions:", err);
-      setError(labels.error);
-      setCommissions([FALLBACK_COMMISSION]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [labels.error]);
+  const [commissions, setCommissions] = useState<Commission[]>([]);
 
   useEffect(() => {
-    fetchCommissions();
-  }, [fetchCommissions]);
+    if (response) {
+      const data = Array.isArray(response) ? response : response?.data || [];
+      setCommissions(data.length > 0 ? data.map(mapToCommission) : [FALLBACK_COMMISSION]);
+    } else if (isError) {
+      setCommissions([FALLBACK_COMMISSION]);
+    }
+  }, [response, isError]);
 
   const openCreateModal = () => {
     setEditingCommission(null);
@@ -158,7 +154,7 @@ export default function CommissionsPage({ locale, dict }: CommissionsPageProps) 
     setIsSubmitting(true);
     try {
       if (editingCommission) {
-        const updated = await updateAdminCommission(editingCommission.id, payload);
+        const updated = await updateMutate({ id: editingCommission.id, payload });
         const mapped = mapToCommission(updated);
         setCommissions((current) =>
           current.map((commission) =>
@@ -166,7 +162,7 @@ export default function CommissionsPage({ locale, dict }: CommissionsPageProps) 
           ),
         );
       } else {
-        const created = await createAdminCommission(payload);
+        const created = await createMutate(payload);
         const mapped = mapToCommission(created);
         setCommissions((current) => [mapped, ...current]);
       }
@@ -174,7 +170,6 @@ export default function CommissionsPage({ locale, dict }: CommissionsPageProps) 
       closeModal(true);
     } catch (err) {
       console.error("Error saving commission:", err);
-      await fetchCommissions();
     } finally {
       setIsSubmitting(false);
     }
@@ -195,7 +190,7 @@ export default function CommissionsPage({ locale, dict }: CommissionsPageProps) 
         statut === "ACTIVE"    ? "EN_COURS"  :
         statut === "DISSOUTE"  ? "ANNULEE"   :
         /* CONSTITUEE */         "ATTRIBUEE";
-      const updated = await changeAdminCommissionStatus(commission.id, backendStatut as any);
+      const updated = await updateStatusMutate({ id: commission.id, status: backendStatut as any });
       const mapped = mapToCommission(updated);
       setCommissions((current) =>
         current.map((item) => (item.id === mapped.id ? mapped : item)),
@@ -203,7 +198,6 @@ export default function CommissionsPage({ locale, dict }: CommissionsPageProps) 
     } catch (err) {
       console.error("Error changing commission status:", err);
       setCommissions(previous);
-      await fetchCommissions();
     }
   };
 
@@ -216,11 +210,10 @@ export default function CommissionsPage({ locale, dict }: CommissionsPageProps) 
     setCommissions((current) => current.filter((item) => item.id !== commission.id));
 
     try {
-      await deleteAdminCommission(commission.id);
+      await deleteMutate(commission.id);
     } catch (err) {
       console.error("Error deleting commission:", err);
       setCommissions(previous);
-      await fetchCommissions();
     } finally {
       setDeletingId(null);
     }
@@ -263,9 +256,9 @@ export default function CommissionsPage({ locale, dict }: CommissionsPageProps) 
         />
       </div>
 
-      {error && (
+      {isError && (
         <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-          {error}
+          {labels.error}
         </div>
       )}
 

@@ -4,9 +4,9 @@ import { useRouter, useParams } from "next/navigation";
 import type { getDictionary } from "@/i18n/get-dictionaries";
 import { type Organisation } from "./types";
 import {
-  getOrganisationById,
-  verifyOrganisation,
-} from "@/services/admin/organisations";
+  useOrganisationDetailQuery,
+  useVerifyOrganisationMutation,
+} from "@/services/admin";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
 
@@ -20,28 +20,7 @@ interface OrgUser {
     isActive: boolean;
 }
 
-const dummyOrg: Organisation = {
-    id: "3",
-    denomination: "BTP-Plus SPA",
-    nif: "111222333444555",
-    nis: "11122233344455",
-    registreCommerce: "RC-2021-078",
-    adresse: "Cité des Annassers, Bt C N°12",
-    wilaya: "Alger",
-    commune: "Kouba",
-    telephone: "+213 21 000 003",
-    email: "contact@btpplus.dz",
-    type: "ENTREPRISE_PUBLIQUE",
-    isVerified: false,
-    createdAt: "2023-06-20T08:00:00Z",
-    updatedAt: "2024-03-01T00:00:00Z",
-};
 
-const dummyUsers: OrgUser[] = [
-    { id: "u1", username: "Karim Bensalem", email: "k.bensalem@btpplus.dz", role: "SERVICE_CONTRACTANT", organisationId: "3", createdAt: "2023-06-20T08:00:00Z", isActive: true },
-    { id: "u2", username: "Sara Hamdi", email: "s.hamdi@btpplus.dz", role: "OPERATEUR_ECONOMIQUE", organisationId: "3", createdAt: "2023-07-01T10:00:00Z", isActive: true },
-    { id: "u3", username: "Yacine Drif", email: "y.drif@btpplus.dz", role: "MEMBRE_COMMISSION", organisationId: "3", createdAt: "2023-08-15T09:00:00Z", isActive: false },
-];
 
 const roleLabels: Record<string, string> = {
     ADMIN: "Administrateur",
@@ -66,26 +45,20 @@ interface OrganisationDetailPageProps {
 
 export default function OrganisationDetailPage({ locale, orgId, dict }: OrganisationDetailPageProps) {
     const router = useRouter();
-    const [org, setOrg] = useState<Organisation>(dummyOrg);
-    const [users, setUsers] = useState<OrgUser[]>(dummyUsers);
-    const [isLoading, setIsLoading] = useState(true);
-    const [verifying, setVerifying] = useState(false);
+    const { data: org, isLoading } = useOrganisationDetailQuery(orgId);
+    const { mutateAsync: verifyMutate, isPending: verifying } = useVerifyOrganisationMutation();
+
+    const [users, setUsers] = useState<OrgUser[]>([]);
     const [rejecting, setRejecting] = useState(false);
     const [showConfirm, setShowConfirm] = useState<"verify" | "reject" | null>(null);
 
     const handleVerify = async () => {
-        setVerifying(true);
         try {
-            await verifyOrganisation(orgId);
-            setOrg((prev) => ({ ...prev, isVerified: true }));
+            await verifyMutate(orgId);
             setShowConfirm(null);
         } catch (error) {
             console.error("Error verifying organisation:", error);
-            // Optimistic update
-            setOrg((prev) => ({ ...prev, isVerified: true }));
             setShowConfirm(null);
-        } finally {
-            setVerifying(false);
         }
     };
 
@@ -101,28 +74,25 @@ export default function OrganisationDetailPage({ locale, orgId, dict }: Organisa
         }
     };
 
-    const fetchOrganisationDetails = async () => {
-        try {
-            setIsLoading(true);
-            const data = await getOrganisationById(orgId);
-            setOrg(data);
-            // Assuming the backend doesn't return users with the org right now
-            setUsers(dummyUsers);
-        } catch (error) {
-            console.error("Error fetching organisation details:", error);
-            setUsers(dummyUsers);
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
-    useEffect(() => {
-        if (orgId) {
-            fetchOrganisationDetails();
-        }
-    }, [orgId]);
 
-    const initials = org?.denomination?.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "";
+    if (isLoading) {
+        return (
+            <div className="p-6 space-y-5 max-w-4xl mx-auto flex justify-center items-center h-64">
+                <span className="text-gray-500">Chargement des détails...</span>
+            </div>
+        );
+    }
+
+    if (!org) {
+        return (
+            <div className="p-6 space-y-5 max-w-4xl mx-auto flex justify-center items-center h-64">
+                <span className="text-red-500">Organisation introuvable ou erreur de chargement.</span>
+            </div>
+        );
+    }
+
+    const initials = org.denomination?.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "";
 
     return (
         <div className="p-6 space-y-5 max-w-4xl mx-auto">
