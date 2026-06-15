@@ -46,16 +46,24 @@ const FALLBACK_COMMISSION: Commission = {
 };
 
 // Helper to map backend DTO (CommissionMarche) to UI model (Commission)
-const mapToCommission = (data: any): Commission => ({
-  id: data.id || `temp-${Math.random()}`,
-  designation: data.intitule || data.reference || data.designation || "Sans titre",
-  type: (data.typeMarche ? "MARCHE" : data.type) || "EVALUATION",
-  niveau: data.niveau || "NATIONALE",
-  statut: data.statut === "EN_COURS" ? "ACTIVE" : (data.statut === "ANNULEE" ? "DISSOUTE" : "CONSTITUEE"),
-  date_constitution: data.createdAt || data.date_constitution || new Date().toISOString(),
-  created_at: data.createdAt || data.created_at || new Date().toISOString(),
-  appel_offre_id: data.reference || data.appel_offre_id || undefined,
-});
+const mapToCommission = (data: any): Commission => {
+  // Map all 5 backend statuses to the 3 UI statuses
+  let uiStatut: CommissionStatut = "CONSTITUEE";
+  if (data.statut === "EN_COURS" || data.statut === "DELIBERATION") uiStatut = "ACTIVE";
+  else if (data.statut === "ANNULEE" || data.statut === "INFRUCTUEUSE") uiStatut = "DISSOUTE";
+  // ATTRIBUEE → CONSTITUEE (default)
+
+  return {
+    id: data.id || `temp-${Math.random()}`,
+    designation: data.intitule || data.reference || data.designation || "Sans titre",
+    type: (data.typeMarche ? "MARCHE" : data.type) || "EVALUATION",
+    niveau: data.niveau || "NATIONALE",
+    statut: uiStatut,
+    date_constitution: data.createdAt || data.date_constitution || new Date().toISOString(),
+    created_at: data.createdAt || data.created_at || new Date().toISOString(),
+    appel_offre_id: data.reference || data.appel_offre_id || undefined,
+  };
+};
 
 export default function CommissionsPage({ locale, dict }: CommissionsPageProps) {
   const labels = useMemo(() => {
@@ -138,11 +146,13 @@ export default function CommissionsPage({ locale, dict }: CommissionsPageProps) 
     e.preventDefault();
 
     // Map form data to backend CreateCommissionInput (CommissionMarcheDto)
+    // TODO: replace presidentId with the actual logged-in admin's userId once
+    // an auth context hook is available (e.g. useAuth().user.id).
     const payload = {
       intitule: formData.designation,
       typeMarche: formData.type === "EVALUATION" ? "SERVICES" : "TRAVAUX",
-      presidentId: "temporaire", 
-      statut: "EN_COURS"
+      presidentId: "00000000-0000-0000-0000-000000000000",
+      statut: "EN_COURS",
     } as unknown as CreateCommissionInput;
 
     setIsSubmitting(true);
@@ -180,8 +190,11 @@ export default function CommissionsPage({ locale, dict }: CommissionsPageProps) 
     );
 
     try {
-      // Map UI status back to backend CommissionStatut
-      const backendStatut = statut === "ACTIVE" ? "EN_COURS" : (statut === "DISSOUTE" ? "ANNULEE" : "ATTRIBUEE");
+      // Map UI status back to the most representative backend CommissionStatut
+      const backendStatut =
+        statut === "ACTIVE"    ? "EN_COURS"  :
+        statut === "DISSOUTE"  ? "ANNULEE"   :
+        /* CONSTITUEE */         "ATTRIBUEE";
       const updated = await changeAdminCommissionStatus(commission.id, backendStatut as any);
       const mapped = mapToCommission(updated);
       setCommissions((current) =>

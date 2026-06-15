@@ -1,32 +1,23 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
 import type { getDictionary } from "@/i18n/get-dictionaries";
-import { getAdminAuditLogs, verifyAdminAuditIntegrity } from "@/services/admin/audit";
+import {
+    getAdminAuditLogs,
+    verifyAdminAuditIntegrity,
+    getAdminAuditIntegrityStatus,
+    type AuditLog,
+    type AuditIntegrityResult,
+} from "@/services/admin/audit";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
 
-interface AuditLog {
-    user_id: string;
-    action: string;
-    entity: string;
-    entity_id: string;
-    ip_address: string;
-    hash_sha256: string;
-    hash_precedent: string;
-    // Optional enriched fields
-    user?: string;
-    role?: string;
-    target?: string;
-    date?: string;
-}
-
 const dummyLogs: AuditLog[] = [
-    { user_id: "user-001", action: "LOGIN", entity: "system", entity_id: "system", ip_address: "192.168.1.10", hash_sha256: "abc123", hash_precedent: "def456", user: "Ahmed Mansour", role: "ADMIN", target: "System", date: "2024-03-10T08:30:00Z" },
-    { user_id: "user-002", action: "UPDATE_AO", entity: "appel_offre", entity_id: "AO-2023-045", ip_address: "192.168.1.15", hash_sha256: "ghi789", hash_precedent: "jkl012", user: "Karim Ziani", role: "SERVICE_CONTRACTANT", target: "AO #2023-045", date: "2024-03-10T09:15:00Z" },
-    { user_id: "user-003", action: "CREATE_USER", entity: "user", entity_id: "user-new", ip_address: "192.168.1.10", hash_sha256: "mno345", hash_precedent: "pqr678", user: "Ahmed Mansour", role: "ADMIN", target: "Nouveau membre", date: "2024-03-10T10:05:00Z" },
-    { user_id: "user-004", action: "VIEW_REPORT", entity: "report", entity_id: "report-monthly", ip_address: "192.168.1.22", hash_sha256: "stu901", hash_precedent: "vwx234", user: "Fatima Benali", role: "CONTROLEUR", target: "Rapport Mensuel", date: "2024-03-11T11:20:00Z" },
-    { user_id: "user-005", action: "UPDATE_SETTINGS", entity: "settings", entity_id: "email-config", ip_address: "192.168.1.10", hash_sha256: "yza567", hash_precedent: "bcd890", user: "Ahmed Mansour", role: "ADMIN", target: "Configuration Email", date: "2024-03-11T14:45:00Z" },
-    { user_id: "user-006", action: "LOGIN", entity: "system", entity_id: "system", ip_address: "192.168.1.34", hash_sha256: "efg123", hash_precedent: "hij456", user: "Tarek Yahia", role: "MEMBRE_COMMISSION", target: "System", date: "2024-03-12T08:00:00Z" }
+    { id: "log-001", user_id: "user-001", action: "LOGIN",          entite: "system",       entite_id: "system",       details: "User logged in",              ip_address: "192.168.1.10", user_agent: "Mozilla/5.0", hash_sha256: "abc123", hash_precedent: "000000", horodatage: "2024-03-10T08:30:00Z" },
+    { id: "log-002", user_id: "user-002", action: "UPDATE_AO",      entite: "AppelOffres",  entite_id: "AO-2023-045",  details: "Updated appel d'offres",       ip_address: "192.168.1.15", user_agent: "Mozilla/5.0", hash_sha256: "ghi789", hash_precedent: "abc123", horodatage: "2024-03-10T09:15:00Z" },
+    { id: "log-003", user_id: "user-003", action: "CREATE",         entite: "User",         entite_id: "user-new",     details: "Created new user profile",     ip_address: "192.168.1.10", user_agent: "Mozilla/5.0", hash_sha256: "mno345", hash_precedent: "ghi789", horodatage: "2024-03-10T10:05:00Z" },
+    { id: "log-004", user_id: "user-004", action: "VIEW_REPORT",    entite: "Report",       entite_id: "report-monthly", details: "Viewed monthly report",      ip_address: "192.168.1.22", user_agent: "Mozilla/5.0", hash_sha256: "stu901", hash_precedent: "mno345", horodatage: "2024-03-11T11:20:00Z" },
+    { id: "log-005", user_id: "user-005", action: "UPDATE_SETTINGS", entite: "Settings",    entite_id: "email-config", details: "Updated email configuration",  ip_address: "192.168.1.10", user_agent: "Mozilla/5.0", hash_sha256: "yza567", hash_precedent: "stu901", horodatage: "2024-03-11T14:45:00Z" },
+    { id: "log-006", user_id: "user-006", action: "LOGIN",          entite: "system",       entite_id: "system",       details: "User logged in",              ip_address: "192.168.1.34", user_agent: "Mozilla/5.0", hash_sha256: "efg123", hash_precedent: "yza567", horodatage: "2024-03-12T08:00:00Z" },
 ];
 
 interface AuditLogsPageProps {
@@ -42,22 +33,29 @@ export default function AuditLogsPage({ locale, dict }: AuditLogsPageProps) {
     const [isLoading, setIsLoading] = useState(true);
 
     const [isVerifyingIntegrity, setIsVerifyingIntegrity] = useState(false);
-    const [integrityValid, setIntegrityValid] = useState<boolean | null>(null);
+    const [integrityResult, setIntegrityResult] = useState<AuditIntegrityResult | null>(null);
+    const [integrityError, setIntegrityError] = useState(false);
 
     const actionOptions = [
-        { key: "LOGIN", label: dict.actions.LOGIN },
-        { key: "UPDATE_AO", label: dict.actions.UPDATE_AO },
-        { key: "CREATE_USER", label: dict.actions.CREATE_USER },
-        { key: "DELETE_USER", label: dict.actions.DELETE_USER },
-        { key: "VIEW_REPORT", label: dict.actions.VIEW_REPORT },
-        { key: "EXPORT_DATA", label: dict.actions.EXPORT_DATA },
+        { key: "LOGIN",           label: dict.actions.LOGIN },
+        { key: "UPDATE_AO",       label: dict.actions.UPDATE_AO },
+        { key: "CREATE_USER",     label: dict.actions.CREATE_USER },
+        { key: "DELETE_USER",     label: dict.actions.DELETE_USER },
+        { key: "VIEW_REPORT",     label: dict.actions.VIEW_REPORT },
+        { key: "EXPORT_DATA",     label: dict.actions.EXPORT_DATA },
         { key: "UPDATE_SETTINGS", label: dict.actions.UPDATE_SETTINGS },
     ];
 
     const fetchLogs = async () => {
         try {
             setIsLoading(true);
-            const data = await getAdminAuditLogs();
+            // Pass server-side filters where possible
+            const data = await getAdminAuditLogs({
+                action:  searchAction || undefined,
+                dateMin: dateFilter ? `${dateFilter}T00:00:00.000Z` : undefined,
+                dateMax: dateFilter ? `${dateFilter}T23:59:59.999Z` : undefined,
+                limit:   100,
+            });
             setLogs(Array.isArray(data) ? data : dummyLogs);
         } catch (error) {
             console.error("Error fetching audit logs:", error);
@@ -69,40 +67,49 @@ export default function AuditLogsPage({ locale, dict }: AuditLogsPageProps) {
 
     const handleVerifyIntegrity = async () => {
         setIsVerifyingIntegrity(true);
-        setIntegrityValid(null);
+        setIntegrityResult(null);
+        setIntegrityError(false);
 
         try {
             const data = await verifyAdminAuditIntegrity();
-            setIntegrityValid(Boolean(data.valid));
+            setIntegrityResult(data);
         } catch (error) {
             console.error("Error verifying audit integrity:", error);
-            setIntegrityValid(false);
+            setIntegrityError(true);
         } finally {
             setIsVerifyingIntegrity(false);
         }
     };
 
+    // Load integrity status on mount
     useEffect(() => {
-        fetchLogs();
+        getAdminAuditIntegrityStatus()
+            .then(setIntegrityResult)
+            .catch(() => { /* silent — status may not exist yet */ });
     }, []);
 
-    const filteredLogs = useMemo(() => {
-        return logs.filter((log) => {
-            const matchUser = log.user?.toLowerCase().includes(searchUser.toLowerCase()) ||
-                             log.user_id?.toLowerCase().includes(searchUser.toLowerCase()) || false;
-            const matchAction = searchAction === "" || log.action === searchAction;
-            
-            // Basic date check (if dateFilter is yyyy-mm-dd)
-            const matchDate = dateFilter === "" || (log.date && log.date.startsWith(dateFilter));
+    useEffect(() => {
+        fetchLogs();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchAction, dateFilter]);
 
-            return matchUser && matchAction && matchDate;
-        });
-    }, [logs, searchUser, searchAction, dateFilter]);
+    // Client-side user filter (user_id is the only reliable text field without a name lookup)
+    const filteredLogs = useMemo(() => {
+        if (!searchUser) return logs;
+        const q = searchUser.toLowerCase();
+        return logs.filter((log) =>
+            log.user_id.toLowerCase().includes(q) ||
+            log.entite.toLowerCase().includes(q) ||
+            log.details.toLowerCase().includes(q)
+        );
+    }, [logs, searchUser]);
 
     const getActionLabel = (actionKey: string) => {
         const option = actionOptions.find(o => o.key === actionKey);
         return option ? option.label : actionKey;
     };
+
+    const integrityIsValid = integrityResult !== null && integrityResult.invalidCount === 0;
 
     return (
         <div className="p-6 space-y-5">
@@ -136,19 +143,35 @@ export default function AuditLogsPage({ locale, dict }: AuditLogsPageProps) {
                 </button>
             </div>
 
-            {integrityValid && (
-                <div className="bg-green-50 border border-green-200 text-green-800 p-4 rounded-lg flex items-center gap-3">
-                    <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            {/* Integrity result banner */}
+            {integrityResult && !integrityError && (
+                <div className={`p-4 rounded-lg flex items-start gap-3 border ${integrityIsValid ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800"}`}>
+                    <svg className={`w-5 h-5 flex-shrink-0 mt-0.5 ${integrityIsValid ? "text-green-600" : "text-red-600"}`} fill="currentColor" viewBox="0 0 20 20">
+                        {integrityIsValid
+                            ? <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            : <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        }
                     </svg>
-                    <span className="text-sm font-medium">{dict.integrityCheck.success}</span>
+                    <div className="text-sm">
+                        <p className="font-medium">
+                            {integrityIsValid ? dict.integrityCheck.success : `${integrityResult.invalidCount} entrée(s) invalide(s) détectée(s)`}
+                        </p>
+                        <p className="text-xs mt-0.5 opacity-75">
+                            {integrityResult.checkedCount} entrées vérifiées · {new Date(integrityResult.checkedAt).toLocaleString(locale)}
+                        </p>
+                    </div>
+                </div>
+            )}
+            {integrityError && (
+                <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg text-sm">
+                    Erreur lors de la vérification d&apos;intégrité.
                 </div>
             )}
 
             {/* Filters */}
             <div className="flex flex-wrap gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                 
-                {/* Search By User */}
+                {/* Search by user ID / entity */}
                 <div className="flex-1 min-w-[200px]">
                     <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
@@ -166,7 +189,7 @@ export default function AuditLogsPage({ locale, dict }: AuditLogsPageProps) {
                     </div>
                 </div>
 
-                {/* Filter By Action */}
+                {/* Filter by action */}
                 <div className="flex-1 min-w-[200px]">
                     <select
                         value={searchAction}
@@ -180,7 +203,7 @@ export default function AuditLogsPage({ locale, dict }: AuditLogsPageProps) {
                     </select>
                 </div>
 
-                {/* Filter By Date */}
+                {/* Filter by date */}
                 <div className="flex-1 min-w-[150px]">
                     <input
                         type="date"
@@ -201,6 +224,7 @@ export default function AuditLogsPage({ locale, dict }: AuditLogsPageProps) {
                                 <th className="px-6 py-4">{dict.columns.user}</th>
                                 <th className="px-6 py-4">{dict.columns.action}</th>
                                 <th className="px-6 py-4">Entité</th>
+                                <th className="px-6 py-4">Détails</th>
                                 <th className="px-6 py-4">{dict.columns.ipAddress}</th>
                                 <th className="px-6 py-4">{dict.columns.date}</th>
                             </tr>
@@ -208,13 +232,13 @@ export default function AuditLogsPage({ locale, dict }: AuditLogsPageProps) {
                         <tbody className="divide-y divide-gray-100 text-gray-700">
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
+                                    <td colSpan={6} className="px-6 py-8 text-center text-gray-400">
                                         Loading...
                                     </td>
                                 </tr>
                             ) : filteredLogs.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
+                                    <td colSpan={6} className="px-6 py-8 text-center text-gray-400">
                                         <div className="flex flex-col items-center gap-2">
                                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -225,10 +249,9 @@ export default function AuditLogsPage({ locale, dict }: AuditLogsPageProps) {
                                 </tr>
                             ) : (
                                 filteredLogs.map((log) => (
-                                    <tr key={log.user_id + log.action + log.entity_id} className="hover:bg-gray-50 transition-colors">
+                                    <tr key={log.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
-                                            <div className="font-medium text-gray-900">{log.user || log.user_id}</div>
-                                            {log.role && <div className="text-xs text-gray-400">{log.role}</div>}
+                                            <div className="font-mono text-xs text-gray-700">{log.user_id}</div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
@@ -236,14 +259,17 @@ export default function AuditLogsPage({ locale, dict }: AuditLogsPageProps) {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="text-sm">{log.entity}</div>
-                                            <div className="text-xs text-gray-400">{log.entity_id}</div>
+                                            <div className="text-sm font-medium">{log.entite}</div>
+                                            <div className="text-xs text-gray-400 font-mono">{log.entite_id}</div>
+                                        </td>
+                                        <td className="px-6 py-4 max-w-[260px] truncate" title={log.details}>
+                                            <span className="text-xs text-gray-500">{log.details}</span>
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className="font-mono text-xs">{log.ip_address}</span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            {log.date ? new Date(log.date).toLocaleString(locale) : 'N/A'}
+                                            {new Date(log.horodatage).toLocaleString(locale)}
                                         </td>
                                     </tr>
                                 ))

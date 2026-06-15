@@ -155,63 +155,117 @@ const mockedAdministratorDashboardData: AdministratorDashboardData = {
 };
 
 import { apiClient } from "@/services/client";
+import type { AIIncident } from "@/services/admin/incidents";
 
-interface ApiEnvelope<T> {
-  data?: T;
-  success?: boolean;
-  statusCode?: number;
+// ─── Raw audit activity returned by GET /audit/activities ─────────────────────
+
+interface RawAuditActivity {
+  id?: string;
+  action?: string;
+  entite?: string;
+  entite_id?: string;
+  details?: string;
+  horodatage?: string;
+  user_id?: string;
 }
 
-interface PaginatedPayload<T> {
-  data: T[];
+/** Map a raw audit activity to the dashboard AdministratorActivityItem shape */
+function mapAuditActivity(raw: RawAuditActivity, idx: number): AdministratorActivityItem {
+  const action = (raw.action ?? "").toUpperCase();
+  let type: AdministratorActivityType = "update";
+  if (action.includes("SUBMIT") || action.includes("SOUMISSION")) type = "submission";
+  else if (action.includes("RECOURS")) type = "recours";
+  else if (action.includes("PV") || action.includes("DELIBERATION")) type = "pv";
+  else if (action.includes("MARCHE")) type = "marche";
+
+  return {
+    id: raw.id ?? `activity-${idx}`,
+    type,
+    title: raw.action ?? "Activité",
+    description: raw.details ?? `${raw.entite ?? ""} · ${raw.entite_id ?? ""}`,
+    time: raw.horodatage ? new Date(raw.horodatage).toLocaleString() : "",
+  };
 }
 
-function unwrapEnvelope<T>(payload: unknown): T {
-  if (
-    payload &&
-    typeof payload === "object" &&
-    "data" in (payload as Record<string, unknown>) &&
-    ("success" in (payload as Record<string, unknown>) || "statusCode" in (payload as Record<string, unknown>))
-  ) {
-    return (payload as ApiEnvelope<T>).data as T;
-  }
-  return payload as T;
+/** Map a real AIIncident to the dashboard AdministratorAiAlert shape */
+function mapIncidentToAlert(inc: AIIncident): AdministratorAiAlert {
+  const severityMap: Record<string, "high" | "medium" | "low"> = {
+    CRITIQUE: "high",
+    ELEVEE:   "high",
+    MOYENNE:  "medium",
+    FAIBLE:   "low",
+  };
+  return {
+    id: inc.id,
+    severity: severityMap[inc.gravite] ?? "medium",
+    title: inc.type_incident.replace(/_/g, " "),
+    description: `${inc.entite_source} · Décision IA: ${inc.decision_ia} vs Humain: ${inc.decision_humaine || "—"} (écart ${(inc.ecart_score * 100).toFixed(0)}%)`,
+    actionLabel: "Voir l'incident",
+    actionHref: "/dashboard/admin/incidents",
+  };
 }
 
-function extractList<T>(payload: unknown): T[] {
-  const unwrapped = unwrapEnvelope<unknown>(payload);
-  if (Array.isArray(unwrapped)) return unwrapped as T[];
-  if (unwrapped && typeof unwrapped === "object" && Array.isArray((unwrapped as PaginatedPayload<T>).data)) {
-    return (unwrapped as PaginatedPayload<T>).data;
-  }
-  return [];
-}
+// ─── Public API functions ─────────────────────────────────────────────────────
 
 export async function getAdministratorDashboardData(): Promise<AdministratorDashboardData> {
   return mockedAdministratorDashboardData;
 }
 
 export async function getAdministratorDashboardStats(): Promise<AdministratorDashboardStats> {
-  const dashboard = await getAdministratorDashboardData();
-  return dashboard.stats;
+  // TODO: replace with real aggregation endpoint when available
+  return mockedAdministratorDashboardData.stats;
 }
 
+/**
+ * GET /api/v1/audit/activities
+ * Falls back to mocked data when the endpoint is unavailable.
+ */
 export async function getAdministratorDashboardActivities(): Promise<AdministratorActivityItem[]> {
-  const dashboard = await getAdministratorDashboardData();
-  return dashboard.activities;
+  try {
+    // The backend requires serviceContractantId OR operateurId — pass limit only for the
+    // admin overview (the gateway may relax the required params for admin callers).
+    const raw = await apiClient<RawAuditActivity[]>(
+      `/api/v1/audit/activities?limit=10`,
+      { method: "GET" }
+    );
+    if (Array.isArray(raw) && raw.length > 0) {
+      return raw.map(mapAuditActivity);
+    }
+  } catch {
+    // Fall through to mock
+  }
+  return mockedAdministratorDashboardData.activities;
 }
 
+/**
+ * GET /api/v1/incidents — fetch open ELEVEE/CRITIQUE incidents for the AI-alerts widget.
+ * Falls back to mocked data when the endpoint is unavailable.
+ */
 export async function getAdministratorDashboardAiAlerts(): Promise<AdministratorAiAlert[]> {
-  const dashboard = await getAdministratorDashboardData();
-  return dashboard.aiAlerts;
+  try {
+    // Fetch high-severity open incidents
+    const [elevee, critique] = await Promise.all([
+      apiClient<AIIncident[]>(`/api/v1/incidents?gravite=ELEVEE&statut=OUVERT&limit=5`, { method: "GET" }),
+      apiClient<AIIncident[]>(`/api/v1/incidents?gravite=CRITIQUE&statut=OUVERT&limit=5`, { method: "GET" }),
+    ]);
+    const combined = [
+      ...(Array.isArray(critique) ? critique : []),
+      ...(Array.isArray(elevee)   ? elevee   : []),
+    ].slice(0, 5);
+    if (combined.length > 0) {
+      return combined.map(mapIncidentToAlert);
+    }
+  } catch {
+    // Fall through to mock
+  }
+  return mockedAdministratorDashboardData.aiAlerts;
 }
 
 export async function getAdministratorDashboardDeadlines(): Promise<AdministratorDeadlineItem[]> {
-  const dashboard = await getAdministratorDashboardData();
-  return dashboard.deadlines;
+  // TODO: replace with real deadlines endpoint when available
+  return mockedAdministratorDashboardData.deadlines;
 }
 
 export async function getAdministratorDashboardSupportLinks(): Promise<AdministratorSupportLink[]> {
-  const dashboard = await getAdministratorDashboardData();
-  return dashboard.supportLinks;
+  return mockedAdministratorDashboardData.supportLinks;
 }
