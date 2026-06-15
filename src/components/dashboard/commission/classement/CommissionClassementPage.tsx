@@ -3,6 +3,12 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { commissionTranslations } from "@/i18n/commission-translations";
+import {
+  useCommissionEvaluationQuery,
+  useMembresEvaluationQuery,
+  useChangeStatutEvaluationMutation,
+} from "@/services/commission-dashboard/queries";
+import { exportCommissionEvaluationPdf } from "@/services/commission-dashboard/api";
 
 interface Props {
   locale: string;
@@ -11,6 +17,7 @@ interface Props {
 
 type RecType = "Retenir" | "Analyser Plus" | "Eliminer";
 type DecType = "Retenir" | "En attente" | "Elimine" | null;
+type CommissionClassementDict = (typeof commissionTranslations)[keyof typeof commissionTranslations]["classement"];
 
 interface LigneClassement {
   rang: number | null;
@@ -26,29 +33,47 @@ interface LigneClassement {
   elimine: boolean;
 }
 
-const CLASSEMENT_MOCK: LigneClassement[] = [
-  { rang: 1, operateur: "TechSolutions SPA", scoreCommission: 88.5, scoreIA: 89.0, ecart: -0.5, divergence: false, recommandationIA: "Retenir", decisionFinale: "Retenir", elimine: false },
-  { rang: 2, operateur: "Global Network SA", scoreCommission: 75.0, scoreIA: 61.0, ecart: +14.0, divergence: true, recommandationIA: "Analyser Plus", decisionFinale: "En attente", elimine: false },
-  { rang: null, operateur: "Micro Systemes", scoreCommission: 42.0, scoreIA: 45.0, ecart: -3.0, divergence: false, recommandationIA: "Eliminer", decisionFinale: "Elimine", motifElimination: "Éliminé (Note tech < 50)", motifEliminationAr: "مُقصى (النقطة التقنية < 50)", elimine: true },
-];
-
-const STATS_KEYS = ["traites", "rejetees", "eligibles"] as const;
-const STATS_VALUES = ["12", "04", "08"];
-const STATS_COLORS = ["#1B1C1C", "#EF4444", "#4CAF50"];
-
 const REC_STYLES: Record<RecType, { bg: string; color: string }> = {
-  "Retenir":       { bg: "rgba(76,175,80,0.12)",  color: "#2e7d32" },
-  "Analyser Plus": { bg: "rgba(234,179,8,0.12)",  color: "#92400e" },
-  "Eliminer":      { bg: "rgba(239,68,68,0.08)",  color: "#991b1b" },
+  Retenir: { bg: "rgba(76,175,80,0.12)", color: "#2e7d32" },
+  "Analyser Plus": { bg: "rgba(234,179,8,0.12)", color: "#92400e" },
+  Eliminer: { bg: "rgba(239,68,68,0.08)", color: "#991b1b" },
 };
 
 const COL_TEMPLATE = "60px minmax(120px,1fr) 140px 120px 130px 130px 140px";
 
-function DecisionDropdown({ current, onChange, t }: {
-  current: DecType;
-  onChange: (d: DecType) => void;
-  t: typeof commissionTranslations["fr"]["classement"];
-}) {
+// Ligne squelette pendant le chargement
+function SkeletonRow() {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: COL_TEMPLATE, padding: "16px 24px", gap: 8, borderBottom: "1px solid #F3F4F6", alignItems: "center" }}>
+      {Array.from({ length: 7 }).map((_, i) => (
+        <div key={i} className="animate-pulse" style={{ height: 14, borderRadius: 6, background: "#F1F5F9", width: `${50 + (i * 11) % 40}%` }} />
+      ))}
+    </div>
+  );
+}
+
+// État vide
+function EmptyClassement({ isAr }: { isAr: boolean }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "72px 24px", gap: 16 }}>
+      <div style={{ width: 60, height: 60, borderRadius: 18, background: "#F8FAFC", border: "1px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+          <path d="M7 17V13H11V17H7ZM13 17V7H17V17H13Z" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      </div>
+      <div style={{ textAlign: "center" }}>
+        <p style={{ fontSize: 14, fontWeight: 600, color: "#6B7280", margin: "0 0 4px" }}>
+          {isAr ? "لا يوجد تصنيف بعد" : "Aucun classement disponible"}
+        </p>
+        <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>
+          {isAr ? "لم يتم تسجيل أي نقطة تقييم بعد" : "Les scores d'évaluation n'ont pas encore été saisis"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function DecisionDropdown({ current, onChange, t }: { current: DecType; onChange: (d: DecType) => void; t: CommissionClassementDict }) {
   const [open, setOpen] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -79,10 +104,7 @@ function DecisionDropdown({ current, onChange, t }: {
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (!btnRef.current?.contains(target) && !menuRef.current?.contains(target)) {
-        setOpen(false);
-      }
+      if (!btnRef.current?.contains(e.target as Node) && !menuRef.current?.contains(e.target as Node)) setOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -111,11 +133,7 @@ function DecisionDropdown({ current, onChange, t }: {
   );
 }
 
-function ConfirmModal({ t, onConfirm, onCancel }: {
-  t: typeof commissionTranslations["fr"]["classement"];
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
+function ConfirmModal({ t, onConfirm, onCancel }: { t: CommissionClassementDict; onConfirm: () => void; onCancel: () => void }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }}>
       <div style={{ background: "#fff", borderRadius: 20, padding: 32, maxWidth: 420, width: "90%", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
@@ -143,57 +161,96 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
   const t = commissionTranslations[isAr ? "ar" : "fr"];
   const tc = t.classement;
 
-  const [lignes, setLignes] = useState<LigneClassement[]>(CLASSEMENT_MOCK);
+  const { data: commission, isLoading } = useCommissionEvaluationQuery(aoId);
+  const { data: membres } = useMembresEvaluationQuery(aoId);
+  const changeStatutMutation = useChangeStatutEvaluationMutation(aoId);
+
+  // Les lignes de classement viendront du service évaluations
+  // GET /api/v1/evaluations/:id/classement — pour l'instant vide jusqu'à branchement
+  const [lignes, setLignes] = useState<LigneClassement[]>([]);
   const [showConfirm, setShowConfirm] = useState(false);
   const [validated, setValidated] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
-  // Fetch real classement from API
-  useEffect(() => {
-    (async () => {
-      try {
-        const { apiClient } = await import("@/services/client");
-        const evaluations = await apiClient<{ id: string }[]>(`/api/v1/evaluations?appelOffreId=${aoId}`, { method: "GET" }).catch(() => []);
-        if (!Array.isArray(evaluations) || !evaluations.length) return;
-        const classement = await apiClient<LigneClassement[]>(`/api/v1/evaluations/${evaluations[0].id}/classement`, { method: "GET" }).catch(() => []);
-        if (Array.isArray(classement) && classement.length > 0) {
-          setLignes(classement);
-        }
-      } catch { /* keep mock fallback */ }
-    })();
-  }, [aoId]);
+  const handleDecision = (idx: number, d: DecType) =>
+    setLignes((prev) => prev.map((l, i) => (i === idx ? { ...l, decisionFinale: d } : l)));
 
-  const handleDecision = (idx: number, d: DecType) => setLignes((prev) => prev.map((l, i) => i === idx ? { ...l, decisionFinale: d } : l));
+  const handleValidate = async () => {
+    setShowConfirm(false);
+    setValidated(true);
+    try { await changeStatutMutation.mutateAsync({ statut: "CLOTUREE" }); } catch {}
+  };
+
+  const handleExportPdf = async () => {
+    setIsExporting(true);
+    try { await exportCommissionEvaluationPdf(aoId); } finally { setIsExporting(false); }
+  };
 
   const recLabel = (rec: RecType) =>
     rec === "Retenir" ? tc.recs.retenir : rec === "Analyser Plus" ? tc.recs.analyser : tc.recs.eliminer;
 
+  const totalSoumissions = lignes.length;
+  const rejetees = lignes.filter((l) => l.elimine).length;
+  const eligibles = totalSoumissions - rejetees;
+
   return (
     <div style={{ minHeight: "100%", direction: isAr ? "rtl" : "ltr" }}>
-      {showConfirm && <ConfirmModal t={tc} onConfirm={() => { setShowConfirm(false); setValidated(true); }} onCancel={() => setShowConfirm(false)} />}
+      {showConfirm && <ConfirmModal t={tc} onConfirm={handleValidate} onCancel={() => setShowConfirm(false)} />}
 
       {/* Page header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <h1 style={{ fontSize: 20, fontWeight: 700, color: "#1B1C1C", margin: 0 }}>{tc.titre}</h1>
           <span style={{ fontSize: 12, padding: "4px 12px", borderRadius: 999, background: "#F0EDED", color: "#364150", border: "1px solid #E5E7EB" }}>{t.commissionBadge}</span>
+          {commission && (
+            <span style={{ fontSize: 12, padding: "4px 12px", borderRadius: 999, background: commission.statut === "ACTIVE" ? "rgba(76,175,80,0.1)" : "#F0EDED", color: commission.statut === "ACTIVE" ? "#2e7d32" : "#364150", border: "1px solid #E5E7EB" }}>
+              {commission.statut}
+            </span>
+          )}
         </div>
-        <button style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 18px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "#fff", color: "#364150", border: "1px solid #E5E7EB", cursor: "pointer" }}>
+        <button onClick={handleExportPdf} disabled={isExporting || isLoading}
+          style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 18px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "#fff", color: "#364150", border: "1px solid #E5E7EB", cursor: (isExporting || isLoading) ? "not-allowed" : "pointer", opacity: (isExporting || isLoading) ? 0.5 : 1 }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
             <path d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          {tc.genererRapport}
+          {isExporting ? (isAr ? "جارٍ التصدير…" : "Export en cours…") : tc.genererRapport}
         </button>
       </div>
 
       {/* AO + stats */}
       <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 16, padding: "20px 24px", marginBottom: 20 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700, color: "#1B1C1C", margin: "0 0 4px" }}>{tc.sousTitre(aoId)}</h2>
-        <p style={{ fontSize: 13, color: "#6F7A6B", marginBottom: 18 }}>{tc.etape}</p>
+        {isLoading ? (
+          <>
+            <div className="animate-pulse" style={{ height: 22, width: "40%", background: "#F1F5F9", borderRadius: 6, marginBottom: 8 }} />
+            <div className="animate-pulse" style={{ height: 14, width: "60%", background: "#F1F5F9", borderRadius: 6, marginBottom: 18 }} />
+          </>
+        ) : (
+          <>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: "#1B1C1C", margin: "0 0 4px" }}>
+              {commission ? commission.objet : tc.sousTitre(aoId)}
+            </h2>
+            <p style={{ fontSize: 13, color: "#6F7A6B", marginBottom: 18 }}>
+              {commission?.reference ?? aoId}
+              {membres && membres.length > 0 && ` · ${membres.length} membre${membres.length > 1 ? "s" : ""}`}
+              {" · "}{tc.etape}
+            </p>
+          </>
+        )}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
-          {STATS_KEYS.map((key, i) => (
-            <div key={key} style={{ background: "#F8FAFC", border: "1px solid #E5E7EB", borderRadius: 12, padding: "12px 16px" }}>
-              <p style={{ fontSize: 12, color: "#9CA3AF", margin: "0 0 4px" }}>{tc.stats[key]}</p>
-              <p style={{ fontSize: 30, fontWeight: 900, color: STATS_COLORS[i], margin: 0 }}>{STATS_VALUES[i]}</p>
+          {[
+            { key: tc.stats.traites, val: totalSoumissions, color: "#1B1C1C" },
+            { key: tc.stats.rejetees, val: rejetees, color: "#EF4444" },
+            { key: tc.stats.eligibles, val: eligibles, color: "#4CAF50" },
+          ].map((s) => (
+            <div key={s.key} style={{ background: "#F8FAFC", border: "1px solid #E5E7EB", borderRadius: 12, padding: "12px 16px" }}>
+              <p style={{ fontSize: 12, color: "#9CA3AF", margin: "0 0 4px" }}>{s.key}</p>
+              {isLoading ? (
+                <div className="animate-pulse" style={{ height: 30, width: 40, background: "#E5E7EB", borderRadius: 6 }} />
+              ) : (
+                <p style={{ fontSize: 30, fontWeight: 900, color: s.color, margin: 0 }}>
+                  {String(s.val).padStart(2, "0")}
+                </p>
+              )}
             </div>
           ))}
         </div>
@@ -201,96 +258,85 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
 
       {/* Table */}
       <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 16, marginBottom: 20 }}>
-        <div style={{ padding: "16px 24px", borderBottom: "1px solid #F3F4F6", borderRadius: "16px 16px 0 0" }}>
+        <div style={{ padding: "16px 24px", borderBottom: "1px solid #F3F4F6" }}>
           <h3 style={{ fontSize: 15, fontWeight: 700, color: "#1B1C1C", margin: "0 0 3px" }}>{tc.table.titre}</h3>
           <p style={{ fontSize: 12, color: "#9CA3AF", margin: 0 }}>{tc.table.sousTitre}</p>
         </div>
 
-        {/* Column headers */}
-        <div style={{ display: "grid", gridTemplateColumns: COL_TEMPLATE, padding: "10px 24px", background: "#F8FAFC", borderBottom: "1px solid #F3F4F6", gap: 8 }}>
-          {tc.table.cols.map((col) => (
-            <span key={col} style={{ fontSize: 11, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.04em" }}>{col}</span>
-          ))}
-        </div>
+        {!isLoading && lignes.length > 0 && (
+          <div style={{ display: "grid", gridTemplateColumns: COL_TEMPLATE, padding: "10px 24px", background: "#F8FAFC", borderBottom: "1px solid #F3F4F6", gap: 8 }}>
+            {tc.table.cols.map((col: string) => (
+              <span key={col} style={{ fontSize: 11, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.04em" }}>{col}</span>
+            ))}
+          </div>
+        )}
 
-        {/* Rows */}
-        {lignes.map((ligne, idx) => (
-          <div key={idx}
-            style={{ display: "grid", gridTemplateColumns: COL_TEMPLATE, padding: "16px 24px", alignItems: "center", gap: 8, borderBottom: idx < lignes.length - 1 ? "1px solid #F3F4F6" : "none", background: ligne.divergence ? "rgba(234,179,8,0.04)" : "transparent", opacity: ligne.elimine ? 0.6 : 1 }}>
-
-            {/* Rang */}
-            <div>
-              {ligne.rang ? (
-                <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: "50%", fontSize: 11, fontWeight: 800, color: "#fff", background: ligne.rang === 1 ? "#4CAF50" : "#94A3B8" }}>
-                  {ligne.rang === 1 ? tc.rangs.premier : tc.rangs.nieme(ligne.rang)}
+        {isLoading ? (
+          Array.from({ length: 3 }).map((_, i) => <SkeletonRow key={i} />)
+        ) : lignes.length === 0 ? (
+          <EmptyClassement isAr={isAr} />
+        ) : (
+          lignes.map((ligne, idx) => (
+            <div key={idx} style={{ display: "grid", gridTemplateColumns: COL_TEMPLATE, padding: "16px 24px", alignItems: "center", gap: 8, borderBottom: idx < lignes.length - 1 ? "1px solid #F3F4F6" : "none", background: ligne.divergence ? "rgba(234,179,8,0.04)" : "transparent", opacity: ligne.elimine ? 0.6 : 1 }}>
+              <div>
+                {ligne.rang ? (
+                  <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: "50%", fontSize: 11, fontWeight: 800, color: "#fff", background: ligne.rang === 1 ? "#4CAF50" : "#94A3B8" }}>
+                    {ligne.rang === 1 ? tc.rangs.premier : tc.rangs.nieme(ligne.rang)}
+                  </span>
+                ) : <span style={{ color: "#9CA3AF", fontSize: 14 }}>—</span>}
+              </div>
+              <span style={{ fontSize: 14, fontWeight: 600, color: ligne.elimine ? "#9CA3AF" : "#364150", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ligne.operateur}</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: ligne.elimine ? "#9CA3AF" : "#364150", textDecoration: ligne.elimine ? "line-through" : "none" }}>{ligne.scoreCommission.toFixed(1)} / 100</span>
+              <span style={{ fontSize: 13, color: "#6F7A6B" }}>{ligne.scoreIA.toFixed(1)} / 100</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: ligne.ecart > 0 ? "#EAB308" : "#6F7A6B" }}>{ligne.ecart > 0 ? `+${ligne.ecart.toFixed(1)}` : ligne.ecart.toFixed(1)}</span>
+                {ligne.divergence && <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 999, background: "#EAB308", color: "#fff" }}>{tc.divergence}</span>}
+              </div>
+              <span style={{ display: "inline-block", fontSize: 12, fontWeight: 600, padding: "4px 10px", borderRadius: 999, background: REC_STYLES[ligne.recommandationIA].bg, color: REC_STYLES[ligne.recommandationIA].color }}>{recLabel(ligne.recommandationIA)}</span>
+              {ligne.elimine ? (
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#EF4444" }}>{isAr ? ligne.motifEliminationAr : ligne.motifElimination}</span>
+              ) : validated ? (
+                <span style={{ display: "inline-block", fontSize: 12, fontWeight: 600, padding: "4px 12px", borderRadius: 999, background: ligne.decisionFinale === "Retenir" ? "rgba(76,175,80,0.12)" : "rgba(234,179,8,0.12)", color: ligne.decisionFinale === "Retenir" ? "#2e7d32" : "#92400e" }}>
+                  {ligne.decisionFinale === "Retenir" ? tc.decisions.retenir : tc.decisions.attente}
                 </span>
-              ) : <span style={{ color: "#9CA3AF", fontSize: 14 }}>—</span>}
-            </div>
-
-            <span style={{ fontSize: 14, fontWeight: 600, color: ligne.elimine ? "#9CA3AF" : "#364150", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ligne.operateur}</span>
-            <span style={{ fontSize: 14, fontWeight: 700, color: ligne.elimine ? "#9CA3AF" : "#364150", textDecoration: ligne.elimine ? "line-through" : "none", whiteSpace: "nowrap" }}>{ligne.scoreCommission.toFixed(1)} / 100</span>
-            <span style={{ fontSize: 13, color: "#6F7A6B", whiteSpace: "nowrap" }}>{ligne.scoreIA.toFixed(1)} / 100</span>
-
-            {/* Écart */}
-            <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: ligne.ecart > 0 ? "#EAB308" : "#6F7A6B", whiteSpace: "nowrap" }}>
-                {ligne.ecart > 0 ? `+${ligne.ecart.toFixed(1)}` : ligne.ecart.toFixed(1)}
-              </span>
-              {ligne.divergence && (
-                <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 999, background: "#EAB308", color: "#fff" }}>{tc.divergence}</span>
+              ) : (
+                <DecisionDropdown current={ligne.decisionFinale} onChange={(d) => handleDecision(idx, d)} t={tc} />
               )}
             </div>
-
-            {/* Recommandation */}
-            <span style={{ display: "inline-block", fontSize: 12, fontWeight: 600, padding: "4px 10px", borderRadius: 999, background: REC_STYLES[ligne.recommandationIA].bg, color: REC_STYLES[ligne.recommandationIA].color, whiteSpace: "nowrap" }}>
-              {recLabel(ligne.recommandationIA)}
-            </span>
-
-            {/* Décision */}
-            {ligne.elimine ? (
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#EF4444" }}>
-                {isAr ? ligne.motifEliminationAr : ligne.motifElimination}
-              </span>
-            ) : validated ? (
-              <span style={{ display: "inline-block", fontSize: 12, fontWeight: 600, padding: "4px 12px", borderRadius: 999, background: ligne.decisionFinale === "Retenir" ? "rgba(76,175,80,0.12)" : "rgba(234,179,8,0.12)", color: ligne.decisionFinale === "Retenir" ? "#2e7d32" : "#92400e" }}>
-                {ligne.decisionFinale === "Retenir" ? tc.decisions.retenir : tc.decisions.attente}
-              </span>
-            ) : (
-              <DecisionDropdown current={ligne.decisionFinale} onChange={(d) => handleDecision(idx, d)} t={tc} />
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Footer */}
-      <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 14, padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#6F7A6B" }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M9 12l2 2 4-4" stroke="#4CAF50" strokeWidth="2" strokeLinecap="round" />
-            <circle cx="12" cy="12" r="9" stroke="#4CAF50" strokeWidth="2" />
-          </svg>
-          {tc.quorum}
-        </div>
-        {!validated ? (
-          <button onClick={() => setShowConfirm(true)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", borderRadius: 999, fontSize: 13, fontWeight: 700, background: "#1E293B", color: "#fff", border: "none", cursor: "pointer" }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2" />
-              <path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-            {tc.validerBtn}
-          </button>
-        ) : (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", borderRadius: 999, fontSize: 13, fontWeight: 700, background: "rgba(76,175,80,0.1)", color: "#2e7d32" }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-              <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-            </svg>
-            {tc.valide}
-          </div>
+          ))
         )}
       </div>
 
-      <Link href={`/${locale}/dashboard/commission/evaluations/${aoId}`} style={{ fontSize: 13, color: "#9CA3AF", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
+      {/* Footer */}
+      {!isLoading && (
+        <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 14, padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#6F7A6B" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M9 12l2 2 4-4" stroke="#4CAF50" strokeWidth="2" strokeLinecap="round" />
+              <circle cx="12" cy="12" r="9" stroke="#4CAF50" strokeWidth="2" />
+            </svg>
+            {tc.quorum}
+            {membres && membres.length > 0 && (
+              <span style={{ color: "#4CAF50", fontWeight: 600 }}>· {membres.length} membre{membres.length > 1 ? "s" : ""}</span>
+            )}
+          </div>
+          {!validated ? (
+            <button onClick={() => setShowConfirm(true)} disabled={changeStatutMutation.isPending || lignes.length === 0}
+              style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", borderRadius: 999, fontSize: 13, fontWeight: 700, background: "#1E293B", color: "#fff", border: "none", cursor: (changeStatutMutation.isPending || lignes.length === 0) ? "not-allowed" : "pointer", opacity: (changeStatutMutation.isPending || lignes.length === 0) ? 0.5 : 1 }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2" /><path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+              {changeStatutMutation.isPending ? (isAr ? "جارٍ…" : "Validation…") : tc.validerBtn}
+            </button>
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", borderRadius: 999, fontSize: 13, fontWeight: 700, background: "rgba(76,175,80,0.1)", color: "#2e7d32" }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" /></svg>
+              {tc.valide}
+            </div>
+          )}
+        </div>
+      )}
+
+      <Link href={`/${locale}/dashboard/commission/evaluations/${aoId}`}
+        style={{ fontSize: 13, color: "#9CA3AF", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ transform: isAr ? "rotate(180deg)" : "none" }}>
           <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
