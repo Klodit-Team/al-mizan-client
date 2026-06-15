@@ -94,7 +94,7 @@ export default function ActiviteRecente({ locale, dict, activities = defaultActi
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                 <h2 className="text-sm font-bold text-gray-800">{dict.title}</h2>
-                <Link href={`/${locale}/dashboard/admin/id/journal-audit`} className="text-xs font-semibold text-green-500 hover:text-green-600 transition-colors">
+                <Link href={`/${locale}/dashboard/admin/journal-audit`} className="text-xs font-semibold text-green-500 hover:text-green-600 transition-colors">
                     {dict.voirTout}
                 </Link>
             </div>

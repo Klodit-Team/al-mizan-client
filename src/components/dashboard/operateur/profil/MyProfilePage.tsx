@@ -10,6 +10,7 @@ import {
   type PersonalInfo, type OrganisationInfo, type OeProfileInfo,
 } from "./types";
 import { apiClient } from "@/services/client";
+import { getProfileByUserId, updateProfileByUserId } from "@/services/admin/users";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -157,14 +158,14 @@ export default function MyProfilePage({ dict }: { dict?: any }) {
         const userId = me?.user?.userId;
         if (!userId) return;
 
-        const profile = await apiClient<{ nom?: string; prenom?: string; telephone?: string; langue?: string }>(`/api/v1/users/profiles/user/${userId}`, { method: "GET" }).catch(() => null);
+        const profile = await getProfileByUserId(userId).catch(() => null);
         if (profile) {
           const p: PersonalInfo = {
-            nom: profile.nom || "",
-            prenom: profile.prenom || "",
-            telephone: profile.telephone || "",
-            email: me.user?.email || "",
-            langue: (profile.langue as "fr" | "ar") || "fr",
+            nom: profile.nom ?? "",
+            prenom: profile.prenom ?? "",
+            telephone: profile.telephone ?? "",
+            email: me.user?.email ?? "",
+            langue: profile.langue ?? "fr",
           };
           setPersonal(p);
           setPDraft(p);
@@ -211,10 +212,25 @@ export default function MyProfilePage({ dict }: { dict?: any }) {
 
   async function savePersonal() {
     setSavingP(true);
-    await new Promise((r) => setTimeout(r, 700));
-    setPersonal(pDraft);
-    setEditingP(false);
-    setSavingP(false);
+    try {
+      // Resolve the auth userId from the stored personal data or re-fetch
+      const me = await apiClient<{ user?: { userId?: string } }>("/api/v1/auth/me", { method: "GET" });
+      const userId = me?.user?.userId;
+      if (userId) {
+        await updateProfileByUserId(userId, {
+          nom: pDraft.nom,
+          prenom: pDraft.prenom,
+          telephone: pDraft.telephone || undefined,
+          langue: pDraft.langue,
+        });
+      }
+      setPersonal(pDraft);
+      setEditingP(false);
+    } catch (err) {
+      console.error("Failed to save profile:", err);
+    } finally {
+      setSavingP(false);
+    }
   }
 
   async function saveOrg() {

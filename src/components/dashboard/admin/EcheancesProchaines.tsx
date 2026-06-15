@@ -68,7 +68,7 @@ export default function EcheancesProchaines({ locale,dict, echeances = defaultEc
 
             {/* Footer */}
             <div className="px-4 py-3 border-t" style={{ borderColor: "#2a3347" }}>
-                <Link href={`/${locale}/dashboard/admin/id/commissions`} className="text-xs text-green-400 hover:text-green-300 font-semibold transition-colors">
+                <Link href={`/${locale}/dashboard/admin/commissions`} className="text-xs text-green-400 hover:text-green-300 font-semibold transition-colors">
                     {dict.ouvrirCalendrier} →
                 </Link>
             </div>

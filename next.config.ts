@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
         source: "/api/v1/:path*",
         destination: `${gatewayUrl}/api/v1/:path*`,
       },
+      {
+        source: "/notification-service/:path*",
+        destination: `${gatewayUrl}/notification-service/:path*`,
+      },
     ];
   },
 };

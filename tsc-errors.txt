@@ -1,0 +1,59 @@
+.next/types/validator.ts(105,39): error TS2307: Cannot find module '../../src/app/[locale]/dashboard/admin/[adminId]/commissions/page.js' or its corresponding type declarations.
+.next/types/validator.ts(114,39): error TS2307: Cannot find module '../../src/app/[locale]/dashboard/admin/[adminId]/incidents/page.js' or its corresponding type declarations.
+.next/types/validator.ts(123,39): error TS2307: Cannot find module '../../src/app/[locale]/dashboard/admin/[adminId]/journal-audit/page.js' or its corresponding type declarations.
+.next/types/validator.ts(132,39): error TS2307: Cannot find module '../../src/app/[locale]/dashboard/admin/[adminId]/notif/page.js' or its corresponding type declarations.
+.next/types/validator.ts(141,39): error TS2307: Cannot find module '../../src/app/[locale]/dashboard/admin/[adminId]/operateurs/page.js' or its corresponding type declarations.
+.next/types/validator.ts(150,39): error TS2307: Cannot find module '../../src/app/[locale]/dashboard/admin/[adminId]/organisations/[id]/page.js' or its corresponding type declarations.
+.next/types/validator.ts(159,39): error TS2307: Cannot find module '../../src/app/[locale]/dashboard/admin/[adminId]/organisations/page.js' or its corresponding type declarations.
+.next/types/validator.ts(168,39): error TS2307: Cannot find module '../../src/app/[locale]/dashboard/admin/[adminId]/profile/page.js' or its corresponding type declarations.
+.next/types/validator.ts(177,39): error TS2307: Cannot find module '../../src/app/[locale]/dashboard/admin/[adminId]/tableau-de-bord/page.js' or its corresponding type declarations.
+.next/types/validator.ts(186,39): error TS2307: Cannot find module '../../src/app/[locale]/dashboard/admin/[adminId]/utilisateurs/page.js' or its corresponding type declarations.
+.next/types/validator.ts(195,39): error TS2307: Cannot find module '../../src/app/[locale]/dashboard/commission/mes-commissions/page.js' or its corresponding type declarations.
+src/app/[locale]/dashboard/admin/id/profile/page.tsx(56,19): error TS2554: Expected 2 arguments, but got 1.
+src/app/[locale]/dashboard/contractant/marches/page.tsx(27,10): error TS2304: Cannot find name 'Link'.
+src/app/[locale]/dashboard/contractant/marches/page.tsx(32,11): error TS2304: Cannot find name 'Link'.
+src/components/dashboard/admin/commissions/Commissionspage.tsx(13,3): error TS2305: Module '"@/services/admin/commissions"' has no exported member 'changeAdminCommissionStatus'.
+src/components/dashboard/admin/commissions/Commissionspage.tsx(14,3): error TS2305: Module '"@/services/admin/commissions"' has no exported member 'createAdminCommission'.
+src/components/dashboard/admin/commissions/Commissionspage.tsx(15,3): error TS2305: Module '"@/services/admin/commissions"' has no exported member 'deleteAdminCommission'.
+src/components/dashboard/admin/commissions/Commissionspage.tsx(16,3): error TS2305: Module '"@/services/admin/commissions"' has no exported member 'getAdminCommissions'.
+src/components/dashboard/admin/commissions/Commissionspage.tsx(17,3): error TS2305: Module '"@/services/admin/commissions"' has no exported member 'updateAdminCommission'.
+src/components/dashboard/admin/commissions/Commissionspage.tsx(18,8): error TS2305: Module '"@/services/admin/commissions"' has no exported member 'CreateCommissionInput'.
+src/components/dashboard/admin/operateurs/Operateurspage.tsx(6,3): error TS2305: Module '"@/services/admin/operateurs"' has no exported member 'getAdminOperateurs'.
+src/components/dashboard/admin/operateurs/Operateurspage.tsx(9,8): error TS2305: Module '"@/services/admin/operateurs"' has no exported member 'AdminOperateur'.
+src/components/dashboard/admin/operateurs/Operateurspage.tsx(148,102): error TS7006: Parameter 'n' implicitly has an 'any' type.
+src/components/dashboard/admin/organisations/Organisationdetailpage.tsx(5,34): error TS2305: Module '"./types"' has no exported member 'User'.
+src/components/dashboard/admin/organisations/Organisationdetailpage.tsx(7,3): error TS2724: '"@/services/admin/organisations"' has no exported member named 'getAdminOrganisationById'. Did you mean 'getOrganisationById'?
+src/components/dashboard/admin/organisations/Organisationdetailpage.tsx(8,3): error TS2724: '"@/services/admin/organisations"' has no exported member named 'verifyAdminOrganisation'. Did you mean 'verifyOrganisation'?
+src/components/dashboard/admin/organisations/Organisationdetailpage.tsx(18,5): error TS2561: Object literal may only specify known properties, but 'registre_commerce' does not exist in type 'Organisation'. Did you mean to write 'registreCommerce'?
+src/components/dashboard/admin/organisations/Organisationdetailpage.tsx(135,100): error TS2551: Property 'is_verified' does not exist on type 'Organisation'. Did you mean 'isVerified'?
+src/components/dashboard/admin/organisations/Organisationdetailpage.tsx(136,38): error TS2551: Property 'is_verified' does not exist on type 'Organisation'. Did you mean 'isVerified'?
+src/components/dashboard/admin/organisations/Organisationdetailpage.tsx(143,23): error TS2551: Property 'is_verified' does not exist on type 'Organisation'. Did you mean 'isVerified'?
+src/components/dashboard/admin/organisations/Organisationdetailpage.tsx(160,22): error TS2551: Property 'is_verified' does not exist on type 'Organisation'. Did you mean 'isVerified'?
+src/components/dashboard/admin/organisations/Organisationdetailpage.tsx(208,65): error TS2551: Property 'registre_commerce' does not exist on type 'Organisation'. Did you mean 'registreCommerce'?
+src/components/dashboard/admin/organisations/Organisationdetailpage.tsx(256,76): error TS7006: Parameter 'n' implicitly has an 'any' type.
+src/components/dashboard/admin/organisations/Organisationdetailpage.tsx(284,49): error TS2551: Property 'created_at' does not exist on type 'Organisation'. Did you mean 'createdAt'?
+src/components/dashboard/admin/organisations/Organisationdetailpage.tsx(284,75): error TS2551: Property 'created_at' does not exist on type 'Organisation'. Did you mean 'createdAt'?
+src/components/dashboard/admin/organisations/Organisationdetailpage.tsx(285,49): error TS2551: Property 'updated_at' does not exist on type 'Organisation'. Did you mean 'updatedAt'?
+src/components/dashboard/admin/organisations/Organisationdetailpage.tsx(285,75): error TS2551: Property 'updated_at' does not exist on type 'Organisation'. Did you mean 'updatedAt'?
+src/components/dashboard/commission/classement/CommissionClassementPage.tsx(172,37): error TS2322: Type '{ readonly titre: "Validation & Classement Final"; readonly genererRapport: "Générer Rapport d'Évaluation"; readonly sousTitre: (id: string) => string; readonly etape: "Étape 3/3 : Délibération et attribution"; ... 13 more ...; readonly confirmer: "Confirmer"; } | { ...; }' is not assignable to type '{ readonly titre: "Validation & Classement Final"; readonly genererRapport: "Générer Rapport d'Évaluation"; readonly sousTitre: (id: string) => string; readonly etape: "Étape 3/3 : Délibération et attribution"; ... 13 more ...; readonly confirmer: "Confirmer"; }'.
+  Type '{ readonly titre: "التحقق والترتيب النهائي"; readonly genererRapport: "إنشاء تقرير التقييم"; readonly sousTitre: (id: string) => string; readonly etape: "المرحلة 3/3 : المداولة والإسناد"; ... 13 more ...; readonly confirmer: "تأكيد"; }' is not assignable to type '{ readonly titre: "Validation & Classement Final"; readonly genererRapport: "Générer Rapport d'Évaluation"; readonly sousTitre: (id: string) => string; readonly etape: "Étape 3/3 : Délibération et attribution"; ... 13 more ...; readonly confirmer: "Confirmer"; }'.
+    Types of property 'titre' are incompatible.
+      Type '"التحقق والترتيب النهائي"' is not assignable to type '"Validation & Classement Final"'.
+src/components/dashboard/commission/classement/CommissionClassementPage.tsx(259,105): error TS2322: Type '{ readonly titre: "Validation & Classement Final"; readonly genererRapport: "Générer Rapport d'Évaluation"; readonly sousTitre: (id: string) => string; readonly etape: "Étape 3/3 : Délibération et attribution"; ... 13 more ...; readonly confirmer: "Confirmer"; } | { ...; }' is not assignable to type '{ readonly titre: "Validation & Classement Final"; readonly genererRapport: "Générer Rapport d'Évaluation"; readonly sousTitre: (id: string) => string; readonly etape: "Étape 3/3 : Délibération et attribution"; ... 13 more ...; readonly confirmer: "Confirmer"; }'.
+  Type '{ readonly titre: "التحقق والترتيب النهائي"; readonly genererRapport: "إنشاء تقرير التقييم"; readonly sousTitre: (id: string) => string; readonly etape: "المرحلة 3/3 : المداولة والإسناد"; ... 13 more ...; readonly confirmer: "تأكيد"; }' is not assignable to type '{ readonly titre: "Validation & Classement Final"; readonly genererRapport: "Générer Rapport d'Évaluation"; readonly sousTitre: (id: string) => string; readonly etape: "Étape 3/3 : Délibération et attribution"; ... 13 more ...; readonly confirmer: "Confirmer"; }'.
+    Types of property 'titre' are incompatible.
+      Type '"التحقق والترتيب النهائي"' is not assignable to type '"Validation & Classement Final"'.
+src/components/dashboard/operateur/profil/MyProfilePage.tsx(199,29): error TS18048: 'current' is possibly 'undefined'.
+src/components/dashboard/operateur/profil/MyProfilePage.tsx(199,69): error TS18048: 'current' is possibly 'undefined'.
+src/components/dashboard/operateur/profil/MyProfilePage.tsx(199,95): error TS18048: 'current' is possibly 'undefined'.
+src/components/dashboard/operateur/profil/MyProfilePage.tsx(199,127): error TS18048: 'current' is possibly 'undefined'.
+src/components/dashboard/operateur/profil/MyProfilePage.tsx(200,41): error TS18048: 'current' is possibly 'undefined'.
+src/components/dashboard/operateur/profil/MyProfilePage.tsx(200,77): error TS18048: 'current' is possibly 'undefined'.
+src/components/dashboard/operateur/profil/MyProfilePage.tsx(200,99): error TS18048: 'current' is possibly 'undefined'.
+src/components/dashboard/operateur/profil/MyProfilePage.tsx(200,127): error TS18048: 'current' is possibly 'undefined'.
+src/components/dashboard/operateur/profil/MyProfilePage.tsx(201,26): error TS18048: 'current' is possibly 'undefined'.
+src/components/dashboard/operateur/profil/MyProfilePage.tsx(202,29): error TS18048: 'current' is possibly 'undefined'.
+src/components/dashboard/operateur/profil/SecuritySettingsPage.tsx(169,13): error TS2345: Argument of type '{ id: string; device: string; ip: string; lastActive: string; current: boolean; }[]' is not assignable to parameter of type 'SetStateAction<Session[]>'.
+  Type '{ id: string; device: string; ip: string; lastActive: string; current: boolean; }[]' is not assignable to type 'Session[]'.
+    Type '{ id: string; device: string; ip: string; lastActive: string; current: boolean; }' is missing the following properties from type 'Session': userAgent, createdAt, isCurrent
+src/components/dashboard/operateur/soumissions/steps/Step2AdminDocs.tsx(87,8): error TS2741: Property 'dict' is missing in type '{ onBack: () => void; onNext: () => void; disabled: boolean; }' but required in type '{ onBack?: (() => void) | undefined; onNext: () => void; dict: any; nextLabel?: string | undefined; nextIcon?: ReactNode; disabled?: boolean | undefined; isLast?: boolean | undefined; }'.

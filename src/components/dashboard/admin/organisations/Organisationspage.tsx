@@ -2,15 +2,15 @@
 import { useState, useEffect } from "react";
 import OrganisationCard from "./Organisationcard";
 import { type Organisation, type OrgType } from "./types";
-import { getAdminOrganisations } from "@/services/admin/organisations";
+import { listOrganisations } from "@/services/admin/organisations";
 
 const dummyOrgs: Organisation[] = [
-    { id: "1", denomination: "Ministère de l'Énergie et des Mines", nif: "123456789012345", nis: "12345678901234", registre_commerce: "RC-2020-001", adresse: "Rue Didouche Mourad", wilaya: "Alger", commune: "Hussein Dey", telephone: "+213 21 000 001", email: "contact@energie.gov.dz", type: "MINISTERE", is_verified: true, created_at: "2023-01-15T10:00:00Z", updated_at: "2024-01-01T00:00:00Z" },
-    { id: "2", denomination: "TechBuild SARL", nif: "987654321098765", nis: "98765432109876", registre_commerce: "RC-2019-045", adresse: "Zone Industrielle Rouiba", wilaya: "Alger", commune: "Rouiba", telephone: "+213 21 000 002", email: "info@techbuild.dz", type: "ENTREPRISE_PRIVEE", is_verified: true, created_at: "2023-03-10T09:00:00Z", updated_at: "2024-02-01T00:00:00Z" },
-    { id: "3", denomination: "BTP-Plus SPA", nif: "111222333444555", nis: "11122233344455", registre_commerce: "RC-2021-078", adresse: "Cité des Annassers", wilaya: "Alger", commune: "Kouba", telephone: "+213 21 000 003", email: "contact@btpplus.dz", type: "ENTREPRISE_PUBLIQUE", is_verified: false, created_at: "2023-06-20T08:00:00Z", updated_at: "2024-03-01T00:00:00Z" },
-    { id: "4", denomination: "Agence Nationale de l'Eau", nif: "222333444555666", nis: "22233344455566", registre_commerce: "RC-2018-012", adresse: "Boulevard Krim Belkacem", wilaya: "Alger", commune: "El Mouradia", telephone: "+213 21 000 004", email: "info@ane.gov.dz", type: "EPA", is_verified: true, created_at: "2023-02-05T11:00:00Z", updated_at: "2024-01-15T00:00:00Z" },
-    { id: "5", denomination: "Sonelgaz EPIC", nif: "333444555666777", nis: "33344455566677", registre_commerce: "RC-2015-003", adresse: "Boulevard Khelifa Boukhalfa", wilaya: "Alger", commune: "Hydra", telephone: "+213 21 000 005", email: "contact@sonelgaz.dz", type: "EPIC", is_verified: false, created_at: "2023-08-12T14:00:00Z", updated_at: "2024-04-01T00:00:00Z" },
-    { id: "6", denomination: "Groupement Hydraulique Nord", nif: "444555666777888", nis: "44455566677788", registre_commerce: "RC-2022-099", adresse: "Rue des Frères Bouadou", wilaya: "Blida", commune: "Blida", telephone: "+213 25 000 006", email: "info@ghn.dz", type: "GROUPEMENT", is_verified: false, created_at: "2023-11-01T10:00:00Z", updated_at: "2024-05-01T00:00:00Z" },
+    { id: "1", denomination: "Ministère de l'Énergie et des Mines", nif: "123456789012345", nis: "12345678901234", registreCommerce: "RC-2020-001", adresse: "Rue Didouche Mourad", wilaya: "Alger", commune: "Hussein Dey", telephone: "+213 21 000 001", email: "contact@energie.gov.dz", type: "MINISTERE", isVerified: true, createdAt: "2023-01-15T10:00:00Z", updatedAt: "2024-01-01T00:00:00Z" },
+    { id: "2", denomination: "TechBuild SARL", nif: "987654321098765", nis: "98765432109876", registreCommerce: "RC-2019-045", adresse: "Zone Industrielle Rouiba", wilaya: "Alger", commune: "Rouiba", telephone: "+213 21 000 002", email: "info@techbuild.dz", type: "ENTREPRISE_PRIVEE", isVerified: true, createdAt: "2023-03-10T09:00:00Z", updatedAt: "2024-02-01T00:00:00Z" },
+    { id: "3", denomination: "BTP-Plus SPA", nif: "111222333444555", nis: "11122233344455", registreCommerce: "RC-2021-078", adresse: "Cité des Annassers", wilaya: "Alger", commune: "Kouba", telephone: "+213 21 000 003", email: "contact@btpplus.dz", type: "ENTREPRISE_PUBLIQUE", isVerified: false, createdAt: "2023-06-20T08:00:00Z", updatedAt: "2024-03-01T00:00:00Z" },
+    { id: "4", denomination: "Agence Nationale de l'Eau", nif: "222333444555666", nis: "22233344455566", registreCommerce: "RC-2018-012", adresse: "Boulevard Krim Belkacem", wilaya: "Alger", commune: "El Mouradia", telephone: "+213 21 000 004", email: "info@ane.gov.dz", type: "EPA", isVerified: true, createdAt: "2023-02-05T11:00:00Z", updatedAt: "2024-01-15T00:00:00Z" },
+    { id: "5", denomination: "Sonelgaz EPIC", nif: "333444555666777", nis: "33344455566677", registreCommerce: "RC-2015-003", adresse: "Boulevard Khelifa Boukhalfa", wilaya: "Alger", commune: "Hydra", telephone: "+213 21 000 005", email: "contact@sonelgaz.dz", type: "EPIC", isVerified: false, createdAt: "2023-08-12T14:00:00Z", updatedAt: "2024-04-01T00:00:00Z" },
+    { id: "6", denomination: "Groupement Hydraulique Nord", nif: "444555666777888", nis: "44455566677788", registreCommerce: "RC-2022-099", adresse: "Rue des Frères Bouadou", wilaya: "Blida", commune: "Blida", telephone: "+213 25 000 006", email: "info@ghn.dz", type: "GROUPEMENT", isVerified: false, createdAt: "2023-11-01T10:00:00Z", updatedAt: "2024-05-01T00:00:00Z" },
 ];
 
 import type { getDictionary } from "@/i18n/get-dictionaries";
@@ -42,11 +42,27 @@ export default function OrganisationsPage({ locale, dict }: OrganisationsPagePro
     const fetchOrganisations = async () => {
         try {
             setIsLoading(true);
-            const data = await getAdminOrganisations();
-            setOrganisations(Array.isArray(data) ? data : dummyOrgs);
+            const response = await listOrganisations({ page: 1, limit: 100 });
+            // Backend returns PaginatedOrganisations; map to UI Organisation type
+            const mapped: Organisation[] = (response.data ?? []).map((o) => ({
+                id: o.id,
+                denomination: o.denomination,
+                nif: o.nif,
+                nis: o.nis,
+                registreCommerce: o.registreCommerce,
+                adresse: o.adresse,
+                wilaya: o.wilaya,
+                commune: o.commune,
+                telephone: o.telephone,
+                email: o.email,
+                type: o.type,
+                isVerified: o.isVerified,
+                createdAt: o.createdAt,
+                updatedAt: o.updatedAt,
+            }));
+            setOrganisations(mapped);
         } catch (error) {
             console.error("Error fetching organisations:", error);
-            setOrganisations(dummyOrgs);
         } finally {
             setIsLoading(false);
         }
@@ -62,13 +78,13 @@ export default function OrganisationsPage({ locale, dict }: OrganisationsPagePro
             org.nif.includes(search);
         const matchType = typeFilter === "all" || org.type === typeFilter;
         const matchVerified = verifiedFilter === "all" ||
-            (verifiedFilter === "verified" && org.is_verified) ||
-            (verifiedFilter === "pending" && !org.is_verified);
+            (verifiedFilter === "verified" && org.isVerified) ||
+            (verifiedFilter === "pending" && !org.isVerified);
         return matchSearch && matchType && matchVerified;
     });
 
-    const verifiedCount = organisations.filter((o) => o.is_verified).length;
-    const pendingCount = organisations.filter((o) => !o.is_verified).length;
+    const verifiedCount = organisations.filter((o) => o.isVerified).length;
+    const pendingCount = organisations.filter((o) => !o.isVerified).length;
 
     return (
         <div className="p-6 space-y-5">

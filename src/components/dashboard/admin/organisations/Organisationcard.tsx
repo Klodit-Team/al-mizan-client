@@ -34,7 +34,7 @@ export default function OrganisationCard({ org, locale, dict }: OrganisationCard
     const initials = org.denomination.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 
     return (
-        <Link href={`/${locale}/dashboard/admin/id/organisations/${org.id}`}>
+        <Link href={`/${locale}/dashboard/admin/organisations/${org.id}`}>
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:shadow-md hover:border-green-200 transition-all cursor-pointer group">
                 <div className="flex items-start justify-between mb-4">
                     {/* Avatar + name */}
@@ -48,8 +48,8 @@ export default function OrganisationCard({ org, locale, dict }: OrganisationCard
                         </div>
                     </div>
                     {/* Verified badge */}
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${org.is_verified ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600"}`}>
-                        {org.is_verified ? dict.card.verified : dict.card.pending}
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${org.isVerified ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600"}`}>
+                        {org.isVerified ? dict.card.verified : dict.card.pending}
                     </span>
                 </div>
 
@@ -71,7 +71,7 @@ export default function OrganisationCard({ org, locale, dict }: OrganisationCard
                         <svg className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        NIF: {org.nif} · RC: {org.registre_commerce}
+                        NIF: {org.nif} · RC: {org.registreCommerce}
                     </div>
                 </div>
 
@@ -81,7 +81,7 @@ export default function OrganisationCard({ org, locale, dict }: OrganisationCard
                         {typeLabels[org.type]}
                     </span>
                     <span className="text-xs text-gray-400">
-                        {new Date(org.created_at).toLocaleDateString("fr-DZ")}
+                        {new Date(org.createdAt).toLocaleDateString("fr-DZ")}
                     </span>
                 </div>
             </div>

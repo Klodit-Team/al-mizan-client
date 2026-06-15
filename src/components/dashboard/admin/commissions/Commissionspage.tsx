@@ -45,6 +45,26 @@ const FALLBACK_COMMISSION: Commission = {
   appel_offre_id: "AO-2024-001",
 };
 
+// Helper to map backend DTO (CommissionMarche) to UI model (Commission)
+const mapToCommission = (data: any): Commission => {
+  // Map all 5 backend statuses to the 3 UI statuses
+  let uiStatut: CommissionStatut = "CONSTITUEE";
+  if (data.statut === "EN_COURS" || data.statut === "DELIBERATION") uiStatut = "ACTIVE";
+  else if (data.statut === "ANNULEE" || data.statut === "INFRUCTUEUSE") uiStatut = "DISSOUTE";
+  // ATTRIBUEE → CONSTITUEE (default)
+
+  return {
+    id: data.id || `temp-${Math.random()}`,
+    designation: data.intitule || data.reference || data.designation || "Sans titre",
+    type: (data.typeMarche ? "MARCHE" : data.type) || "EVALUATION",
+    niveau: data.niveau || "NATIONALE",
+    statut: uiStatut,
+    date_constitution: data.createdAt || data.date_constitution || new Date().toISOString(),
+    created_at: data.createdAt || data.created_at || new Date().toISOString(),
+    appel_offre_id: data.reference || data.appel_offre_id || undefined,
+  };
+};
+
 export default function CommissionsPage({ locale, dict }: CommissionsPageProps) {
   const labels = useMemo(() => {
     const extra = dict as typeof dict & {
@@ -82,8 +102,9 @@ export default function CommissionsPage({ locale, dict }: CommissionsPageProps) 
     setError(null);
 
     try {
-      const data = await getAdminCommissions();
-      setCommissions(Array.isArray(data) && data.length > 0 ? data : [FALLBACK_COMMISSION]);
+      const res = await getAdminCommissions();
+      const data = Array.isArray(res) ? res : res?.data || [];
+      setCommissions(data.length > 0 ? data.map(mapToCommission) : [FALLBACK_COMMISSION]);
     } catch (err) {
       console.error("Error fetching commissions:", err);
       setError(labels.error);
@@ -124,25 +145,30 @@ export default function CommissionsPage({ locale, dict }: CommissionsPageProps) 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    const payload: CreateCommissionInput = {
-      designation: formData.designation,
-      type: formData.type,
-      niveau: formData.niveau,
-      appel_offre_id: formData.appel_offre_id || undefined,
-    };
+    // Map form data to backend CreateCommissionInput (CommissionMarcheDto)
+    // TODO: replace presidentId with the actual logged-in admin's userId once
+    // an auth context hook is available (e.g. useAuth().user.id).
+    const payload = {
+      intitule: formData.designation,
+      typeMarche: formData.type === "EVALUATION" ? "SERVICES" : "TRAVAUX",
+      presidentId: "00000000-0000-0000-0000-000000000000",
+      statut: "EN_COURS",
+    } as unknown as CreateCommissionInput;
 
     setIsSubmitting(true);
     try {
       if (editingCommission) {
         const updated = await updateAdminCommission(editingCommission.id, payload);
+        const mapped = mapToCommission(updated);
         setCommissions((current) =>
           current.map((commission) =>
-            commission.id === updated.id ? updated : commission,
+            commission.id === mapped.id ? mapped : commission,
           ),
         );
       } else {
         const created = await createAdminCommission(payload);
-        setCommissions((current) => [created, ...current]);
+        const mapped = mapToCommission(created);
+        setCommissions((current) => [mapped, ...current]);
       }
 
       closeModal(true);
@@ -164,9 +190,15 @@ export default function CommissionsPage({ locale, dict }: CommissionsPageProps) 
     );
 
     try {
-      const updated = await changeAdminCommissionStatus(commission.id, { statut });
+      // Map UI status back to the most representative backend CommissionStatut
+      const backendStatut =
+        statut === "ACTIVE"    ? "EN_COURS"  :
+        statut === "DISSOUTE"  ? "ANNULEE"   :
+        /* CONSTITUEE */         "ATTRIBUEE";
+      const updated = await changeAdminCommissionStatus(commission.id, backendStatut as any);
+      const mapped = mapToCommission(updated);
       setCommissions((current) =>
-        current.map((item) => (item.id === updated.id ? updated : item)),
+        current.map((item) => (item.id === mapped.id ? mapped : item)),
       );
     } catch (err) {
       console.error("Error changing commission status:", err);

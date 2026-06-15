@@ -3,22 +3,17 @@ import { useState, useEffect } from "react";
 import NotificationCard from "@/components/dashboard/admin/NotificationCard";
 import type { getDictionary } from "@/i18n/get-dictionaries";
 import {
-  getAdminNotifications,
-  markAdminNotificationRead,
-  markAllAdminNotificationsRead,
-  type NotificationCategory,
+  listNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+  type NotificationCategorie,
+  type NotificationEntity,
 } from "@/services/admin/notifications";
 
-export type FilterCategory = NotificationCategory | "all";
+export type FilterCategory = NotificationCategorie | "all";
 
-export interface Notification {
-    id: string;
-    category: NotificationCategory;
-    title: string;
-    description: string;
-    time: string;
-    read: boolean;
-}
+// Re-export the entity type so NotificationCard can import it from here
+export type { NotificationEntity };
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
 
@@ -27,7 +22,7 @@ interface NotificationsPageProps {
 }
 
 export default function NotificationsPageClient({ dict }: NotificationsPageProps) {
-    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [notifications, setNotifications] = useState<NotificationEntity[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [activeCategory, setActiveCategory] = useState<FilterCategory>("all");
@@ -39,8 +34,8 @@ export default function NotificationsPageClient({ dict }: NotificationsPageProps
             setFetchError(null);
 
             try {
-                const data = await getAdminNotifications();
-                setNotifications(Array.isArray(data) ? data : []);
+                const response = await listNotifications({ page: 1, limit: 100 });
+                setNotifications(response.data ?? []);
             } catch (error) {
                 console.error("Error fetching notifications:", error);
                 setFetchError("Impossible de charger les notifications.");
@@ -53,20 +48,20 @@ export default function NotificationsPageClient({ dict }: NotificationsPageProps
     }, []);
 
     const handleMarkRead = async (id: string) => {
-        setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+        setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isLue: true } : n)));
 
         try {
-            await markAdminNotificationRead(id);
+            await markNotificationRead(id);
         } catch (error) {
             console.error("Error marking notification read:", error);
         }
     };
 
     const handleMarkAllRead = async () => {
-        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+        setNotifications((prev) => prev.map((n) => ({ ...n, isLue: true })));
 
         try {
-            await markAllAdminNotificationsRead();
+            await markAllNotificationsRead();
         } catch (error) {
             console.error("Error marking all notifications read:", error);
         }
@@ -75,23 +70,24 @@ export default function NotificationsPageClient({ dict }: NotificationsPageProps
     // ── FILTERS ───────────────────────────────────────────────────────
 
     const filtered = notifications.filter((n) => {
-        const categoryMatch = activeCategory === "all" || n.category === activeCategory;
-        const unreadMatch = !unreadOnly || !n.read;
+        const categoryMatch = activeCategory === "all" || n.categorie === activeCategory;
+        const unreadMatch = !unreadOnly || !n.isLue;
         return categoryMatch && unreadMatch;
     });
 
-    const unreadCount = notifications.filter((n) => !n.read).length;
+    const unreadCount = notifications.filter((n) => !n.isLue).length;
 
     const categoriesList: { key: FilterCategory; label: string }[] = [
         { key: "all", label: dict.categories.all },
-        { key: "publication_ao", label: dict.categories.publication_ao },
-        { key: "depot_confirme", label: dict.categories.depot_confirme },
-        { key: "ouverture_plis", label: dict.categories.ouverture_plis },
-        { key: "evaluation_resultat", label: dict.categories.evaluation_resultat },
-        { key: "attribution_provisoire", label: dict.categories.attribution_provisoire },
-        { key: "attribution_definitive", label: dict.categories.attribution_definitive },
-        { key: "recours_update", label: dict.categories.recours_update },
-        { key: "systeme", label: dict.categories.systeme },
+        { key: "PUBLICATION", label: dict.categories.publication_ao ?? "Publication" },
+        { key: "DEPOT", label: dict.categories.depot_confirme ?? "Dépôt" },
+        { key: "OUVERTURE", label: dict.categories.ouverture_plis ?? "Ouverture" },
+        { key: "EVALUATION", label: dict.categories.evaluation_resultat ?? "Évaluation" },
+        { key: "ATTRIBUTION", label: dict.categories.attribution_provisoire ?? "Attribution" },
+        { key: "RECOURS", label: dict.categories.recours_update ?? "Recours" },
+        { key: "SYSTEME", label: dict.categories.systeme ?? "Système" },
+        { key: "IA_DIVERGENCE", label: "IA Divergence" },
+        { key: "IA_ERREUR", label: "IA Erreur" },
     ];
 
     return (
