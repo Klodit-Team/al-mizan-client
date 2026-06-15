@@ -2,13 +2,15 @@
 import { useState, useMemo, useEffect } from "react";
 import type { getDictionary } from "@/i18n/get-dictionaries";
 import {
-    getAdminIncidents,
-    resolveAdminIncident,
-    updateAdminIncidentStatut,
     type AIIncident,
     type IncidentStatut,
     type IncidentGravite,
 } from "@/services/admin/incidents";
+import {
+    useIncidentsQuery,
+    useUpdateIncidentStatusMutation,
+    useResolveIncidentMutation,
+} from "@/services/admin";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
 
@@ -64,10 +66,7 @@ interface IncidentsPageProps {
     locale: string;
     dict: CommonDict['dashboard']['admin']['incidentsPage'];
 }
-
 export default function IncidentsPage({ locale, dict }: IncidentsPageProps) {
-    const [incidents, setIncidents] = useState<AIIncident[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<IncidentStatut | "">("");
     const [graviteFilter, setGraviteFilter] = useState<IncidentGravite | "">("");
@@ -79,33 +78,21 @@ export default function IncidentsPage({ locale, dict }: IncidentsPageProps) {
     const [newStatus, setNewStatus] = useState<IncidentStatut>("EN_ANALYSE");
     const [isSaving, setIsSaving] = useState(false);
 
-    const fetchIncidents = async () => {
-        try {
-            setIsLoading(true);
-            const data = await getAdminIncidents({
-                statut:  statusFilter  || undefined,
-                gravite: graviteFilter || undefined,
-                limit: 100,
-            });
-            setIncidents(Array.isArray(data) ? data : defaultIncidents);
-        } catch (error) {
-            console.error("Error fetching incidents:", error);
-            setIncidents(defaultIncidents);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const { data: response, isLoading } = useIncidentsQuery({
+        statut: statusFilter || undefined,
+        gravite: graviteFilter || undefined,
+        limit: 100,
+    });
+    const incidents = Array.isArray(response) ? response : defaultIncidents;
 
-    useEffect(() => {
-        fetchIncidents();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [statusFilter, graviteFilter]);
+    const { mutateAsync: updateStatusMutate } = useUpdateIncidentStatusMutation();
+    const { mutateAsync: resolveMutate } = useResolveIncidentMutation();
 
     // Client-side text search
     const filteredIncidents = useMemo(() => {
         if (!search) return incidents;
         const q = search.toLowerCase();
-        return incidents.filter((inc) =>
+        return incidents.filter((inc: AIIncident) =>
             inc.id.toLowerCase().includes(q) ||
             inc.type_incident.toLowerCase().includes(q) ||
             inc.entite_source.toLowerCase().includes(q) ||
@@ -147,22 +134,17 @@ export default function IncidentsPage({ locale, dict }: IncidentsPageProps) {
         try {
             if (newStatus === "RESOLU") {
                 // Use the resolve endpoint (requires notes)
-                await resolveAdminIncident(selectedIncident.id, {
-                    resolution_notes: resolutionNotes,
+                await resolveMutate({
+                    id: selectedIncident.id,
+                    resolutionNotes: resolutionNotes,
                 });
             } else {
                 // Use the statut endpoint for other transitions
-                await updateAdminIncidentStatut(selectedIncident.id, newStatus);
+                await updateStatusMutate({
+                    id: selectedIncident.id,
+                    statut: newStatus
+                });
             }
-
-            // Optimistic update
-            setIncidents((prev) =>
-                prev.map((inc) =>
-                    inc.id === selectedIncident.id
-                        ? { ...inc, statut: newStatus, resolution_notes: resolutionNotes }
-                        : inc
-                )
-            );
         } catch (error) {
             console.error("Error updating incident:", error);
         } finally {
@@ -257,7 +239,7 @@ export default function IncidentsPage({ locale, dict }: IncidentsPageProps) {
                             ) : filteredIncidents.length === 0 ? (
                                 <tr><td colSpan={8} className="px-6 py-8 text-center text-gray-400">Aucun incident trouvé.</td></tr>
                             ) : (
-                                filteredIncidents.map((inc) => (
+                                filteredIncidents.map((inc: AIIncident) => (
                                     <tr key={inc.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4 font-mono text-xs text-gray-500">{inc.id}</td>
                                         <td className="px-6 py-4">

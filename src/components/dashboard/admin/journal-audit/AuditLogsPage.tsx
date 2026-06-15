@@ -2,12 +2,13 @@
 import { useState, useMemo, useEffect } from "react";
 import type { getDictionary } from "@/i18n/get-dictionaries";
 import {
-    getAdminAuditLogs,
-    verifyAdminAuditIntegrity,
-    getAdminAuditIntegrityStatus,
     type AuditLog,
-    type AuditIntegrityResult,
 } from "@/services/admin/audit";
+import {
+    useAuditQuery,
+    useIntegrityStatusQuery,
+    useVerifyIntegrityMutation
+} from "@/services/admin";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
 
@@ -29,12 +30,17 @@ export default function AuditLogsPage({ locale, dict }: AuditLogsPageProps) {
     const [searchUser, setSearchUser] = useState("");
     const [searchAction, setSearchAction] = useState("");
     const [dateFilter, setDateFilter] = useState("");
-    const [logs, setLogs] = useState<AuditLog[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
 
-    const [isVerifyingIntegrity, setIsVerifyingIntegrity] = useState(false);
-    const [integrityResult, setIntegrityResult] = useState<AuditIntegrityResult | null>(null);
-    const [integrityError, setIntegrityError] = useState(false);
+    const { data: logsResponse, isLoading } = useAuditQuery({
+        action: searchAction || undefined,
+        dateMin: dateFilter ? `${dateFilter}T00:00:00.000Z` : undefined,
+        dateMax: dateFilter ? `${dateFilter}T23:59:59.999Z` : undefined,
+        limit: 100,
+    });
+    const logs = Array.isArray(logsResponse) ? logsResponse : dummyLogs;
+
+    const { data: integrityResult, isError: integrityError } = useIntegrityStatusQuery();
+    const { mutateAsync: verifyMutate, isPending: isVerifyingIntegrity } = useVerifyIntegrityMutation();
 
     const actionOptions = [
         { key: "LOGIN",           label: dict.actions.LOGIN },
@@ -46,58 +52,19 @@ export default function AuditLogsPage({ locale, dict }: AuditLogsPageProps) {
         { key: "UPDATE_SETTINGS", label: dict.actions.UPDATE_SETTINGS },
     ];
 
-    const fetchLogs = async () => {
-        try {
-            setIsLoading(true);
-            // Pass server-side filters where possible
-            const data = await getAdminAuditLogs({
-                action:  searchAction || undefined,
-                dateMin: dateFilter ? `${dateFilter}T00:00:00.000Z` : undefined,
-                dateMax: dateFilter ? `${dateFilter}T23:59:59.999Z` : undefined,
-                limit:   100,
-            });
-            setLogs(Array.isArray(data) ? data : dummyLogs);
-        } catch (error) {
-            console.error("Error fetching audit logs:", error);
-            setLogs(dummyLogs);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     const handleVerifyIntegrity = async () => {
-        setIsVerifyingIntegrity(true);
-        setIntegrityResult(null);
-        setIntegrityError(false);
-
         try {
-            const data = await verifyAdminAuditIntegrity();
-            setIntegrityResult(data);
+            await verifyMutate();
         } catch (error) {
             console.error("Error verifying audit integrity:", error);
-            setIntegrityError(true);
-        } finally {
-            setIsVerifyingIntegrity(false);
         }
     };
-
-    // Load integrity status on mount
-    useEffect(() => {
-        getAdminAuditIntegrityStatus()
-            .then(setIntegrityResult)
-            .catch(() => { /* silent — status may not exist yet */ });
-    }, []);
-
-    useEffect(() => {
-        fetchLogs();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchAction, dateFilter]);
 
     // Client-side user filter (user_id is the only reliable text field without a name lookup)
     const filteredLogs = useMemo(() => {
         if (!searchUser) return logs;
         const q = searchUser.toLowerCase();
-        return logs.filter((log) =>
+        return logs.filter((log: AuditLog) =>
             log.user_id.toLowerCase().includes(q) ||
             log.entite.toLowerCase().includes(q) ||
             log.details.toLowerCase().includes(q)
@@ -109,7 +76,7 @@ export default function AuditLogsPage({ locale, dict }: AuditLogsPageProps) {
         return option ? option.label : actionKey;
     };
 
-    const integrityIsValid = integrityResult !== null && integrityResult.invalidCount === 0;
+    const integrityIsValid = integrityResult && integrityResult.invalidCount === 0;
 
     return (
         <div className="p-6 space-y-5">
@@ -248,7 +215,7 @@ export default function AuditLogsPage({ locale, dict }: AuditLogsPageProps) {
                                     </td>
                                 </tr>
                             ) : (
-                                filteredLogs.map((log) => (
+                                filteredLogs.map((log: AuditLog) => (
                                     <tr key={log.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="font-mono text-xs text-gray-700">{log.user_id}</div>
