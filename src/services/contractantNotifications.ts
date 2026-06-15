@@ -14,7 +14,8 @@ export interface ServiceContractantNotificationItem {
   isRead: boolean;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "");
+const API_BASE_URL = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "");
+const USE_REAL_API = typeof window !== "undefined" || Boolean(process.env.NEXT_PUBLIC_API_BASE_URL);
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -67,11 +68,9 @@ let notificationsStore: ServiceContractantNotificationItem[] = [
 ];
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  if (!API_BASE_URL) {
-    throw new Error("API base URL is not configured");
-  }
+  const url = API_BASE_URL ? `${API_BASE_URL}${path}` : path;
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(url, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -85,7 +84,14 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(message || `Request failed with status ${response.status}`);
   }
 
-  return (await response.json()) as T;
+  const json = await response.json();
+
+  // Unwrap paginated responses { data: [...] }
+  if (json && typeof json === "object" && "data" in json && Array.isArray(json.data)) {
+    return json.data as T;
+  }
+
+  return json as T;
 }
 
 function cloneNotifications(): ServiceContractantNotificationItem[] {
@@ -95,27 +101,42 @@ function cloneNotifications(): ServiceContractantNotificationItem[] {
 export async function listServiceContractantNotifications(): Promise<
   ServiceContractantNotificationItem[]
 > {
-  if (API_BASE_URL) {
-    return requestJson<ServiceContractantNotificationItem[]>(
-      "/service-contractant/notifications",
-      {
-        method: "GET",
-      },
+  if (USE_REAL_API) {
+    const raw = await requestJson<{ id: string; titre?: string; contenu?: string; categorie?: string; is_lue?: boolean; date_envoi?: string; created_at?: string }[]>(
+      "/api/v1/notifications/mes-notifications",
+      { method: "GET" },
     );
+    return (Array.isArray(raw) ? raw : []).map((n) => ({
+      id: n.id,
+      title: n.titre || "Notification",
+      content: n.contenu || "",
+      category: mapNotifCategory(n.categorie),
+      sentAt: n.date_envoi || n.created_at || new Date().toISOString(),
+      isRead: n.is_lue ?? false,
+    }));
   }
 
   await sleep(160);
   return cloneNotifications();
 }
 
+function mapNotifCategory(cat?: string): ContractantNotificationCategory {
+  const c = (cat || "").toUpperCase();
+  if (c === "PUBLICATION") return "publication";
+  if (c === "ATTRIBUTION") return "attribution";
+  if (c === "RECOURS") return "recours";
+  if (c.startsWith("IA")) return "ia";
+  return "systeme";
+}
+
 export async function markServiceContractantNotificationAsRead(
   notificationId: string,
 ): Promise<ServiceContractantNotificationItem[]> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     return requestJson<ServiceContractantNotificationItem[]>(
-      `/service-contractant/notifications/${notificationId}/read`,
+      `/api/v1/notifications/${notificationId}/lire`,
       {
-        method: "POST",
+        method: "PATCH",
       },
     );
   }
@@ -130,11 +151,11 @@ export async function markServiceContractantNotificationAsRead(
 export async function markAllServiceContractantNotificationsAsRead(): Promise<
   ServiceContractantNotificationItem[]
 > {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     return requestJson<ServiceContractantNotificationItem[]>(
-      "/service-contractant/notifications/read-all",
+      "/api/v1/notifications/marquer-toutes-lues",
       {
-        method: "POST",
+        method: "PATCH",
       },
     );
   }

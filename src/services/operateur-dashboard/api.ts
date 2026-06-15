@@ -465,3 +465,30 @@ export async function getOperateurDashboardData(): Promise<OeDashboardData> {
     openRecours: openRecours.slice(0, 3),
   };
 }
+
+/**
+ * Fetch activity feed from the audit service for the operateur.
+ * Falls back to empty array if the audit service is unavailable.
+ */
+export async function getOperateurActivityFeed(): Promise<OeActivityItem[]> {
+  try {
+    const raw = await apiClient<unknown>("/api/v1/audit/activities?limit=10", { method: "GET" });
+
+    if (raw && typeof raw === "object" && "data" in (raw as Record<string, unknown>)) {
+      const items = (raw as { data: unknown }).data;
+      if (Array.isArray(items)) {
+        return items.map((item: { id?: string; type?: string; title?: string; subtitle?: string; timestamp?: string }) => ({
+          id: item.id || crypto.randomUUID(),
+          type: (item.type || "NOTIFICATION") as OeActivityItem["type"],
+          title: item.title || "Activite",
+          subtitle: item.subtitle || "",
+          timestamp: item.timestamp || new Date().toISOString(),
+        }));
+      }
+    }
+
+    return [];
+  } catch {
+    return [];
+  }
+}

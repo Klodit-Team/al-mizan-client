@@ -35,7 +35,8 @@ export interface ServiceContractantProfile {
   serviceInfo: ServiceContractantServiceInfo;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "");
+const API_BASE_URL = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "");
+const USE_REAL_API = typeof window !== "undefined" || Boolean(process.env.NEXT_PUBLIC_API_BASE_URL);
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -75,11 +76,9 @@ function cloneProfile(
 }
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  if (!API_BASE_URL) {
-    throw new Error("API base URL is not configured");
-  }
+  const url = API_BASE_URL ? `${API_BASE_URL}${path}` : path;
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(url, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -93,13 +92,20 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(message || `Request failed with status ${response.status}`);
   }
 
-  return (await response.json()) as T;
+  const json = await response.json();
+
+  // Unwrap paginated responses { data: [...] }
+  if (json && typeof json === "object" && "data" in json && Array.isArray(json.data)) {
+    return json.data as T;
+  }
+
+  return json as T;
 }
 
 export async function getServiceContractantProfile(): Promise<ServiceContractantProfile> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     return requestJson<ServiceContractantProfile>(
-      "/service-contractant/profile",
+      "/api/v1/users/services-contractants/profile",
       {
         method: "GET",
       },
@@ -113,9 +119,9 @@ export async function getServiceContractantProfile(): Promise<ServiceContractant
 export async function updateServiceContractantProfile(
   payload: ServiceContractantProfile,
 ): Promise<ServiceContractantProfile> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     return requestJson<ServiceContractantProfile>(
-      "/service-contractant/profile",
+      "/api/v1/users/services-contractants/profile",
       {
         method: "PUT",
         body: JSON.stringify(payload),

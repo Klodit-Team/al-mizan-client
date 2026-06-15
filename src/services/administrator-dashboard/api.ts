@@ -154,8 +154,93 @@ const mockedAdministratorDashboardData: AdministratorDashboardData = {
   ],
 };
 
+import { apiClient } from "@/services/client";
+
+interface ApiEnvelope<T> {
+  data?: T;
+  success?: boolean;
+  statusCode?: number;
+}
+
+interface PaginatedPayload<T> {
+  data: T[];
+}
+
+function unwrapEnvelope<T>(payload: unknown): T {
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "data" in (payload as Record<string, unknown>) &&
+    ("success" in (payload as Record<string, unknown>) || "statusCode" in (payload as Record<string, unknown>))
+  ) {
+    return (payload as ApiEnvelope<T>).data as T;
+  }
+  return payload as T;
+}
+
+function extractList<T>(payload: unknown): T[] {
+  const unwrapped = unwrapEnvelope<unknown>(payload);
+  if (Array.isArray(unwrapped)) return unwrapped as T[];
+  if (unwrapped && typeof unwrapped === "object" && Array.isArray((unwrapped as PaginatedPayload<T>).data)) {
+    return (unwrapped as PaginatedPayload<T>).data;
+  }
+  return [];
+}
+
 export async function getAdministratorDashboardData(): Promise<AdministratorDashboardData> {
-  return mockedAdministratorDashboardData;
+  try {
+    const [aosRaw, recoursRaw, alertsRaw] = await Promise.all([
+      apiClient<unknown>("/api/v1/appels-offres?page=1&limit=200", { method: "GET" }).catch(() => []),
+      apiClient<unknown>("/api/v1/recours?page=1&limit=100", { method: "GET" }).catch(() => []),
+      apiClient<unknown>("/api/v1/alertes-ia?page=1&limit=10", { method: "GET" }).catch(() => []),
+    ]);
+
+    const aos = extractList<{ id: string; statut?: string; dateLimiteSoumission?: string; reference?: string }>(aosRaw);
+    const recours = extractList<{ id: string; statut?: string }>(recoursRaw);
+    const alerts = extractList<{ id: string; severity?: string; title?: string; description?: string }>(alertsRaw);
+
+    const activeStatuses = new Set(["PUBLIE", "EN_COURS", "OUVERTURE_PLIS", "EVALUATION"]);
+    const aoEnCours = aos.filter((ao) => activeStatuses.has((ao.statut || "").toUpperCase())).length;
+    const recoursOuverts = recours.filter((r) => {
+      const s = (r.statut || "").toUpperCase();
+      return s === "DEPOSE" || s === "EN_EXAMEN";
+    }).length;
+
+    const aiAlerts: AdministratorAiAlert[] = alerts.slice(0, 3).map((a) => ({
+      id: a.id,
+      severity: (a.severity as "high" | "medium" | "low") || "medium",
+      title: a.title || "Alerte IA",
+      description: a.description || "",
+    }));
+
+    const deadlines: AdministratorDeadlineItem[] = aos
+      .filter((ao) => ao.dateLimiteSoumission)
+      .map((ao) => ({
+        id: `deadline-${ao.id}`,
+        type: "depot" as const,
+        title: `Fin de depot - ${ao.reference || ao.id}`,
+        subtitle: ao.dateLimiteSoumission || "",
+        time: ao.dateLimiteSoumission || "",
+      }))
+      .slice(0, 3);
+
+    return {
+      userName: "Administrateur",
+      roleLabel: "Administrateur plateforme",
+      stats: {
+        utilisateursActifs: 0,
+        aoEnCours,
+        recoursOuverts,
+        incidentsIA: alerts.length,
+      },
+      activities: mockedAdministratorDashboardData.activities,
+      aiAlerts,
+      deadlines,
+      supportLinks: mockedAdministratorDashboardData.supportLinks,
+    };
+  } catch {
+    return mockedAdministratorDashboardData;
+  }
 }
 
 export async function getAdministratorDashboardStats(): Promise<AdministratorDashboardStats> {

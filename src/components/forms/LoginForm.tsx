@@ -136,7 +136,7 @@ export default function LoginForm({ dict }: LoginFormProps) {
                 <p className="text-sm text-gray-500 mt-1 text-left">{dict.subtitle}</p>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">

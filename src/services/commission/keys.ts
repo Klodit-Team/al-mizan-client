@@ -1,0 +1,11 @@
+export const commissionKeys = {
+  all: ["commission"] as const,
+  evaluationsOverview: () => [...commissionKeys.all, "evaluations-overview"] as const,
+  evaluationDetail: (aoId: string) => [...commissionKeys.all, "evaluation", aoId] as const,
+  evaluationSubmissions: (aoId: string) => [...commissionKeys.all, "evaluation-submissions", aoId] as const,
+  evaluationCriteria: (aoId: string) => [...commissionKeys.all, "evaluation-criteria", aoId] as const,
+  documents: (soumissionId: string) => [...commissionKeys.all, "documents", soumissionId] as const,
+  classement: (aoId: string) => [...commissionKeys.all, "classement", aoId] as const,
+  preDechiffrement: (offreId: string) => [...commissionKeys.all, "pre-dechiffrement", offreId] as const,
+  dechiffrement: (offreId: string) => [...commissionKeys.all, "dechiffrement", offreId] as const,
+};

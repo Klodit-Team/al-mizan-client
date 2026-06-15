@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { commissionTranslations } from "@/i18n/commission-translations";
 import {
   useResultatsOuvertureQuery,
@@ -127,6 +127,21 @@ export default function DocumentValidationPage({
   const [docs, setDocs] = useState<DocFile[]>(documents);
   const [selectedType, setSelectedType] = useState<DocType>("RC");
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // Fetch real documents from API
+  useEffect(() => {
+    if (!soumissionId) return;
+    (async () => {
+      try {
+        const { apiClient } = await import("@/services/client");
+        const realDocs = await apiClient<DocFile[]>(`/api/v1/documents/administrative/${soumissionId}`, { method: "GET" }).catch(() => []);
+        if (Array.isArray(realDocs) && realDocs.length > 0) {
+          setDocs(realDocs);
+          setActiveDocId(realDocs[0].id);
+        }
+      } catch { /* keep mock fallback */ }
+    })();
+  }, [soumissionId]);
   const [saved, setSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 

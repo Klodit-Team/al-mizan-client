@@ -47,7 +47,8 @@ export interface ServiceContractantTenderEvaluationPhaseDetail {
   validatedAt: string | null;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "");
+const API_BASE_URL = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "");
+const USE_REAL_API = typeof window !== "undefined" || Boolean(process.env.NEXT_PUBLIC_API_BASE_URL);
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -221,11 +222,9 @@ function cloneDetail(
 }
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  if (!API_BASE_URL) {
-    throw new Error("API base URL is not configured");
-  }
+  const url = API_BASE_URL ? `${API_BASE_URL}${path}` : path;
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(url, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -239,15 +238,22 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(message || `Request failed with status ${response.status}`);
   }
 
-  return (await response.json()) as T;
+  const json = await response.json();
+
+  // Unwrap paginated responses { data: [...] }
+  if (json && typeof json === "object" && "data" in json && Array.isArray(json.data)) {
+    return json.data as T;
+  }
+
+  return json as T;
 }
 
 export async function listServiceContractantTenderEvaluationPhases(
   aoId: string,
 ): Promise<TenderEvaluationPhaseOverviewItem[]> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     return requestJson<TenderEvaluationPhaseOverviewItem[]>(
-      `/service-contractant/tenders/${aoId}/evaluation/phases`,
+      `/api/v1/evaluations?appelOffreId=${aoId}`,
       {
         method: "GET",
       },
@@ -262,10 +268,10 @@ export async function getServiceContractantTenderEvaluationPhaseDetail(
   aoId: string,
   phase: TenderEvaluationPhase,
 ): Promise<ServiceContractantTenderEvaluationPhaseDetail | null> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     try {
       return await requestJson<ServiceContractantTenderEvaluationPhaseDetail>(
-        `/service-contractant/tenders/${aoId}/evaluation/phases/${phase}`,
+        `/api/v1/evaluations?appelOffreId=${aoId}&phase=${phase}`,
         {
           method: "GET",
         },
@@ -284,9 +290,9 @@ export async function validateServiceContractantTenderEvaluationPhase(
   aoId: string,
   phase: TenderEvaluationPhase,
 ): Promise<ServiceContractantTenderEvaluationPhaseDetail> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     return requestJson<ServiceContractantTenderEvaluationPhaseDetail>(
-      `/service-contractant/tenders/${aoId}/evaluation/phases/${phase}/validate`,
+      `/api/v1/evaluations?appelOffreId=${aoId}&phase=${phase}&action=validate`,
       {
         method: "PATCH",
       },

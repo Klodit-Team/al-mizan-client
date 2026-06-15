@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter, useParams, usePathname, useSearchParams } from "next/navigation";
 import { type Locale } from "@/i18n/config";
@@ -14,6 +14,7 @@ import type { getAuthDictionary } from "@/i18n/get-dictionaries";
 type AuthDict = Awaited<ReturnType<typeof getAuthDictionary>>;
 
 type RegistrationRole = "SERVICE_CONTRACTANT" | "OPERATEUR_ECONOMIQUE";
+const PENDING_VERIFICATION_EMAIL_KEY = "pendingVerificationEmail";
 
 const resolveRegistrationRole = (rawRole: string): RegistrationRole => {
     const normalized = rawRole
@@ -95,12 +96,6 @@ export default function RegisterForm({ dict, initialRole }: RegisterFormProps) {
         initialRole || resolveRegistrationRole(requestedRole),
     );
 
-    useEffect(() => {
-        if (initialRole) {
-            setRegistrationRole(initialRole);
-        }
-    }, [initialRole]);
-
     const updateRole = (nextRole: RegistrationRole) => {
         setRegistrationRole(nextRole);
 
@@ -118,7 +113,6 @@ export default function RegisterForm({ dict, initialRole }: RegisterFormProps) {
         register,
         handleSubmit,
         trigger,
-        setError,
         formState: { errors, isSubmitting },
     } = useForm<RegisterFormData>({
         resolver: zodResolver(registerSchema),
@@ -152,7 +146,7 @@ export default function RegisterForm({ dict, initialRole }: RegisterFormProps) {
 
         try {
             // 1. Create the user in the database
-            const result = await registerMutation.mutateAsync({
+            await registerMutation.mutateAsync({
                 email: data.email,
                 password: data.password,
                 role: registrationRole,
@@ -184,8 +178,9 @@ export default function RegisterForm({ dict, initialRole }: RegisterFormProps) {
                 body: JSON.stringify({ email: data.email }),
             });
 
-            // 3. Redirect to the Verify page, passing the email in the URL
-            router.push(`/${locale}/auth/verify?email=${encodeURIComponent(data.email)}`);
+            // 3. Keep the verification email out of the URL.
+            sessionStorage.setItem(PENDING_VERIFICATION_EMAIL_KEY, data.email);
+            router.push(`/${locale}/auth/verify`);
             
         } catch (error) {
             if (error instanceof ApiClientError) {
@@ -523,7 +518,7 @@ export default function RegisterForm({ dict, initialRole }: RegisterFormProps) {
 
             {/* ── STEP 3 ── */}
             {step === 3 && (
-                <form onSubmit={handleSubmit(onSubmit, (errors) => console.log("VALIDATION ERRORS:", errors))}
+                <form method="post" onSubmit={handleSubmit(onSubmit, (errors) => console.log("VALIDATION ERRORS:", errors))}
                      className="p-8 space-y-4">
                     <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
                         <svg className="w-4 h-4 text-[#4CAF50]" fill="none" stroke="currentColor" viewBox="0 0 24 24">

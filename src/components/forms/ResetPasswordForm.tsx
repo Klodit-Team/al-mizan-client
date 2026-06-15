@@ -21,7 +21,20 @@ export default function ResetPasswordForm({ dict }: ResetPasswordFormProps) {
     const handleSubmit = async () => {
         if (!email) return;
         setIsSubmitting(true);
-        await new Promise((r) => setTimeout(r, 1000));
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/forgot-password`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ email }),
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error("Reset password error:", errorData.message || "Request failed");
+            }
+        } catch (error) {
+            console.error("Reset password error:", error);
+        }
         setIsSubmitting(false);
         router.push(`/${locale}/auth/reset-password/set-new-password`);
     };

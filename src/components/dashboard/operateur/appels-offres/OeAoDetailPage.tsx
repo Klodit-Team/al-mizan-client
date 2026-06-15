@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   type OeAoItem,
@@ -9,6 +9,7 @@ import {
   type OeAoType,
 } from "@/services/operateur-appels-offres/api";
 import { useOperateurAppelOffreDetailQuery } from "@/services/operateur-appels-offres/queries";
+import { apiClient } from "@/services/client";
 import { type Locale } from "@/i18n/config";
 import {
   ChevronRight,
@@ -66,6 +67,19 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 function GeneralTab({ ao, dict, locale }: { ao: OeAoItem; dict: any; locale: string }) {
+  const [eligibilityCriteria, setEligibilityCriteria] = useState<{ id: string; libelle: string; valeurMinimale?: string }[]>([]);
+
+  useEffect(() => {
+    apiClient<{ id: string; libelle?: string; valeurMinimale?: string }[]>(
+      `/api/v1/appels-offres/${ao.id}/criteres-eligibilite`,
+      { method: "GET" },
+    )
+      .then((data) => {
+        const items = Array.isArray(data) ? data : (data as any)?.data || [];
+        if (items.length > 0) setEligibilityCriteria(items);
+      })
+      .catch(() => {});
+  }, [ao.id]);
   return (
     <div className="space-y-4">
       <dl className="divide-y divide-slate-100">
@@ -109,18 +123,26 @@ function GeneralTab({ ao, dict, locale }: { ao: OeAoItem; dict: any; locale: str
         />
       </dl>
 
-      {/* Eligibility conditions (static mock) */}
+      {/* Eligibility conditions */}
       <div>
         <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-slate-500">
           {dict.general.eligibility}
         </h3>
         <ul className="space-y-1.5">
-          {dict.general.eligibilityMock.map((cond: string) => (
-            <li key={cond} className="flex items-center gap-2 text-xs text-slate-600">
-              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
-              {cond}
-            </li>
-          ))}
+          {eligibilityCriteria.length > 0
+            ? eligibilityCriteria.map((crit) => (
+                <li key={crit.id} className="flex items-center gap-2 text-xs text-slate-600">
+                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                  {crit.libelle}{crit.valeurMinimale ? ` — ${crit.valeurMinimale}` : ""}
+                </li>
+              ))
+            : (dict.general.eligibilityMock || []).map((cond: string) => (
+                <li key={cond} className="flex items-center gap-2 text-xs text-slate-600">
+                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                  {cond}
+                </li>
+              ))
+          }
         </ul>
       </div>
     </div>
@@ -162,14 +184,53 @@ function LotsTab({ ao, dict }: { ao: OeAoItem; dict: any }) {
   );
 }
 
-function DocumentsTab({ dict }: { dict: any }) {
-  const docs = [
-    { name: "Cahier des Charges – Volume I", size: "2.4 MB", type: "PDF" },
-    { name: "Cahier des Charges – Volume II (Technique)", size: "5.1 MB", type: "PDF" },
-    { name: "Bordereau des Prix Unitaires", size: "320 KB", type: "XLSX" },
-    { name: "Formulaire de Soumission", size: "180 KB", type: "DOCX" },
-    { name: "Modèle de Caution Bancaire", size: "95 KB", type: "PDF" },
-  ];
+function DocumentsTab({ aoId, dict }: { aoId: string; dict: any }) {
+  const [docs, setDocs] = useState<{ name: string; size: string; type: string; url?: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        // Try to get the CDC download link
+        const cdcResult = await apiClient<{ url?: string; documentId?: string; prixRetrait?: number }>(
+          `/api/v1/appels-offres/${aoId}/cdc`,
+          { method: "GET" },
+        ).catch(() => null);
+
+        if (cdcResult && cdcResult.url) {
+          setDocs([{
+            name: "Cahier des Charges (CDC)",
+            size: "PDF",
+            type: "PDF",
+            url: cdcResult.url,
+          }]);
+        } else {
+          // No CDC uploaded — show empty state
+          setDocs([]);
+        }
+      } catch {
+        setDocs([]);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [aoId]);
+
+  if (loading) {
+    return <div className="animate-pulse h-20 rounded-lg bg-slate-100" />;
+  }
+
+  if (docs.length === 0) {
+    return (
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-6 text-center">
+        <FileText className="mx-auto h-8 w-8 text-slate-300" />
+        <p className="mt-2 text-xs font-medium text-slate-500">
+          {dict.documents?.empty || "Aucun document disponible pour cet appel d'offres."}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-2">
       <p className="text-[11px] text-slate-500">
@@ -189,13 +250,15 @@ function DocumentsTab({ dict }: { dict: any }) {
               <p className="text-[10px] text-slate-400">{doc.size}</p>
             </div>
           </div>
-          <button
-            type="button"
+          <a
+            href={doc.url || "#"}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-2.5 py-1 text-[11px] font-medium text-slate-600 hover:border-[#4CAF50] hover:text-[#4CAF50] transition-colors"
           >
             <Download className="h-3 w-3" />
             {dict.documents.download}
-          </button>
+          </a>
         </div>
       ))}
     </div>
@@ -481,7 +544,7 @@ export default function OeAoDetailPage({ aoId, dict, locale }: { aoId: string; d
         <div className="p-4 md:p-5">
           {tab === "general" && <GeneralTab ao={ao} dict={dict} locale={locale} />}
           {tab === "lots" && <LotsTab ao={ao} dict={dict} />}
-          {tab === "documents" && <DocumentsTab dict={dict} />}
+          {tab === "documents" && <DocumentsTab aoId={aoId} dict={dict} />}
           {tab === "soumission" && <SoumissionTab ao={ao} dict={dict} locale={locale} />}
         </div>
       </div>

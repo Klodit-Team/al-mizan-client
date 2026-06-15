@@ -33,7 +33,8 @@ export interface SaveTenderAvisPayload {
   publicationEndDate: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "");
+const API_BASE_URL = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "");
+const USE_REAL_API = typeof window !== "undefined" || Boolean(process.env.NEXT_PUBLIC_API_BASE_URL);
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -84,11 +85,9 @@ function seedAvisForAo(aoId: string) {
 }
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  if (!API_BASE_URL) {
-    throw new Error("API base URL is not configured");
-  }
+  const url = API_BASE_URL ? `${API_BASE_URL}${path}` : path;
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(url, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -102,16 +101,26 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(message || `Request failed with status ${response.status}`);
   }
 
-  return (await response.json()) as T;
+  const json = await response.json();
+
+  // Unwrap paginated responses { data: [...] }
+  if (json && typeof json === "object" && "data" in json && Array.isArray(json.data)) {
+    return json.data as T;
+  }
+
+  return json as T;
 }
 
 export async function listServiceContractantTenderAvis(
   aoId: string,
 ): Promise<TenderAvisItem[]> {
-  if (API_BASE_URL) {
-    return requestJson<TenderAvisItem[]>(`/service-contractant/tenders/${aoId}/avis`, {
+  if (USE_REAL_API) {
+    const all = await requestJson<any[]>(`/api/v1/appels-offres/avis-ao`, {
       method: "GET",
     });
+    // Filter by aoId client-side since backend doesn't support filter
+    const filtered = (Array.isArray(all) ? all : []).filter((item) => item.aoId === aoId);
+    return filtered.map((item) => mapBackendAvisToFrontend(item, aoId));
   }
 
   await sleep(200);
@@ -122,10 +131,10 @@ export async function getServiceContractantTenderAvisById(
   aoId: string,
   avisId: string,
 ): Promise<TenderAvisItem | null> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     try {
       return await requestJson<TenderAvisItem>(
-        `/service-contractant/tenders/${aoId}/avis/${avisId}`,
+        `/api/v1/appels-offres/avis-ao/${avisId}`,
         {
           method: "GET",
         },
@@ -144,11 +153,13 @@ export async function saveServiceContractantTenderAvisDraft(
   aoId: string,
   payload: SaveTenderAvisPayload,
 ): Promise<TenderAvisItem> {
-  if (API_BASE_URL) {
-    return requestJson<TenderAvisItem>(`/service-contractant/tenders/${aoId}/avis`, {
+  if (USE_REAL_API) {
+    const mapped = mapAvisPayloadToBackend(aoId, payload, false);
+    const result = await requestJson<any>(`/api/v1/appels-offres/avis-ao`, {
       method: "POST",
-      body: JSON.stringify({ ...payload, isPublished: false }),
+      body: JSON.stringify(mapped),
     });
+    return mapBackendAvisToFrontend(result, aoId);
   }
 
   await sleep(260);
@@ -173,14 +184,16 @@ export async function publishServiceContractantTenderAvis(
   aoId: string,
   payload: SaveTenderAvisPayload,
 ): Promise<TenderAvisItem> {
-  if (API_BASE_URL) {
-    return requestJson<TenderAvisItem>(
-      `/service-contractant/tenders/${aoId}/avis/publish`,
+  if (USE_REAL_API) {
+    const mapped = mapAvisPayloadToBackend(aoId, payload, true);
+    const result = await requestJson<any>(
+      `/api/v1/appels-offres/avis-ao`,
       {
         method: "POST",
-        body: JSON.stringify({ ...payload, isPublished: true }),
+        body: JSON.stringify(mapped),
       },
     );
+    return mapBackendAvisToFrontend(result, aoId);
   }
 
   await sleep(280);
@@ -205,9 +218,9 @@ export async function publishServiceContractantTenderAvisById(
   aoId: string,
   avisId: string,
 ): Promise<TenderAvisItem> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     return requestJson<TenderAvisItem>(
-      `/service-contractant/tenders/${aoId}/avis/${avisId}/publish`,
+      `/api/v1/appels-offres/avis-ao/${avisId}`,
       {
         method: "PATCH",
       },
@@ -232,4 +245,56 @@ export async function publishServiceContractantTenderAvisById(
   avisStore.set(aoId, list);
 
   return updated;
+}
+
+// ─── Mapping helpers (frontend ↔ backend) ────────────────────────────────────
+
+function mapTypeToBackend(type: TenderAvisType): string {
+  switch (type) {
+    case "ao": return "PUBLICATION";
+    case "attribution_provisoire": return "ATTRIBUTION_PROV";
+    case "attribution_definitive": return "ATTRIBUTION_DEF";
+    case "annulation": return "ANNULATION";
+    case "rectificatif": return "RECTIFICATIF";
+    default: return "PUBLICATION";
+  }
+}
+
+function mapTypeFromBackend(typeAvis: string): TenderAvisType {
+  switch (typeAvis) {
+    case "PUBLICATION": return "ao";
+    case "ATTRIBUTION_PROV": return "attribution_provisoire";
+    case "ATTRIBUTION_DEF": return "attribution_definitive";
+    case "ANNULATION": return "annulation";
+    case "RECTIFICATIF": return "rectificatif";
+    default: return "ao";
+  }
+}
+
+function mapAvisPayloadToBackend(aoId: string, payload: SaveTenderAvisPayload, publish: boolean) {
+  return {
+    aoId,
+    typeAvis: mapTypeToBackend(payload.type),
+    contenuBomop: payload.content || payload.title || "Avis",
+    datePublication: payload.publicationDate ? new Date(payload.publicationDate).toISOString() : new Date().toISOString(),
+    publieBomop: publish && (payload.support === "bomop" || payload.support === "plateforme"),
+    publiePresse: publish && payload.support === "presse",
+  };
+}
+
+function mapBackendAvisToFrontend(item: any, aoId: string): TenderAvisItem {
+  return {
+    id: item.id || "",
+    aoId: item.aoId || aoId,
+    type: mapTypeFromBackend(item.typeAvis || "PUBLICATION"),
+    title: item.contenuBomop?.substring(0, 60) || "Avis",
+    content: item.contenuBomop || "",
+    support: item.publiePresse ? "presse" : item.publieBomop ? "bomop" : "plateforme",
+    publicationDate: item.datePublication || "",
+    publicationEndDate: item.datePublication || "",
+    isPublished: item.publieBomop || item.publiePresse || false,
+    status: (item.publieBomop || item.publiePresse) ? "publie" : "brouillon",
+    createdAt: item.createdAt || new Date().toISOString(),
+    updatedAt: item.updatedAt || new Date().toISOString(),
+  };
 }

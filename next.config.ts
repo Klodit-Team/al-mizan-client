@@ -2,19 +2,20 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
-  output: "standalone", 
+  output: "standalone",
   turbopack: {
     root: process.cwd(),
   },
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Trick the browser: Proxy API calls directly to the Docker container!
+  // Proxy API calls to the configured gateway — avoids CORS issues with cookies.
   async rewrites() {
-    return[
+    const gatewayUrl = process.env.NEXT_PUBLIC_API_URL || "https://klodit.app";
+    return [
       {
-        source: '/api/v1/:path*',
-        destination: 'http://api-gateway:3000/api/v1/:path*',
+        source: "/api/v1/:path*",
+        destination: `${gatewayUrl}/api/v1/:path*`,
       },
     ];
   },

@@ -77,7 +77,8 @@ interface AttributionStoreItem {
   hasBlockingRecours: boolean;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "");
+const API_BASE_URL = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "");
+const USE_REAL_API = typeof window !== "undefined" || Boolean(process.env.NEXT_PUBLIC_API_BASE_URL);
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -212,11 +213,9 @@ function ensureAttribution(aoId: string): AttributionStoreItem {
 }
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  if (!API_BASE_URL) {
-    throw new Error("API base URL is not configured");
-  }
+  const url = API_BASE_URL ? `${API_BASE_URL}${path}` : path;
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(url, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -230,15 +229,22 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(message || `Request failed with status ${response.status}`);
   }
 
-  return (await response.json()) as T;
+  const json = await response.json();
+
+  // Unwrap paginated responses { data: [...] }
+  if (json && typeof json === "object" && "data" in json && Array.isArray(json.data)) {
+    return json.data as T;
+  }
+
+  return json as T;
 }
 
 export async function getServiceContractantTenderAttributionOverview(
   aoId: string,
 ): Promise<ServiceContractantTenderAttributionOverview> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     return requestJson<ServiceContractantTenderAttributionOverview>(
-      `/service-contractant/tenders/${aoId}/attribution/overview`,
+      `/api/v1/appels-offres/attributions?appelOffreId=${aoId}`,
       {
         method: "GET",
       },
@@ -253,9 +259,9 @@ export async function pronounceServiceContractantProvisionalAttribution(
   aoId: string,
   payload: PronounceProvisionalAttributionPayload,
 ): Promise<ServiceContractantTenderAttributionOverview> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     return requestJson<ServiceContractantTenderAttributionOverview>(
-      `/service-contractant/tenders/${aoId}/attribution/provisional`,
+      `/api/v1/appels-offres/attributions`,
       {
         method: "POST",
         body: JSON.stringify(payload),
@@ -300,9 +306,9 @@ export async function confirmServiceContractantDefinitiveAttribution(
   aoId: string,
   payload: ConfirmDefinitiveAttributionPayload,
 ): Promise<ServiceContractantTenderAttributionOverview> {
-  if (API_BASE_URL) {
+  if (USE_REAL_API) {
     return requestJson<ServiceContractantTenderAttributionOverview>(
-      `/service-contractant/tenders/${aoId}/attribution/definitive`,
+      `/api/v1/appels-offres/attributions`,
       {
         method: "POST",
         body: JSON.stringify(payload),

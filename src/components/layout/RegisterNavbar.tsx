@@ -3,11 +3,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 
-import { type Locale } from "@/i18n/config";
+import { locales, type Locale } from "@/i18n/config";
 
 import type { getDictionary } from "@/i18n/get-dictionaries";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
+const localeLabels: Record<Locale, string> = {
+  fr: "FR",
+  ar: "AR",
+  en: "EN",
+};
 
 interface NavbarRegisterProps {
   dict: CommonDict["navbarRegister"];
@@ -17,11 +22,14 @@ export default function NavbarRegister({ dict, locale }: NavbarRegisterProps) {
     const router = useRouter();
     const pathname = usePathname();
 
-    const toggleLang = () => {
-        const nextLocale = locale === "fr" ? "ar" : "fr";
+    const switchLocale = (nextLocale: Locale) => {
+        if (nextLocale === locale) {
+            return;
+        }
+
         const segments = pathname.split("/");
         segments[1] = nextLocale;
-        window.location.href = segments.join("/");
+        router.push(segments.join("/") || `/${nextLocale}`);
     };
 
     return (
@@ -29,7 +37,7 @@ export default function NavbarRegister({ dict, locale }: NavbarRegisterProps) {
             <div className="mx-auto px-8 h-14 flex items-center justify-between">
                 
                 
-                <Link href="/" className="flex items-center gap-2">
+                <Link href={`/${locale}`} className="flex items-center gap-2">
                     <Image
                         src="/logo2.png"
                         alt="Al-Mizan Logo"
@@ -42,12 +50,23 @@ export default function NavbarRegister({ dict, locale }: NavbarRegisterProps) {
 
                 {/* Right side */}
                 <div className="flex items-center gap-6">
-                    <button
-                        onClick={toggleLang}
-                        className="text-sm text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg px-3 py-1.5 transition-colors hover:border-gray-400"
-                    >
-                        {locale === "fr" ? "FR / AR" : "AR / FR"}
-                    </button>
+                    <div className="flex overflow-hidden rounded-lg border border-gray-300">
+                        {locales.map((option) => (
+                            <button
+                                key={option}
+                                type="button"
+                                onClick={() => switchLocale(option)}
+                                className={`px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+                                    option === locale
+                                        ? "bg-[#4CAF50] text-white"
+                                        : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                                }`}
+                                aria-pressed={option === locale}
+                            >
+                                {localeLabels[option]}
+                            </button>
+                        ))}
+                    </div>
                     <Link
                         href="/help"
                         className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
