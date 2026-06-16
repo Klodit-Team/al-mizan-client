@@ -736,7 +736,7 @@
             "weightingInvalid": "قيمة غير صالحة (0 < % <= 100)",
             "eliminationScoreRange": "يجب أن تكون بين 0 و 100",
             "fileTooLarge": "يجب ألا يتجاوز حجم الملف 25 ميغابايت",
-            "pdfOnly": "يُسمح فقط بملفات PDF",
+            "pdfOnly": "يُسمح فقط بملفات PDF أو TXT",
             "cdcFileRequired": "يرجى رفع ملف دفتر الشروط",
             "addEvaluationCriterion": "أضف معيار تقييم واحد على الأقل.",
             "totalWeightMustBe100": "يجب أن يكون مجموع الأوزان مساوياً لـ 100%."
