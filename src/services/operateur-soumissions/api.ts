@@ -689,12 +689,23 @@ export async function submitOperateurSoumissionWorkflow(
   const financialHash = await computeSha256Hex(financialFile);
   const ecdsaProof = await buildEcdsaProof(financialHash);
 
+  const lignes = input.financialLots.flatMap(lot => 
+    lot.lines.map((line, index) => ({
+      articleId: `article-${index + 1}`,
+      designation: line.designation,
+      unite: line.unite,
+      quantite: parseFloat(line.quantite.replace(/\s/g, "").replace(",", ".")) || 0,
+      prixUnitaire: parseFloat(line.prixUnitaire.replace(/\s/g, "").replace(",", ".")) || 0,
+    }))
+  );
+
   const financialFormData = new FormData();
   financialFormData.append("fichierChiffre", financialFile);
   financialFormData.append("donnees", JSON.stringify({
     hashClient: financialHash || undefined,
     signatureEcdsa: ecdsaProof.signatureEcdsa,
     clePubliqueEcdsaPem: ecdsaProof.clePubliqueEcdsaPem,
+    lignes: lignes
   }));
 
   await apiClient<unknown>(`/api/v1/soumissions/${draft.id}/offre-financiere`, {
