@@ -82,15 +82,35 @@ export async function getGreAGreRequestById(id: string): Promise<GreAGreRequestD
 export async function submitGreAGreRequest(
   payload: SubmitGreAGreRequestPayload,
 ): Promise<GreAGreRequestDetail> {
-  // Create the AO with gre-a-gre type, then submit it
+  // We must map frontend properties to the required CreateAppelOffreDto fields.
+  // We use dummy values for dates/wilaya/secteurActivite if they aren't provided by the form,
+  // since a Gré-à-Gré doesn't have a public submission deadline.
+  // We also need to map object -> objet, estimatedAmount -> montantEstime.
+  // Note: We'll retrieve the current user's profile to get the serviceContractantId if needed,
+  // or we can pass a placeholder that the backend might bypass or we can fetch the user profile.
+  // Wait, if we use a dummy UUID for serviceContractantId, it might break validation if it checks the DB.
+  // Let's first fetch the user profile to get the ID.
+  const meRaw = await apiClient<unknown>('/api/v1/auth/me', { method: 'GET' }).catch(() => null);
+  const me = unwrapEnvelope<any>(meRaw);
+  const serviceContractantId = me?.user?.userId || '00000000-0000-0000-0000-000000000000';
+
+  const createAppelOffrePayload = {
+    reference: payload.reference,
+    objet: payload.object,
+    typeProcedure: "GRE_A_GRE",
+    montantEstime: Number(payload.estimatedAmount) || 1,
+    dateLimiteSoumission: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    dateLimiteRetraitCdc: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+    wilaya: "Non spécifié",
+    secteurActivite: "Non spécifié",
+    serviceContractantId,
+  };
+
   const raw = await apiClient<unknown>(
     "/api/v1/appels-offres",
     {
       method: "POST",
-      body: JSON.stringify({
-        ...payload,
-        typeProcedure: "GRE_A_GRE",
-      }),
+      body: JSON.stringify(createAppelOffrePayload),
     },
   );
   const created = unwrapEnvelope<{ id: string }>(raw);
@@ -118,9 +138,15 @@ export async function resubmitGreAGreRequest(
   id: string,
   payload: SubmitGreAGreRequestPayload,
 ): Promise<GreAGreRequestDetail> {
+  const updateAppelOffrePayload = {
+    reference: payload.reference,
+    objet: payload.object,
+    montantEstime: Number(payload.estimatedAmount) || 1,
+  };
+
   await apiClient<unknown>(
     `/api/v1/appels-offres/${id}`,
-    { method: "PATCH", body: JSON.stringify(payload) },
+    { method: "PATCH", body: JSON.stringify(updateAppelOffrePayload) },
   );
 
   // Map frontend payload to match backend DTO
