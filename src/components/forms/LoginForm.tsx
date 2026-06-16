@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { type Locale } from "@/i18n/config";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -37,6 +38,15 @@ function setUserTypeCookie(userType: DashboardUserType | null) {
     document.cookie = `user_type=${userType}; Path=/; Max-Age=604800; SameSite=Lax`;
 }
 
+function setCommissionUserIdCookie(userId: string | null) {
+    if (typeof document === "undefined") return;
+    if (!userId) {
+        document.cookie = "commission_user_id=; Path=/; Max-Age=0; SameSite=Lax";
+        return;
+    }
+    document.cookie = `commission_user_id=${userId}; Path=/; Max-Age=604800; SameSite=Lax`;
+}
+
 export default function LoginForm({ dict }: LoginFormProps) {
     const params = useParams();
     const locale = (params?.locale as Locale) || "fr";
@@ -61,8 +71,6 @@ export default function LoginForm({ dict }: LoginFormProps) {
                 email: data.email,
                 password: data.password,
             });
-
-            console.log("Bruh I am here in the login form onSubmit function after successful login API call.");
 
             console.log("Login API Response:", loginResponse);
 
@@ -98,6 +106,12 @@ export default function LoginForm({ dict }: LoginFormProps) {
 
             if (resolvedUserType === "admin" && userId) {
                 setAdminId(userId);
+            }
+
+            // Commission members need their userId stored as a cookie so the
+            // middleware can resolve correct dashboard redirects.
+            if (resolvedUserType === "commission" && userId) {
+                setCommissionUserIdCookie(userId);
             }
 
             router.push(getDashboardHomePath(locale, resolvedUserType, userId));
@@ -228,12 +242,50 @@ export default function LoginForm({ dict }: LoginFormProps) {
                 )}
             </form>
 
+            {/* Commission member link */}
+            <div className="mt-6">
+                <Link
+                    href={`/${locale}/auth/login/commission`}
+                    className="flex items-center justify-between w-full px-4 py-3 rounded-xl transition-all hover:opacity-90 active:scale-[0.99]"
+                    style={{ backgroundColor: "#364150" }}
+                >
+                    <div className="flex items-center gap-3">
+                        <div
+                            className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                            style={{ backgroundColor: "rgba(76, 175, 80, 0.15)", border: "1px solid rgba(76, 175, 80, 0.3)" }}
+                        >
+                            <svg className="w-3.5 h-3.5" style={{ color: "#4CAF50" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p className="text-xs font-semibold text-white leading-none">
+                                {dict.commissionAccess}
+                            </p>
+                            <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>
+                                {dict.commissionAccessSub}
+                            </p>
+                        </div>
+                    </div>
+                    <svg className="w-4 h-4" style={{ color: "rgba(255,255,255,0.4)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                </Link>
+            </div>
+
             <p className="text-center text-sm text-gray-500 mt-6">
                 {dict.noAccount} {" "}
                 <a href={`/${locale}/auth/register/operateur`} className="font-semibold" style={{ color: "#364150" }}>
                     {dict.createOne}
                 </a>
             </p>
+
+            <div className="mt-6 pt-5 border-t border-gray-100">
+                <p className="text-xs text-gray-400 text-center leading-relaxed">
+                    {dict.footerNote}
+                </p>
+            </div>
         </div>
     );
 }
