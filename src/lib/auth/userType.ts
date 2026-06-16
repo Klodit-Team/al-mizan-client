@@ -1,4 +1,4 @@
-export type DashboardUserType = "admin" | "contractant" | "operateur";
+export type DashboardUserType = "admin" | "contractant" | "operateur" | "commission";
 
 export function mapRoleToDashboardUserType(
   role: string | null | undefined,
@@ -21,17 +21,37 @@ export function mapRoleToDashboardUserType(
     return "operateur";
   }
 
+  if (normalized === "MEMBRE_COMMISSION" || normalized === "COMMISSION") {
+    return "commission";
+  }
+
   return null;
 }
 
-export function getDashboardHomePath(locale: string, userType: DashboardUserType, userId?: string): string {
+/**
+ * Returns the home path for a given dashboard user type.
+ * For commission members, userId is required to build the correct URL
+ * (the commission dashboard is user-scoped: /dashboard/commission/[userId]/tableau-de-bord).
+ */
+export function getDashboardHomePath(
+  locale: string,
+  userType: DashboardUserType,
+  userId?: string,
+): string {
   if (userType === "admin") {
     return `/${locale}/dashboard/admin/tableau-de-bord`;
   }
 
   if (userType === "operateur") {
-
     return `/${locale}/dashboard/operateur/tableau-de-bord`;
+  }
+
+  if (userType === "commission") {
+    if (userId) {
+      return `/${locale}/dashboard/commission/${userId}/tableau-de-bord`;
+    }
+    // Fallback: root redirects to mes-commissions
+    return `/${locale}/dashboard/commission`;
   }
 
   return `/${locale}/dashboard/contractant/tableau-de-bord`;

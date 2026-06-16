@@ -56,9 +56,12 @@ export function middleware(request: NextRequest) {
     }
 
     if (userType === "commission" && !isCommissionPath) {
-      return NextResponse.redirect(
-        new URL(`/${locale}/dashboard/commission`, request.url)
-      );
+      // Read the commission_user_id cookie set at login to build the correct URL.
+      const commissionUserId = request.cookies.get("commission_user_id")?.value;
+      const commissionRedirect = commissionUserId
+        ? `/${locale}/dashboard/commission/${commissionUserId}/tableau-de-bord`
+        : `/${locale}/dashboard/commission`;
+      return NextResponse.redirect(new URL(commissionRedirect, request.url));
     }
   }
 
