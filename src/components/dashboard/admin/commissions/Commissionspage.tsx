@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import type {
   Commission,
   CommissionFormData,
@@ -69,6 +70,7 @@ const mapToCommission = (data: any): Commission => {
 };
 
 export default function CommissionsPage({ locale, dict }: CommissionsPageProps) {
+  const router = useRouter();
   const labels = useMemo(() => {
     const extra = dict as typeof dict & {
       columns?: { actions?: string };
@@ -82,6 +84,7 @@ export default function CommissionsPage({ locale, dict }: CommissionsPageProps) 
       actionsColumn: extra.columns?.actions ?? "Actions",
       editTitle: extra.modal?.editTitle ?? "Modifier la commission",
       save: extra.modal?.save ?? "Enregistrer",
+      viewDetails: (extra.actions as any)?.viewDetails ?? "Détails",
       edit: extra.actions?.edit ?? "Modifier",
       delete: extra.actions?.delete ?? "Supprimer",
       deleting: extra.actions?.deleting ?? "Suppression...",
@@ -323,6 +326,17 @@ export default function CommissionsPage({ locale, dict }: CommissionsPageProps) 
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => router.push(`/${locale}/dashboard/admin/commissions/${commission.id}`)}
+                          title={labels.viewDetails}
+                          className="p-1.5 text-gray-500 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-[#4CAF50] transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </button>
                         <button
                           type="button"
                           onClick={() => openEditModal(commission)}

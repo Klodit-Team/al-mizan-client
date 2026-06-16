@@ -29,7 +29,8 @@ export interface AssignRoleDto {
 // Matches backend RoleEntity returned by GET /roles
 export interface RoleEntity {
   id: string;
-  name: 'ADMIN' | 'SERVICE_CONTRACTANT' | 'OPERATEUR_ECONOMIQUE' | 'MEMBRE_COMMISSION' | 'CONTROLEUR';
+  name: string;
+  description?: string;
 }
 
 // UI representation used by the component
@@ -42,8 +43,7 @@ export interface User {
   telephone: string | null;
   langue: SupportedLanguage;
   email: string;        // loaded from auth /me or supplementary endpoint
-  role: 'ADMIN' | 'SERVICE_CONTRACTANT' | 'OPERATEUR_ECONOMIQUE' | 'MEMBRE_COMMISSION' | 'CONTROLEUR';
-  roleId: string;       // UUID — needed for AssignRoleDto
+  assignedRoles: UserRoleEntity[];
   createdAt: string;    // ISO 8601 (from ProfileEntity)
   is_active: boolean;
   is_blacklisted?: boolean;

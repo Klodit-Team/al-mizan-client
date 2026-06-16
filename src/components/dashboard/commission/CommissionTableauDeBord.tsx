@@ -23,9 +23,15 @@ function formatDate(d: string, locale: string) {
 
 function StatutBadge({ statut }: { statut: string }) {
   const map: Record<string, { label: string; bg: string; color: string }> = {
+    // Evaluation
     ACTIVE:    { label: "Active",     bg: "rgba(76,175,80,0.1)",   color: "#2e7d32"  },
     BROUILLON: { label: "Brouillon",  bg: "rgba(234,179,8,0.1)",   color: "#92400e"  },
     CLOTUREE:  { label: "Clôturée",   bg: "#F1F5F9",               color: "#475569"  },
+    // Marche
+    EN_COURS:     { label: "En cours",     bg: "rgba(76,175,80,0.1)",   color: "#2e7d32"  },
+    DELIBERATION: { label: "Délibération", bg: "rgba(234,179,8,0.1)",   color: "#92400e"  },
+    ATTRIBUEE:    { label: "Attribuée",    bg: "rgba(76,175,80,0.1)",   color: "#2e7d32"  },
+    INFRUCTUEUSE: { label: "Infructueuse", bg: "rgba(239,68,68,0.08)",  color: "#dc2626"  },
     ANNULEE:   { label: "Annulée",    bg: "rgba(239,68,68,0.08)",  color: "#dc2626"  },
   };
   const s = map[statut] ?? { label: statut, bg: "#F1F5F9", color: "#475569" };
@@ -282,24 +288,15 @@ export default function CommissionTableauDeBord({ locale, userId }: Props) {
                           {formatDate(c.dateCreation, locale)}
                         </td>
                         <td className="px-5 py-4">
-                          {c.statut === "ACTIVE" ? (
-                            <Link
-                              href={`/${locale}/dashboard/commission/evaluations/${c.id}`}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#4CAF50] text-white text-xs font-semibold hover:bg-[#43A047] transition-colors"
-                            >
-                              {isAr ? "متابعة" : "Continuer"}
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                              </svg>
-                            </Link>
-                          ) : (
-                            <Link
-                              href={`/${locale}/dashboard/commission/classement/${c.id}`}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-semibold hover:border-slate-300 hover:bg-slate-50 transition-colors"
-                            >
-                              {isAr ? "عرض" : "Voir"}
-                            </Link>
-                          )}
+                          <Link
+                            href={`/${locale}/dashboard/commission/details/${c.id}`}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#4CAF50] text-white text-xs font-semibold hover:bg-[#43A047] transition-colors"
+                          >
+                            {isAr ? "عرض" : "Voir"}
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </Link>
                         </td>
                       </tr>
                     ))

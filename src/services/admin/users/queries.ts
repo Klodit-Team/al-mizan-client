@@ -6,10 +6,11 @@ import type {
   UserRoleEntity,
 } from "@/components/dashboard/admin/users/types";
 import {
-  getAdminUserProfiles,
   getAdminRoles,
   getUserRoles,
   assignUserRole,
+  removeUserRole,
+  createRole,
   createUserProfile,
   updateProfileByUserId,
   deleteProfile,
@@ -17,13 +18,6 @@ import {
   type UpdateProfileDto,
 } from "./api";
 import { usersKeys } from "./keys";
-
-export function useAdminUserProfilesQuery() {
-  return useQuery<ProfileEntity[], Error>({
-    queryKey: usersKeys.profilesList(),
-    queryFn: getAdminUserProfiles,
-  });
-}
 
 export function useAdminRolesQuery() {
   return useQuery<RoleEntity[], Error>({
@@ -78,8 +72,30 @@ export function useAssignUserRoleMutation() {
 
   return useMutation<UserRoleEntity, Error, AssignRoleDto>({
     mutationFn: assignUserRole,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: usersKeys.userRoles(variables.userId) });
+    },
+  });
+}
+
+export function useRemoveUserRoleMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation<{ deleted: boolean }, Error, { userId: string; roleId: string }>({
+    mutationFn: ({ userId, roleId }) => removeUserRole(userId, roleId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: usersKeys.userRoles(variables.userId) });
+    },
+  });
+}
+
+export function useCreateRoleMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation<RoleEntity, Error, { name: string; description: string }>({
+    mutationFn: createRole,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: usersKeys.all });
+      queryClient.invalidateQueries({ queryKey: usersKeys.rolesList() });
     },
   });
 }
