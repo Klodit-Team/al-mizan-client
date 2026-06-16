@@ -171,24 +171,94 @@ export async function getServiceContractantGreAGreRequestById(
 export async function submitServiceContractantGreAGreRequest(
   payload: SubmitGreAGreRequestPayload,
 ): Promise<ServiceContractantGreAGreRequestDetail> {
-  return requestJson<ServiceContractantGreAGreRequestDetail>(
-    "/api/v1/appels-offres?typeProcedure=GRE_A_GRE",
+  // 1. Fetch user ID to set serviceContractantId
+  const meRaw = await requestJson<any>("/api/v1/auth/me", { method: "GET" }).catch(() => null);
+  const serviceContractantId = meRaw?.user?.userId || "00000000-0000-0000-0000-000000000000";
+
+  // 2. Map payload to CreateAppelOffreDto required fields
+  const createAppelOffrePayload = {
+    reference: payload.reference,
+    objet: payload.object,
+    typeProcedure: "GRE_A_GRE",
+    montantEstime: Number(payload.estimatedAmount) || 1,
+    dateLimiteSoumission: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    dateLimiteRetraitCdc: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+    wilaya: "Non spécifié",
+    secteurActivite: "Non spécifié",
+    serviceContractantId,
+  };
+
+  // 3. Create the Appel d'Offre
+  const created = await requestJson<{ id: string }>(
+    "/api/v1/appels-offres",
     {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: JSON.stringify(createAppelOffrePayload),
     },
   );
+
+  // 4. Map justifications to the backend format
+  const submitDto = {
+    ...payload,
+    justifications: payload.justifications.map((j) => ({
+      type_justification: j.type,
+      description: j.description,
+    })),
+  };
+
+  // 5. Submit the Gre-a-gre request
+  await requestJson<any>(
+    `/api/v1/appels-offres/${created.id}/gre-a-gre/soumettre`,
+    {
+      method: "POST",
+      body: JSON.stringify(submitDto),
+    },
+  );
+
+  const detail = await getServiceContractantGreAGreRequestById(created.id);
+  if (!detail) throw new Error("Failed to retrieve created request");
+  return detail;
 }
 
 export async function resubmitServiceContractantGreAGreRequest(
   id: string,
   payload: SubmitGreAGreRequestPayload,
 ): Promise<ServiceContractantGreAGreRequestDetail> {
-  return requestJson<ServiceContractantGreAGreRequestDetail>(
+  // 1. Map to UpdateAppelOffreDto
+  const updateAppelOffrePayload = {
+    reference: payload.reference,
+    objet: payload.object,
+    montantEstime: Number(payload.estimatedAmount) || 1,
+  };
+
+  // 2. Patch the existing AO
+  await requestJson<any>(
     `/api/v1/appels-offres/${id}`,
     {
       method: "PATCH",
-      body: JSON.stringify(payload),
+      body: JSON.stringify(updateAppelOffrePayload),
     },
   );
+
+  // 3. Map justifications for resubmission
+  const submitDto = {
+    ...payload,
+    justifications: payload.justifications.map((j) => ({
+      type_justification: j.type,
+      description: j.description,
+    })),
+  };
+
+  // 4. Resubmit the Gre-a-gre request
+  await requestJson<any>(
+    `/api/v1/appels-offres/${id}/gre-a-gre/soumettre`,
+    {
+      method: "POST",
+      body: JSON.stringify(submitDto),
+    },
+  );
+
+  const detail = await getServiceContractantGreAGreRequestById(id);
+  if (!detail) throw new Error("Failed to retrieve resubmitted request");
+  return detail;
 }
