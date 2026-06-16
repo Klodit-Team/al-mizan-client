@@ -21,11 +21,6 @@ const AI_CDC_SECTIONS = [
   "Clauses administratives",
 ];
 
-const AI_CDC_SECTION_LABEL_BY_KEY = AI_CDC_SECTIONS.reduce<Record<string, string>>((acc, label) => {
-  acc[normalizeSectionKey(label)] = label;
-  return acc;
-}, {});
-
 const normalizeSectionKey = (section: string) =>
   section
     .normalize("NFD")
@@ -33,6 +28,11 @@ const normalizeSectionKey = (section: string) =>
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
+
+const AI_CDC_SECTION_LABEL_BY_KEY = AI_CDC_SECTIONS.reduce<Record<string, string>>((acc, label) => {
+  acc[normalizeSectionKey(label)] = label;
+  return acc;
+}, {});
 
 const parseAiSectionResponse = (
   rawContent: string,
