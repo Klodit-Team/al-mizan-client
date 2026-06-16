@@ -95,10 +95,20 @@ export async function submitGreAGreRequest(
   );
   const created = unwrapEnvelope<{ id: string }>(raw);
 
+  // Map frontend payload to match backend DTO
+  const submitDto = {
+    ...payload,
+    justifications: payload.justifications.map((j) => ({
+      type_justification: j.type, // Map 'type' to 'type_justification'
+      description: j.description,
+      // If the backend accepts documentId in the future, it would go here
+    })),
+  };
+
   // Submit for validation
   await apiClient<unknown>(
     `/api/v1/appels-offres/${created.id}/gre-a-gre/soumettre`,
-    { method: "POST", body: JSON.stringify(payload) },
+    { method: "POST", body: JSON.stringify(submitDto) },
   );
 
   return getGreAGreRequestById(created.id) as Promise<GreAGreRequestDetail>;
@@ -113,9 +123,18 @@ export async function resubmitGreAGreRequest(
     { method: "PATCH", body: JSON.stringify(payload) },
   );
 
+  // Map frontend payload to match backend DTO
+  const submitDto = {
+    ...payload,
+    justifications: payload.justifications.map((j) => ({
+      type_justification: j.type,
+      description: j.description,
+    })),
+  };
+
   await apiClient<unknown>(
     `/api/v1/appels-offres/${id}/gre-a-gre/soumettre`,
-    { method: "POST", body: JSON.stringify(payload) },
+    { method: "POST", body: JSON.stringify(submitDto) },
   );
 
   return getGreAGreRequestById(id) as Promise<GreAGreRequestDetail>;
