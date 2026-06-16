@@ -1,7 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useCommissionDetailQuery } from "@/services/admin";
+import {
+  useCommissionDetailQuery,
+  useUpdateCommissionStatusMutation,
+  useUpdateCommissionMutation,
+} from "@/services/admin";
+import type { CommissionStatut, TypeMarche } from "@/services/admin/commissions/api";
 import type { getDictionary } from "@/i18n/get-dictionaries";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
@@ -42,6 +48,9 @@ const roleLabels: Record<string, string> = {
   OBSERVATEUR: "Observateur",
 };
 
+const allStatuts: CommissionStatut[] = ["EN_COURS", "DELIBERATION", "ATTRIBUEE", "ANNULEE", "INFRUCTUEUSE"];
+const allTypes: TypeMarche[] = ["TRAVAUX", "FOURNITURES", "SERVICES"];
+
 export default function CommissionDetailPage({
   locale,
   commissionId,
@@ -50,6 +59,37 @@ export default function CommissionDetailPage({
   const router = useRouter();
   const { data: commission, isLoading } =
     useCommissionDetailQuery(commissionId);
+  const { mutateAsync: updateStatusMutate, isPending: statusPending } =
+    useUpdateCommissionStatusMutation();
+  const { mutateAsync: updateMutate, isPending: updatePending } =
+    useUpdateCommissionMutation();
+
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  const handleStatusChange = async (newStatut: CommissionStatut) => {
+    setErrorMsg(null);
+    try {
+      await updateStatusMutate({ id: commissionId, status: newStatut });
+      setSuccessMsg("Statut mis à jour avec succès.");
+      setTimeout(() => setSuccessMsg(null), 3000);
+    } catch (error) {
+      console.error("Error changing commission status:", error);
+      setErrorMsg("Erreur lors du changement de statut. Veuillez réessayer.");
+    }
+  };
+
+  const handleTypeChange = async (newType: TypeMarche) => {
+    setErrorMsg(null);
+    try {
+      await updateMutate({ id: commissionId, payload: { typeMarche: newType } as any });
+      setSuccessMsg("Type de marché mis à jour avec succès.");
+      setTimeout(() => setSuccessMsg(null), 3000);
+    } catch (error) {
+      console.error("Error changing commission type:", error);
+      setErrorMsg("Erreur lors du changement du type de marché. Veuillez réessayer.");
+    }
+  };
 
   if (isLoading) {
     return (
@@ -125,6 +165,24 @@ export default function CommissionDetailPage({
         Retour aux commissions
       </button>
 
+      {errorMsg && (
+        <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2">
+          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {errorMsg}
+        </div>
+      )}
+
+      {successMsg && (
+        <div className="bg-green-50 border border-green-100 text-green-600 px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2">
+          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {successMsg}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
@@ -139,14 +197,26 @@ export default function CommissionDetailPage({
               {commission.intitule}
             </h1>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600">
-                {typeLabels[commission.typeMarche] ?? commission.typeMarche}
-              </span>
-              <span
-                className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${statutStyle.bg} ${statutStyle.text}`}
+              <select
+                value={commission.typeMarche}
+                onChange={(e) => handleTypeChange(e.target.value as TypeMarche)}
+                disabled={updatePending}
+                className="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 outline-none focus:border-indigo-400 cursor-pointer disabled:opacity-60"
               >
-                {statutLabels[commission.statut] ?? commission.statut}
-              </span>
+                {allTypes.map((t) => (
+                  <option key={t} value={t}>{typeLabels[t] ?? t}</option>
+                ))}
+              </select>
+              <select
+                value={commission.statut}
+                onChange={(e) => handleStatusChange(e.target.value as CommissionStatut)}
+                disabled={statusPending}
+                className={`text-xs font-semibold px-2.5 py-1 rounded-full border outline-none cursor-pointer disabled:opacity-60 ${statutStyle.bg} ${statutStyle.text} border-gray-200 focus:border-gray-400`}
+              >
+                {allStatuts.map((s) => (
+                  <option key={s} value={s}>{statutLabels[s] ?? s}</option>
+                ))}
+              </select>
             </div>
           </div>
         </div>

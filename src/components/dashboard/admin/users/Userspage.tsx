@@ -45,6 +45,9 @@ export default function UsersPage({ locale, dict }: UsersPageProps) {
     motif: string;
   }>({ isOpen: false, user: null, motif: "" });
 
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
   const [createRoleModal, setCreateRoleModal] = useState<{
     isOpen: boolean;
     name: string;
@@ -123,6 +126,7 @@ export default function UsersPage({ locale, dict }: UsersPageProps) {
 
   const handleAddRole = async (userId: string, roleId: string) => {
     if (!roleId) return;
+    setErrorMsg(null);
     try {
       const newAssignment = await assignUserRole({ userId, roleId });
       setUsers((prev) =>
@@ -136,13 +140,16 @@ export default function UsersPage({ locale, dict }: UsersPageProps) {
           return u;
         })
       );
+      setSuccessMsg("Rôle attribué avec succès.");
+      setTimeout(() => setSuccessMsg(null), 3000);
     } catch (error) {
       console.error("Error assigning role:", error);
-      alert("Erreur lors de l'attribution du rôle.");
+      setErrorMsg("Erreur lors de l'attribution du rôle. Veuillez réessayer.");
     }
   };
 
   const handleRemoveRole = async (userId: string, roleId: string) => {
+    setErrorMsg(null);
     try {
       await removeUserRole(userId, roleId);
       setUsers((prev) =>
@@ -156,9 +163,11 @@ export default function UsersPage({ locale, dict }: UsersPageProps) {
           return u;
         })
       );
+      setSuccessMsg("Rôle retiré avec succès.");
+      setTimeout(() => setSuccessMsg(null), 3000);
     } catch (error) {
       console.error("Error removing role:", error);
-      alert("Erreur lors de la suppression du rôle.");
+      setErrorMsg("Erreur lors de la suppression du rôle. Veuillez réessayer.");
     }
   };
 
@@ -167,6 +176,7 @@ export default function UsersPage({ locale, dict }: UsersPageProps) {
   const handleCreateRole = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreateRoleModal((prev) => ({ ...prev, isSubmitting: true }));
+    setErrorMsg(null);
     try {
       await createRole({
         name: createRoleModal.name.toUpperCase(),
@@ -174,9 +184,11 @@ export default function UsersPage({ locale, dict }: UsersPageProps) {
       });
       await fetchRoles(); // refresh list
       setCreateRoleModal({ isOpen: false, name: "", description: "", isSubmitting: false });
+      setSuccessMsg("Rôle créé avec succès.");
+      setTimeout(() => setSuccessMsg(null), 3000);
     } catch (error) {
       console.error("Error creating role:", error);
-      alert("Erreur lors de la création du rôle.");
+      setErrorMsg("Erreur lors de la création du rôle. Veuillez réessayer.");
       setCreateRoleModal((prev) => ({ ...prev, isSubmitting: false }));
     }
   };
@@ -239,6 +251,24 @@ export default function UsersPage({ locale, dict }: UsersPageProps) {
           <p className="text-sm text-gray-400 mt-0.5">{dict.subtitle}</p>
         </div>
       </div>
+
+      {errorMsg && (
+        <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2">
+          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {errorMsg}
+        </div>
+      )}
+
+      {successMsg && (
+        <div className="bg-green-50 border border-green-100 text-green-600 px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2">
+          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {successMsg}
+        </div>
+      )}
 
       {/* Filters & Search */}
       <div className="flex flex-col gap-3">

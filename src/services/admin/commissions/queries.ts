@@ -35,7 +35,7 @@ export function useCreateCommissionMutation() {
   return useMutation<CommissionMarche, Error, CommissionMarcheDto>({
     mutationFn: (payload) => createCommissionMarche(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: commissionsKeys.list() });
+      queryClient.invalidateQueries({ queryKey: commissionsKeys.all });
     },
   });
 }
@@ -45,8 +45,9 @@ export function useUpdateCommissionMutation() {
 
   return useMutation<CommissionMarche, Error, { id: string; payload: CommissionMarcheDto }>({
     mutationFn: ({ id, payload }) => updateCommissionMarche(id, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: commissionsKeys.list() });
+    onSuccess: (data, { id }) => {
+      queryClient.setQueryData(commissionsKeys.detail(id), data);
+      queryClient.invalidateQueries({ queryKey: commissionsKeys.all });
     },
   });
 }
@@ -57,7 +58,7 @@ export function useDeleteCommissionMutation() {
   return useMutation<void, Error, string>({
     mutationFn: (id) => deleteCommissionMarche(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: commissionsKeys.list() });
+      queryClient.invalidateQueries({ queryKey: commissionsKeys.all });
     },
   });
 }
@@ -67,8 +68,9 @@ export function useUpdateCommissionStatusMutation() {
 
   return useMutation<CommissionMarche, Error, { id: string; status: CommissionStatut }>({
     mutationFn: ({ id, status }) => changeCommissionMarcheStatut(id, status),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: commissionsKeys.list() });
+    onSuccess: (data, { id }) => {
+      queryClient.setQueryData(commissionsKeys.detail(id), data);
+      queryClient.invalidateQueries({ queryKey: commissionsKeys.all });
     },
   });
 }

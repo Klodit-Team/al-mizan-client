@@ -30,7 +30,7 @@ export function useBlacklistOperateurMutation() {
   return useMutation<OperateurEconomiqueEntity, Error, { oeId: string; reason: string }>({
     mutationFn: ({ oeId, reason }) => blacklistAdminOperateur(oeId, reason),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: operateursKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: operateursKeys.all });
     },
   });
 }
@@ -41,7 +41,7 @@ export function useUnblacklistOperateurMutation() {
   return useMutation<OperateurEconomiqueEntity, Error, string>({
     mutationFn: unblacklistAdminOperateur,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: operateursKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: operateursKeys.all });
     },
   });
 }

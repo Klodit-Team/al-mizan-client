@@ -23,7 +23,7 @@ export function useUpdateIncidentStatusMutation() {
   return useMutation<AIIncident, Error, { id: string; statut: IncidentStatut }>({
     mutationFn: ({ id, statut }) => updateAdminIncidentStatut(id, statut),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: incidentsKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: incidentsKeys.all });
     },
   });
 }
@@ -34,7 +34,7 @@ export function useResolveIncidentMutation() {
   return useMutation<AIIncident, Error, { id: string; resolutionNotes: string }>({
     mutationFn: ({ id, resolutionNotes }) => resolveAdminIncident(id, { resolution_notes: resolutionNotes }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: incidentsKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: incidentsKeys.all });
     },
   });
 }
