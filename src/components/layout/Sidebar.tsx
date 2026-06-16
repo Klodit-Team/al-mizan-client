@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
 import { type Locale } from "@/i18n/config";
 import type { getDictionary } from "@/i18n/get-dictionaries";
+import { useCommissionUserId } from "@/hooks/useCommissionUserId";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
 
@@ -40,6 +41,7 @@ const ICONS = {
 
 export default function Sidebar({ locale, role, dict }: SidebarProps) {
   const pathname = usePathname();
+  const { commissionUserId } = useCommissionUserId();
 
   // ── Nav items by role ────────────────────────────────────────────────────────
   const navItems = (() => {
@@ -157,7 +159,9 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
     switch (role) {
       case "admin":       return `/${locale}/dashboard/admin/tableau-de-bord`;
       case "contractant": return `/${locale}/dashboard/contractant/tableau-de-bord`;
-      case "commission": return `/${locale}/dashboard/commission/${userId}/tableau-de-bord`;
+      case "commission":  return commissionUserId  // ← utiliser commissionUserId
+        ? `/${locale}/dashboard/commission/${commissionUserId}/tableau-de-bord`
+        : `/${locale}/dashboard/commission`;
       default:            return `/${locale}/dashboard/operateur/tableau-de-bord`;
     }
   })();
