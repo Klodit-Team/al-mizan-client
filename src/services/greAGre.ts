@@ -199,9 +199,8 @@ export async function submitServiceContractantGreAGreRequest(
 
   // 4. Map justifications to the backend format
   const submitDto = {
-    ...payload,
     justifications: payload.justifications.map((j) => ({
-      type_justification: j.type,
+      type_justification: j.type.toUpperCase(),
       description: j.description,
     })),
   };
@@ -242,9 +241,8 @@ export async function resubmitServiceContractantGreAGreRequest(
 
   // 3. Map justifications for resubmission
   const submitDto = {
-    ...payload,
     justifications: payload.justifications.map((j) => ({
-      type_justification: j.type,
+      type_justification: j.type.toUpperCase(),
       description: j.description,
     })),
   };

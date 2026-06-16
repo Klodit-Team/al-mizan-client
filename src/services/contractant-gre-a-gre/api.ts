@@ -117,9 +117,8 @@ export async function submitGreAGreRequest(
 
   // Map frontend payload to match backend DTO
   const submitDto = {
-    ...payload,
     justifications: payload.justifications.map((j) => ({
-      type_justification: j.type, // Map 'type' to 'type_justification'
+      type_justification: j.type.toUpperCase(), // Map 'type' to 'type_justification'
       description: j.description,
       // If the backend accepts documentId in the future, it would go here
     })),
@@ -151,9 +150,8 @@ export async function resubmitGreAGreRequest(
 
   // Map frontend payload to match backend DTO
   const submitDto = {
-    ...payload,
     justifications: payload.justifications.map((j) => ({
-      type_justification: j.type,
+      type_justification: j.type.toUpperCase(),
       description: j.description,
     })),
   };
