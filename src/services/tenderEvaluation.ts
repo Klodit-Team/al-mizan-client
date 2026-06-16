@@ -48,7 +48,6 @@ export interface ServiceContractantTenderEvaluationPhaseDetail {
 }
 
 const API_BASE_URL = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "");
-const API_BASE_URL = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "");
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const url = API_BASE_URL ? `${API_BASE_URL}${path}` : path;
