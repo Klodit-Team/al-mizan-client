@@ -1,7 +1,7 @@
 "use client";
 
-import { type NotificationEntity } from "@/components/dashboard/admin/notif/Notificationspage";
-import type { NotificationCategorie } from "@/services/admin/notifications";
+import { type NotificationEntity } from "@/services/admin/notifications/api";
+import type { NotificationCategorie } from "@/services/admin/notifications/api";
 import type { getDictionary } from "@/i18n/get-dictionaries";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;

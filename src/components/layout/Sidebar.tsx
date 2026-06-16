@@ -141,11 +141,6 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
             icon: <Icon d={ICONS.audit} />,
           },
           {
-            label: dict.admin?.sessions ?? "Connexions",
-            href: `/${locale}/dashboard/admin/sessions`,
-            icon: <Icon d={ICONS.clock} />,
-          },
-          {
             label: dict.admin?.incidents ?? "Incidents IA",
             href: `/${locale}/dashboard/admin/incidents`,
             icon: <Icon d={ICONS.warning} />,
