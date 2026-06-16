@@ -3,4 +3,5 @@ import type { GenerateCdcDraftPayload, GenerateCdcDraftResponse } from "@/servic
 
 export type WizardStepProps = Record<string, any> & {
   generateCdcDraftMutation?: UseMutationResult<GenerateCdcDraftResponse, Error, GenerateCdcDraftPayload, unknown>;
+  draftId?: string;
 };

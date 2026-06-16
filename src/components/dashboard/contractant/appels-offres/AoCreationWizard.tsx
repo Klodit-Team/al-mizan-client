@@ -1686,6 +1686,7 @@ export default function AoCreationWizard({
     dict,
     stepTitles,
     getSwitchThumbClass,
+    draftId,
     form,
     updateField,
     errors,

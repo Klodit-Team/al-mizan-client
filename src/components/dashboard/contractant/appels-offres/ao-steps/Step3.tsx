@@ -78,7 +78,12 @@ export default function Step3({ props }: { props: WizardStepProps }) {
 
   const handleGenerateAi = async () => {
     if (!generateCdcDraftMutation) return;
-    const aoId = form?.reference || "draft-ao";
+    
+    const aoId = props.draftId;
+    if (!aoId) {
+      alert("Veuillez d'abord sauvegarder le brouillon (bouton 'Save as draft' en bas) avant de générer le CDC avec l'IA. L'IA a besoin que les informations soient enregistrées pour générer le document.");
+      return;
+    }
 
     try {
       const result = await generateCdcDraftMutation.mutateAsync({
