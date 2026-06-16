@@ -102,19 +102,30 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 export async function listServiceContractantGreAGreRequests(): Promise<
   ServiceContractantGreAGreRequestItem[]
 > {
-  const raw = await requestJson<{ id: string; reference?: string; objet?: string; montantEstime?: number | string; statut?: string; createdAt?: string; demandeGreAGre?: { scoreConformite?: number } }[]>(
+  const raw = await requestJson<{ id: string; reference?: string; objet?: string; montantEstime?: number | string; statut?: string; createdAt?: string; demandeGreAGre?: any }[]>(
     "/api/v1/appels-offres?typeProcedure=GRE_A_GRE&page=1&limit=100",
     { method: "GET" },
   );
-  return (Array.isArray(raw) ? raw : []).map((ao) => ({
-    id: ao.id,
-    reference: ao.reference || ao.id,
-    object: ao.objet || "",
-    estimatedAmount: String(ao.montantEstime || "0"),
-    status: mapAoStatusToGreAGre(ao.statut),
-    submittedAt: ao.createdAt || new Date().toISOString(),
-    iaComplianceScore: ao.demandeGreAGre?.scoreConformite ?? null,
-  }));
+  return (Array.isArray(raw) ? raw : []).map((ao) => {
+    let status = "brouillon";
+    if (ao.demandeGreAGre && ao.demandeGreAGre.statut) {
+      status = ao.demandeGreAGre.statut.toLowerCase();
+    } else {
+      status = mapAoStatusToGreAGre(ao.statut);
+    }
+    
+    const score = ao.demandeGreAGre?.evaluationsIa?.[0]?.scoreConformite;
+
+    return {
+      id: ao.id,
+      reference: ao.reference || ao.id,
+      object: ao.objet || "",
+      estimatedAmount: String(ao.montantEstime || "0"),
+      status: status as GreAGreRequestStatus,
+      submittedAt: ao.createdAt || new Date().toISOString(),
+      iaComplianceScore: score !== undefined ? Number(score) : null,
+    };
+  });
 }
 
 function mapAoStatusToGreAGre(statut?: string): GreAGreRequestStatus {
@@ -145,30 +156,67 @@ export async function getServiceContractantGreAGreRequestById(
     if (!raw) return null;
 
     let iaAnalysis: GreAGreIaAnalysis | null = null;
-    if (raw.demandeGreAGre && raw.demandeGreAGre.scoreConformite !== undefined) {
+    const derniereEval = raw.demandeGreAGre?.evaluationsIa?.[0];
+    if (derniereEval && derniereEval.scoreConformite !== undefined) {
+      let recStr = String(derniereEval.recommandation).toLowerCase();
+      if (recStr === "accepter" || recStr === "rejeter" || recStr === "demander_complements") {
+        // valid
+      } else {
+        recStr = "demander_complements";
+      }
+
       iaAnalysis = {
-        scoreCompliance: raw.demandeGreAGre.scoreConformite,
-        recommendation: raw.demandeGreAGre.recommandationIa || "demander_complements",
-        justification: raw.demandeGreAGre.justificationIa || "",
-        confidenceLevel: raw.demandeGreAGre.confianceScore || 0,
-        analysisDate: raw.demandeGreAGre.updatedAt || new Date().toISOString(),
+        scoreCompliance: Number(derniereEval.scoreConformite),
+        recommendation: recStr as GreAGreIaRecommendation,
+        justification: derniereEval.justificationIa || "",
+        confidenceLevel: Number(derniereEval.confianceScore),
+        analysisDate: derniereEval.dateAnalyse || derniereEval.createdAt || new Date().toISOString(),
       };
     }
 
-    const justifications = raw.demandeGreAGre?.justifications || [];
+    let controllerDecision: GreAGreControllerDecision | null = null;
+    const derniereDecision = raw.demandeGreAGre?.decisions?.[0];
+    if (derniereDecision) {
+      let decStr = String(derniereDecision.decisionFinale).toLowerCase();
+      if (decStr !== "accepter" && decStr !== "rejeter" && decStr !== "demander_complements") {
+        decStr = "demander_complements";
+      }
+      controllerDecision = {
+        finalDecision: decStr as GreAGreControllerFinalDecision,
+        reason: derniereDecision.motifDecision || "",
+        matchesIaRecommendation: Boolean(derniereDecision.correspondIa),
+        decisionDate: derniereDecision.dateDecision || derniereDecision.createdAt || new Date().toISOString(),
+      };
+    }
+
+    const rawJustifs = raw.demandeGreAGre?.justifications || [];
+    const justifications = rawJustifs.map((j: any) => ({
+      type: String(j.typeJustification).toLowerCase(),
+      description: j.description,
+      fileName: j.documentId,
+      order: j.ordre,
+    }));
+
+    // Status: prefer demandeGreAGre.statut, otherwise mapped AO statut
+    let status = "brouillon";
+    if (raw.demandeGreAGre && raw.demandeGreAGre.statut) {
+      status = raw.demandeGreAGre.statut.toLowerCase();
+    } else {
+      status = mapAoStatusToGreAGre(raw.statut);
+    }
 
     return {
       id: raw.id,
       reference: raw.reference || raw.id,
       object: raw.objet || "",
       estimatedAmount: String(raw.montantEstime || "0"),
-      status: mapAoStatusToGreAGre(raw.statut),
+      status: status as GreAGreRequestStatus,
       submittedAt: raw.createdAt || new Date().toISOString(),
-      iaComplianceScore: raw.demandeGreAGre?.scoreConformite ?? null,
+      iaComplianceScore: iaAnalysis?.scoreCompliance ?? null,
       description: raw.description || "",
       justifications,
       iaAnalysis,
-      controllerDecision: null,
+      controllerDecision,
     };
   } catch {
     return null;
