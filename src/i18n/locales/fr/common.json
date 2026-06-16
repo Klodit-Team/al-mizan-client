@@ -1726,11 +1726,30 @@
                 "rejetee": {
                   "label": "Rejetée",
                   "desc": "L'offre n'a pas été retenue."
+                },
+                "pendingResult": {
+                  "label": "Résultat d'attribution",
+                  "desc": "Le résultat sera communiqué après clôture de l'évaluation."
                 }
               }
+            },
+            "dates": {
+              "enAttente": "En attente",
+              "resultPublished": "Résultat publié",
+              "toPlan": "À planifier"
             }
           },
-          "wizard": {
+          "conformite": {
+            "title": "Infos de conformité",
+            "legalDelay": "Dans délai légal :",
+            "deadlineAo": "Date limite AO :",
+            "yes": "Oui",
+            "no": "Non",
+            "unspecified": "Non précisé"
+          },
+          "notFound": "Soumission introuvable"
+        },
+        "wizard": {
             "success": {
               "title": "Soumission déposée avec succès !",
               "desc1": "Votre offre",
