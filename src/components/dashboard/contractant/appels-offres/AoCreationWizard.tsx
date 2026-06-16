@@ -1106,10 +1106,13 @@ export default function AoCreationWizard({
       return;
     }
 
-    if (!file.name.toLowerCase().endsWith(".pdf")) {
+    const isPdf = file.name.toLowerCase().endsWith(".pdf");
+    const isTxt = file.name.toLowerCase().endsWith(".txt");
+    
+    if (!isPdf && !isTxt) {
       setCdcErrors((prev) => ({
         ...prev,
-        file: dict.validation.pdfOnly,
+        file: dict.validation.pdfOnly, // We'll keep the key but the translation says PDF/TXT
       }));
       return;
     }

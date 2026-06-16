@@ -185,7 +185,7 @@ export default function Step3({ props }: { props: WizardStepProps }) {
           <input
             id="cdc-upload"
             type="file"
-            accept=".pdf,application/pdf"
+            accept=".pdf,application/pdf,.txt,text/plain"
             className="hidden"
             onChange={(event) =>
               handleCdcFileChange(event.target.files?.[0] ?? null)
