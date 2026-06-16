@@ -180,3 +180,13 @@ export function usePublishTenderAvisByIdMutation(aoId: string) {
     },
   });
 }
+
+// ─── AI Orchestrator ─────────────────────────────────────────────────────────
+
+import { generateCdcDraft, type GenerateCdcDraftPayload, type GenerateCdcDraftResponse } from "./api";
+
+export function useGenerateCdcDraftMutation() {
+  return useMutation<GenerateCdcDraftResponse, Error, GenerateCdcDraftPayload>({
+    mutationFn: (payload) => generateCdcDraft(payload),
+  });
+}

@@ -16,6 +16,7 @@ import {
   saveServiceContractantTenderDraft,
   type SaveTenderDraftPayload,
 } from "@/services/tenders";
+import { useGenerateCdcDraftMutation } from "@/services/contractant-tenders/queries";
 
 export type WizardStep = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -478,6 +479,8 @@ export default function AoCreationWizard({
   const [draftHydratedFromApi, setDraftHydratedFromApi] = useState(
     Boolean(initialDraft),
   );
+
+  const generateCdcDraftMutation = useGenerateCdcDraftMutation();
 
   const [lots, setLots] = useState<LotItem[]>(() =>
     (initialDraft?.lots || []).map((item, index) => ({
@@ -1780,6 +1783,7 @@ export default function AoCreationWizard({
     scoringSummary,
     totalEvaluationWeight,
     activeEvaluationWeight,
+    generateCdcDraftMutation,
   };
 
   return (

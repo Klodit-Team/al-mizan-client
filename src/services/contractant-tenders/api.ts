@@ -341,3 +341,26 @@ export async function publishServiceContractantTenderAvisById(
     { method: "PATCH", body: JSON.stringify({ isPublished: true }) },
   );
 }
+
+// ─── AI Orchestrator API ─────────────────────────────────────────────────────
+
+export interface GenerateCdcDraftPayload {
+  aoId: string;
+  sectionType: string;
+  userPrompt?: string;
+}
+
+export interface GenerateCdcDraftResponse {
+  draft: string;
+  biasDetected: boolean;
+  correctedDraft?: string;
+}
+
+export async function generateCdcDraft(
+  payload: GenerateCdcDraftPayload,
+): Promise<GenerateCdcDraftResponse> {
+  return apiClient<GenerateCdcDraftResponse>("/api/v1/ai/cdc-draft", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}

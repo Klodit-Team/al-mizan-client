@@ -7,6 +7,10 @@ import {
   useCommissionEvaluationQuery,
   useMembresEvaluationQuery,
 } from "@/services/commission-dashboard/queries";
+import {
+  useCommissionEvaluationSubmissionsQuery,
+  useCommissionEvaluationCriteriaQuery,
+} from "@/services/commission/queries";
 
 interface Props {
   locale: string;
@@ -83,78 +87,6 @@ function EmptySoumissions({ isAr }: { isAr: boolean }) {
   );
 }
 
-// ── Critères par défaut (grille d'évaluation standard — configurée par le président) ──
-// Ces données sont propres au membre évaluateur et ne viennent pas du service commission.
-// Elles seront POSTées vers /api/v1/evaluations quand le membre enregistre.
-const CRITERES_DEFAULT: Critere[] = [
-  {
-    id: "c1",
-    labelFr: "Capacité Technique & Expérience",
-    labelAr: "القدرة التقنية والخبرة",
-    ponderation: 40,
-    noteMax: 100,
-    descriptionFr: "Évaluation de l'expérience pertinente et des capacités techniques démontrées.",
-    descriptionAr: "تقييم الخبرة ذات الصلة والقدرات التقنية المُثبتة.",
-    note: null,
-    justification: "",
-    ia: {
-      noteSuggeree: 85, confiance: 92,
-      justifFr: "Le candidat a fourni 3 attestations de bonne exécution valides pour des projets similaires.",
-      justifAr: "قدّم المترشح 3 شهادات تنفيذ سليمة لمشاريع مماثلة.",
-    },
-  },
-  {
-    id: "c2",
-    labelFr: "Méthodologie & Planning",
-    labelAr: "المنهجية والجدول الزمني",
-    ponderation: 30,
-    noteMax: 100,
-    noteEliminatoire: 15,
-    descriptionFr: "Analyse de la cohérence de la méthodologie et du réalisme du planning.",
-    descriptionAr: "تحليل اتساق المنهجية وواقعية الجدول الزمني.",
-    note: null,
-    justification: "",
-    ia: {
-      noteSuggeree: 60, confiance: 78,
-      justifFr: "Le planning proposé est inférieur au minimum requis dans le CDC.",
-      justifAr: "الجدول الزمني المقترح أقل من الحد الأدنى المطلوب في دفتر الشروط.",
-      alerteFr: "Planning inférieur au minimum du CDC.",
-      alerteAr: "الجدول الزمني أقل من الحد الأدنى لدفتر الشروط.",
-    },
-  },
-  {
-    id: "c3",
-    labelFr: "Ressources Humaines",
-    labelAr: "الموارد البشرية",
-    ponderation: 20,
-    noteMax: 100,
-    descriptionFr: "Évaluation des CV et qualifications du personnel clé proposé.",
-    descriptionAr: "تقييم السير الذاتية ومؤهلات الكوادر الرئيسية المقترحة.",
-    note: null,
-    justification: "",
-    ia: {
-      noteSuggeree: 72, confiance: 85,
-      justifFr: "L'équipe proposée couvre les profils requis mais manque d'un expert senior.",
-      justifAr: "الفريق المقترح يغطي الملفات المطلوبة لكنه يفتقر إلى خبير أول.",
-    },
-  },
-  {
-    id: "c4",
-    labelFr: "Moyens Matériels",
-    labelAr: "الوسائل المادية",
-    ponderation: 10,
-    noteMax: 100,
-    descriptionFr: "Adéquation des équipements et matériels techniques proposés.",
-    descriptionAr: "ملاءمة المعدات والوسائل التقنية المقترحة.",
-    note: null,
-    justification: "",
-    ia: {
-      noteSuggeree: 90, confiance: 95,
-      justifFr: "Les équipements listés correspondent aux spécifications du CDC.",
-      justifAr: "المعدات المدرجة تتوافق مع المواصفات التقنية لدفتر الشروط.",
-    },
-  },
-];
 
 export default function CommissionEvaluationPage({ locale, aoId }: Props) {
   const isAr = locale === "ar";
@@ -165,10 +97,36 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
   const { data: commission, isLoading } = useCommissionEvaluationQuery(aoId);
   const { data: membres } = useMembresEvaluationQuery(aoId);
 
-  // Les soumissions à évaluer viennent du service soumissions (pas encore branché ici)
-  // Quand ce service sera intégré : GET /api/v1/soumissions?appelOffreId=aoId
-  // Pour l'instant : liste vide → état vide propre
-  const soumissions: Soumission[] = [];
+  const { data: fetchedSoumissions = [] } = useCommissionEvaluationSubmissionsQuery(aoId);
+  const { data: fetchedCriteres = [] } = useCommissionEvaluationCriteriaQuery(aoId);
+
+  // Map API fetched criteria to local UI state format
+  const baseCriteres: Critere[] = fetchedCriteres.map((c) => ({
+    id: c.id,
+    labelFr: c.label || "Critère",
+    labelAr: c.labelAr || c.label || "معيار",
+    ponderation: c.weighting || 0,
+    noteMax: c.noteMax || 100,
+    noteEliminatoire: c.eliminationScore,
+    descriptionFr: c.description || "",
+    descriptionAr: c.descriptionAr || c.description || "",
+    note: null,
+    justification: "",
+    ia: {
+      noteSuggeree: c.iaSuggestion?.noteSuggeree ?? 0,
+      confiance: c.iaSuggestion?.confiance ?? 0,
+      justifFr: c.iaSuggestion?.justifFr || "Pas de données IA",
+      justifAr: c.iaSuggestion?.justifAr || "لا توجد بيانات للذكاء الاصطناعي",
+      alerteFr: c.iaSuggestion?.alerteFr,
+      alerteAr: c.iaSuggestion?.alerteAr,
+    },
+  }));
+
+  const soumissions: Soumission[] = fetchedSoumissions.map((s) => ({
+    id: s.id,
+    reference: s.reference || s.id,
+    lot: s.lotLabel || "Lot Unique",
+  }));
 
   const [activeSoumissionIdx, setActiveSoumissionIdx] = useState(0);
   const [criteresByS, setCriteresByS] = useState<Record<string, Critere[]>>({});
@@ -177,7 +135,7 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
 
   const currentSoumission = soumissions[activeSoumissionIdx];
   const criteres: Critere[] = currentSoumission
-    ? (criteresByS[currentSoumission.id] ?? CRITERES_DEFAULT.map((c) => ({ ...c })))
+    ? (criteresByS[currentSoumission.id] ?? baseCriteres.map((c) => ({ ...c })))
     : [];
 
   const scoreActuel = criteres.reduce((acc, c) => {
@@ -189,7 +147,7 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
     if (!currentSoumission) return;
     setCriteresByS((prev) => ({
       ...prev,
-      [currentSoumission.id]: (prev[currentSoumission.id] ?? CRITERES_DEFAULT.map((c) => ({ ...c }))).map(
+      [currentSoumission.id]: (prev[currentSoumission.id] ?? baseCriteres.map((c) => ({ ...c }))).map(
         (c) => (c.id === id ? { ...c, note: val } : c)
       ),
     }));
@@ -200,7 +158,7 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
     if (!currentSoumission) return;
     setCriteresByS((prev) => ({
       ...prev,
-      [currentSoumission.id]: (prev[currentSoumission.id] ?? CRITERES_DEFAULT.map((c) => ({ ...c }))).map(
+      [currentSoumission.id]: (prev[currentSoumission.id] ?? baseCriteres.map((c) => ({ ...c }))).map(
         (c) => (c.id === id ? { ...c, justification: val } : c)
       ),
     }));

@@ -1,5 +1,5 @@
 import { WizardStepProps } from "./types";
-import React from "react";
+import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   ChevronRight,
@@ -70,7 +70,33 @@ export default function Step3({ props }: { props: WizardStepProps }) {
     formatFileSize,
     publishCdc,
     downloadCdcFile,
+    generateCdcDraftMutation,
+    form,
   } = props;
+
+  const [aiPrompt, setAiPrompt] = useState("");
+
+  const handleGenerateAi = async () => {
+    if (!generateCdcDraftMutation) return;
+    const aoId = form?.reference || "draft-ao";
+
+    try {
+      const result = await generateCdcDraftMutation.mutateAsync({
+        aoId,
+        sectionType: "CDC_GENERAL",
+        userPrompt: aiPrompt,
+      });
+
+      const content = result.correctedDraft || result.draft;
+      const file = new File([content], "CDC_Draft_AI.txt", {
+        type: "text/plain",
+      });
+      handleCdcFileChange(file);
+    } catch (err) {
+      console.error("AI Generation failed", err);
+    }
+  };
+
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-3">
@@ -90,11 +116,22 @@ export default function Step3({ props }: { props: WizardStepProps }) {
             <p className="mt-0.5 text-xs text-slate-600">
               {dict.step3.aiDescription}
             </p>
+            <textarea
+              className="mt-2 w-full rounded-md border border-slate-200 p-2 text-xs"
+              placeholder="Besoins spécifiques pour ce CDC..."
+              rows={2}
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+            />
             <button
               type="button"
-              className="mt-2 inline-flex h-8 items-center justify-center rounded-md bg-[#4CAF50] px-3 text-xs font-semibold text-white hover:opacity-95"
+              onClick={handleGenerateAi}
+              disabled={generateCdcDraftMutation?.isPending}
+              className="mt-2 inline-flex h-8 items-center justify-center rounded-md bg-[#4CAF50] px-3 text-xs font-semibold text-white hover:opacity-95 disabled:opacity-50"
             >
-              {dict.step3.aiButton}
+              {generateCdcDraftMutation?.isPending
+                ? "Génération en cours..."
+                : dict.step3.aiButton}
             </button>
           </div>
         </div>
