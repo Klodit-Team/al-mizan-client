@@ -11,6 +11,7 @@ import {
   type GreAGreIaRecommendation,
   type GreAGreJustificationType,
 } from "@/services/greAGre";
+import { cookies } from "next/headers";
 
 interface GreAGreRequestDetailPageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -121,7 +122,9 @@ export default async function GreAGreRequestDetailPage({
   const { locale, id } = await params;
   const dict = await getDictionary(locale as Locale);
   const detailDict = dict.dashboard.contractant.greAGre.detail;
-  const item = await getServiceContractantGreAGreRequestById(id);
+  const cookieStore = await cookies();
+  const token = cookieStore.get("access_token")?.value;
+  const item = await getServiceContractantGreAGreRequestById(id, token);
 
   if (!item) {
     notFound();

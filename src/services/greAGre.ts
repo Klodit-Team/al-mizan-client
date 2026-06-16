@@ -70,7 +70,7 @@ export interface ServiceContractantGreAGreRequestDetail extends ServiceContracta
   controllerDecision: GreAGreControllerDecision | null;
 }
 
-const API_BASE_URL = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "");
+const API_BASE_URL = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "http://api-gateway:3000");
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const url = API_BASE_URL ? `${API_BASE_URL}${path}` : path;
@@ -129,10 +129,17 @@ function mapAoStatusToGreAGre(statut?: string): GreAGreRequestStatus {
 
 export async function getServiceContractantGreAGreRequestById(
   id: string,
+  token?: string
 ): Promise<ServiceContractantGreAGreRequestDetail | null> {
   try {
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers.Cookie = `access_token=${token}`;
+    }
+    
     const raw = await requestJson<any>(`/api/v1/appels-offres/${id}`, {
       method: "GET",
+      headers,
     });
 
     if (!raw) return null;
