@@ -25,6 +25,20 @@ export interface AuditIntegrityResult {
   checkedAt: string; // ISO 8601
 }
 
+interface ApiEnvelope<T> {
+  success?: boolean;
+  data?: T;
+  message?: string;
+  meta?: Record<string, unknown>;
+}
+
+function unwrapData<T>(payload: T | ApiEnvelope<T>): T {
+  if (payload && typeof payload === "object" && "data" in payload) {
+    return (payload as ApiEnvelope<T>).data as T;
+  }
+  return payload as T;
+}
+
 // ─── Query params ─────────────────────────────────────────────────────────────
 
 export interface ListAuditLogsParams {
@@ -58,7 +72,8 @@ export async function getAdminAuditLogs(
   if (params.limit !== undefined) qs.set("limit", String(params.limit));
 
   const query = qs.toString() ? `?${qs.toString()}` : "";
-  return apiClient<AuditLog[]>(`/api/v1/audit/logs${query}`, { method: "GET" });
+  const payload = await apiClient<AuditLog[] | ApiEnvelope<AuditLog[]>>(`/api/v1/audit/logs${query}`, { method: "GET" });
+  return unwrapData(payload);
 }
 
 /**
@@ -66,7 +81,8 @@ export async function getAdminAuditLogs(
  * Get a single audit log by its ID.
  */
 export async function getAdminAuditLogById(id: string): Promise<AuditLog> {
-  return apiClient<AuditLog>(`/api/v1/audit/logs/${id}`, { method: "GET" });
+  const payload = await apiClient<AuditLog | ApiEnvelope<AuditLog>>(`/api/v1/audit/logs/${id}`, { method: "GET" });
+  return unwrapData(payload);
 }
 
 /**
@@ -77,10 +93,11 @@ export async function getAuditLogsByEntite(
   entite: string,
   entiteId: string
 ): Promise<AuditLog[]> {
-  return apiClient<AuditLog[]>(
+  const payload = await apiClient<AuditLog[] | ApiEnvelope<AuditLog[]>>(
     `/api/v1/audit/logs/entite/${entite}/${entiteId}`,
     { method: "GET" }
   );
+  return unwrapData(payload);
 }
 
 /**
@@ -88,9 +105,10 @@ export async function getAuditLogsByEntite(
  * Trigger a manual integrity check of the audit chain.
  */
 export async function verifyAdminAuditIntegrity(): Promise<AuditIntegrityResult> {
-  return apiClient<AuditIntegrityResult>(`/api/v1/integrity/verify`, {
+  const payload = await apiClient<AuditIntegrityResult | ApiEnvelope<AuditIntegrityResult>>(`/api/v1/integrity/verify`, {
     method: "GET",
   });
+  return unwrapData(payload);
 }
 
 /**
@@ -98,7 +116,8 @@ export async function verifyAdminAuditIntegrity(): Promise<AuditIntegrityResult>
  * Get the last integrity check report.
  */
 export async function getAdminAuditIntegrityStatus(): Promise<AuditIntegrityResult> {
-  return apiClient<AuditIntegrityResult>(`/api/v1/integrity/status`, {
+  const payload = await apiClient<AuditIntegrityResult | ApiEnvelope<AuditIntegrityResult>>(`/api/v1/integrity/status`, {
     method: "GET",
   });
+  return unwrapData(payload);
 }

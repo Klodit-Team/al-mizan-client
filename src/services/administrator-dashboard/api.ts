@@ -66,6 +66,20 @@ interface RawAuditActivity {
   user_id?: string;
 }
 
+interface ApiEnvelope<T> {
+  success?: boolean;
+  data?: T;
+  message?: string;
+  meta?: Record<string, unknown>;
+}
+
+function unwrapData<T>(payload: T | ApiEnvelope<T>): T {
+  if (payload && typeof payload === "object" && "data" in payload) {
+    return (payload as ApiEnvelope<T>).data as T;
+  }
+  return payload as T;
+}
+
 /** Map a raw audit activity to the dashboard AdministratorActivityItem shape */
 function mapAuditActivity(raw: RawAuditActivity, idx: number): AdministratorActivityItem {
   const action = (raw.action ?? "").toUpperCase();
@@ -134,12 +148,13 @@ export async function getAdministratorDashboardStats(): Promise<AdministratorDas
  */
 export async function getAdministratorDashboardActivities(): Promise<AdministratorActivityItem[]> {
   try {
-    const raw = await apiClient<RawAuditActivity[]>(
+    const raw = await apiClient<RawAuditActivity[] | ApiEnvelope<RawAuditActivity[]>>(
       `/api/v1/audit/activities?limit=10`,
       { method: "GET" }
     );
-    if (Array.isArray(raw) && raw.length > 0) {
-      return raw.map(mapAuditActivity);
+    const activities = unwrapData(raw);
+    if (Array.isArray(activities) && activities.length > 0) {
+      return activities.map(mapAuditActivity);
     }
   } catch {
     // API failed, return empty
@@ -153,12 +168,14 @@ export async function getAdministratorDashboardActivities(): Promise<Administrat
 export async function getAdministratorDashboardAiAlerts(): Promise<AdministratorAiAlert[]> {
   try {
     const [elevee, critique] = await Promise.all([
-      apiClient<AIIncident[]>(`/api/v1/incidents?gravite=ELEVEE&statut=OUVERT&limit=5`, { method: "GET" }),
-      apiClient<AIIncident[]>(`/api/v1/incidents?gravite=CRITIQUE&statut=OUVERT&limit=5`, { method: "GET" }),
+      apiClient<AIIncident[] | ApiEnvelope<AIIncident[]>>(`/api/v1/incidents?gravite=ELEVEE&statut=OUVERT&limit=5`, { method: "GET" }),
+      apiClient<AIIncident[] | ApiEnvelope<AIIncident[]>>(`/api/v1/incidents?gravite=CRITIQUE&statut=OUVERT&limit=5`, { method: "GET" }),
     ]);
+    const eleveeData = unwrapData(elevee);
+    const critiqueData = unwrapData(critique);
     const combined = [
-      ...(Array.isArray(critique) ? critique : []),
-      ...(Array.isArray(elevee)   ? elevee   : []),
+      ...(Array.isArray(critiqueData) ? critiqueData : []),
+      ...(Array.isArray(eleveeData)   ? eleveeData   : []),
     ].slice(0, 5);
     if (combined.length > 0) {
       return combined.map(mapIncidentToAlert);

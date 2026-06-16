@@ -49,7 +49,7 @@ export interface PaginatedNotifications {
   totalPages: number;
 }
 
-/** Query params for GET /notification-service/v1/notifications */
+/** Query params for GET /api/v1/notifications */
 export interface ListNotificationsParams {
   userId?: string;
   type?: NotificationType;
@@ -60,12 +60,26 @@ export interface ListNotificationsParams {
   limit?: number;  // default: 20
 }
 
-const BASE = "/notification-service/v1/notifications";
+const BASE = "/api/v1/notifications";
+
+interface ApiEnvelope<T> {
+  success?: boolean;
+  data?: T;
+  message?: string;
+  meta?: Record<string, unknown>;
+}
+
+function unwrapData<T>(payload: T | ApiEnvelope<T>): T {
+  if (payload && typeof payload === "object" && "data" in payload) {
+    return (payload as ApiEnvelope<T>).data as T;
+  }
+  return payload as T;
+}
 
 // ─── Endpoints ─────────────────────────────────────────────────────────────────
 
 /**
- * GET /notification-service/v1/notifications
+ * GET /api/v1/notifications
  * List all notifications (admin). Roles: ADMIN, CONTROLEUR.
  */
 export async function listNotifications(
@@ -81,11 +95,12 @@ export async function listNotifications(
   if (params.limit !== undefined)   qs.set("limit", String(params.limit));
 
   const query = qs.toString() ? `?${qs.toString()}` : "";
-  return apiClient<PaginatedNotifications>(`${BASE}${query}`, { method: "GET" });
+  const response = await apiClient<PaginatedNotifications | ApiEnvelope<PaginatedNotifications>>(`${BASE}${query}`, { method: "GET" });
+  return unwrapData(response);
 }
 
 /**
- * GET /notification-service/v1/notifications/mes-notifications
+ * GET /api/v1/notifications/mes-notifications
  * Mes notifications (utilisateur connecté)
  */
 export async function listMesNotifications(
@@ -93,7 +108,8 @@ export async function listMesNotifications(
 ): Promise<PaginatedNotifications> {
   const qs = newSearchParams(params);
   const query = qs.toString() ? `?${qs.toString()}` : "";
-  return apiClient<PaginatedNotifications>(`${BASE}/mes-notifications${query}`, { method: "GET" });
+  const response = await apiClient<PaginatedNotifications | ApiEnvelope<PaginatedNotifications>>(`${BASE}/mes-notifications${query}`, { method: "GET" });
+  return unwrapData(response);
 }
 
 function newSearchParams(params: any): URLSearchParams {
@@ -107,37 +123,41 @@ function newSearchParams(params: any): URLSearchParams {
 }
 
 /**
- * GET /notification-service/v1/notifications/{id}
+ * GET /api/v1/notifications/{id}
  * Get a single notification by UUID.
  */
 export async function getNotificationById(id: string): Promise<NotificationEntity> {
-  return apiClient<NotificationEntity>(`${BASE}/${id}`, { method: "GET" });
+  const response = await apiClient<NotificationEntity | ApiEnvelope<NotificationEntity>>(`${BASE}/${id}`, { method: "GET" });
+  return unwrapData(response);
 }
 
 /**
- * PATCH /notification-service/v1/notifications/{id}/lire
+ * PATCH /api/v1/notifications/{id}/lire
  * Mark a single notification as read. Returns the updated notification.
  */
 export async function markNotificationRead(id: string): Promise<NotificationEntity> {
-  return apiClient<NotificationEntity>(`${BASE}/${id}/lire`, { method: "PATCH" });
+  const response = await apiClient<NotificationEntity | ApiEnvelope<NotificationEntity>>(`${BASE}/${id}/lire`, { method: "PATCH" });
+  return unwrapData(response);
 }
 
 /**
- * PATCH /notification-service/v1/notifications/marquer-toutes-lues
+ * PATCH /api/v1/notifications/marquer-toutes-lues
  * Mark all notifications as read for the current user.
  * Returns { count: number }.
  */
 export async function markAllNotificationsRead(): Promise<{ count: number }> {
-  return apiClient<{ count: number }>(`${BASE}/marquer-toutes-lues`, { method: "PATCH" });
+  const response = await apiClient<{ count: number } | ApiEnvelope<{ count: number }>>(`${BASE}/marquer-toutes-lues`, { method: "PATCH" });
+  return unwrapData(response);
 }
 
 /**
- * GET /notification-service/v1/notifications/non-lues/count
+ * GET /api/v1/notifications/non-lues/count
  * Count unread notifications for the current user.
  * Returns { count: number }.
  */
 export async function getUnreadNotificationsCount(): Promise<{ count: number }> {
-  return apiClient<{ count: number }>(`${BASE}/non-lues/count`, { method: "GET" });
+  const response = await apiClient<{ count: number } | ApiEnvelope<{ count: number }>>(`${BASE}/non-lues/count`, { method: "GET" });
+  return unwrapData(response);
 }
 
 // ─── Alertes IA ────────────────────────────────────────────────────────────────
@@ -173,30 +193,34 @@ export interface ListAlertesIAParams {
   limit?: number;
 }
 
-const ALERTS_BASE = "/notification-service/v1/alertes-ia";
+const ALERTS_BASE = "/api/v1/alertes-ia";
 
 export async function listAlertesIA(params: ListAlertesIAParams = {}): Promise<PaginatedAlertesIA> {
   const qs = newSearchParams(params);
   const query = qs.toString() ? `?${qs.toString()}` : "";
-  return apiClient<PaginatedAlertesIA>(`${ALERTS_BASE}${query}`, { method: "GET" });
+  const response = await apiClient<PaginatedAlertesIA | ApiEnvelope<PaginatedAlertesIA>>(`${ALERTS_BASE}${query}`, { method: "GET" });
+  return unwrapData(response);
 }
 
 export async function getAlerteIAById(id: string): Promise<AlerteIAEntity> {
-  return apiClient<AlerteIAEntity>(`${ALERTS_BASE}/${id}`, { method: "GET" });
+  const response = await apiClient<AlerteIAEntity | ApiEnvelope<AlerteIAEntity>>(`${ALERTS_BASE}/${id}`, { method: "GET" });
+  return unwrapData(response);
 }
 
 export async function acquitterAlerteIA(id: string, notesResolution: string): Promise<AlerteIAEntity> {
-  return apiClient<AlerteIAEntity>(`${ALERTS_BASE}/${id}/acquitter`, {
+  const response = await apiClient<AlerteIAEntity | ApiEnvelope<AlerteIAEntity>>(`${ALERTS_BASE}/${id}/acquitter`, {
     method: "PATCH",
     body: JSON.stringify({ notesResolution }),
   });
+  return unwrapData(response);
 }
 
 export async function resoudreAlerteIA(id: string, notesResolution: string): Promise<AlerteIAEntity> {
-  return apiClient<AlerteIAEntity>(`${ALERTS_BASE}/${id}/resoudre`, {
+  const response = await apiClient<AlerteIAEntity | ApiEnvelope<AlerteIAEntity>>(`${ALERTS_BASE}/${id}/resoudre`, {
     method: "PATCH",
     body: JSON.stringify({ notesResolution }),
   });
+  return unwrapData(response);
 }
 
 // ─── Rapports IA ───────────────────────────────────────────────────────────────
@@ -232,23 +256,26 @@ export interface ListRapportsIAParams {
   limit?: number;
 }
 
-const RAPPORTS_BASE = "/notification-service/v1/rapports-ia";
+const RAPPORTS_BASE = "/api/v1/rapports-ia";
 
 export async function listRapportsIA(params: ListRapportsIAParams = {}): Promise<PaginatedRapportsIA> {
   const qs = newSearchParams(params);
   const query = qs.toString() ? `?${qs.toString()}` : "";
-  return apiClient<PaginatedRapportsIA>(`${RAPPORTS_BASE}${query}`, { method: "GET" });
+  const response = await apiClient<PaginatedRapportsIA | ApiEnvelope<PaginatedRapportsIA>>(`${RAPPORTS_BASE}${query}`, { method: "GET" });
+  return unwrapData(response);
 }
 
 export async function getRapportIAById(id: string): Promise<RapportIAEntity> {
-  return apiClient<RapportIAEntity>(`${RAPPORTS_BASE}/${id}`, { method: "GET" });
+  const response = await apiClient<RapportIAEntity | ApiEnvelope<RapportIAEntity>>(`${RAPPORTS_BASE}/${id}`, { method: "GET" });
+  return unwrapData(response);
 }
 
 export async function genererRapportIA(payload: any): Promise<RapportIAEntity> {
-  return apiClient<RapportIAEntity>(RAPPORTS_BASE, {
+  const response = await apiClient<RapportIAEntity | ApiEnvelope<RapportIAEntity>>(RAPPORTS_BASE, {
     method: "POST",
     body: JSON.stringify(payload),
   });
+  return unwrapData(response);
 }
 
 // ─── Preferences ───────────────────────────────────────────────────────────────
@@ -266,12 +293,14 @@ export interface NotificationPreferences {
 }
 
 export async function getNotificationPreferences(): Promise<NotificationPreferences> {
-  return apiClient<NotificationPreferences>("/notification-service/v1/preferences", { method: "GET" });
+  const response = await apiClient<NotificationPreferences | ApiEnvelope<NotificationPreferences>>("/api/v1/preferences", { method: "GET" });
+  return unwrapData(response);
 }
 
 export async function updateNotificationPreferences(payload: Partial<NotificationPreferences> & { categoriesDesactivees?: string[] }): Promise<NotificationPreferences> {
-  return apiClient<NotificationPreferences>("/notification-service/v1/preferences", {
+  const response = await apiClient<NotificationPreferences | ApiEnvelope<NotificationPreferences>>("/api/v1/preferences", {
     method: "PATCH",
     body: JSON.stringify(payload),
   });
+  return unwrapData(response);
 }

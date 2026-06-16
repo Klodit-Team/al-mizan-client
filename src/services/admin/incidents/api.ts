@@ -77,6 +77,20 @@ export interface ListIncidentsParams {
 
 const BASE = "/api/v1/incidents";
 
+interface ApiEnvelope<T> {
+  success?: boolean;
+  data?: T;
+  message?: string;
+  meta?: Record<string, unknown>;
+}
+
+function unwrapData<T>(payload: T | ApiEnvelope<T>): T {
+  if (payload && typeof payload === "object" && "data" in payload) {
+    return (payload as ApiEnvelope<T>).data as T;
+  }
+  return payload as T;
+}
+
 // ─── Endpoints ────────────────────────────────────────────────────────────────
 
 /**
@@ -97,7 +111,8 @@ export async function getAdminIncidents(
   if (params.limit !== undefined) qs.set("limit", String(params.limit));
 
   const query = qs.toString() ? `?${qs.toString()}` : "";
-  return apiClient<AIIncident[]>(`${BASE}${query}`, { method: "GET" });
+  const payload = await apiClient<AIIncident[] | ApiEnvelope<AIIncident[]>>(`${BASE}${query}`, { method: "GET" });
+  return unwrapData(payload);
 }
 
 /**
@@ -105,7 +120,8 @@ export async function getAdminIncidents(
  * Get a single AI incident by its ID.
  */
 export async function getAdminIncidentById(id: string): Promise<AIIncident> {
-  return apiClient<AIIncident>(`${BASE}/${id}`, { method: "GET" });
+  const payload = await apiClient<AIIncident | ApiEnvelope<AIIncident>>(`${BASE}/${id}`, { method: "GET" });
+  return unwrapData(payload);
 }
 
 /**
@@ -115,10 +131,11 @@ export async function getAdminIncidentById(id: string): Promise<AIIncident> {
 export async function createAdminIncident(
   payload: CreateIncidentDto
 ): Promise<AIIncident> {
-  return apiClient<AIIncident>(BASE, {
+  const response = await apiClient<AIIncident | ApiEnvelope<AIIncident>>(BASE, {
     method: "POST",
     body: JSON.stringify(payload),
   });
+  return unwrapData(response);
 }
 
 /**
@@ -129,10 +146,11 @@ export async function resolveAdminIncident(
   id: string,
   payload: ResolveIncidentDto
 ): Promise<AIIncident> {
-  return apiClient<AIIncident>(`${BASE}/${id}/resolve`, {
+  const response = await apiClient<AIIncident | ApiEnvelope<AIIncident>>(`${BASE}/${id}/resolve`, {
     method: "PATCH",
     body: JSON.stringify(payload),
   });
+  return unwrapData(response);
 }
 
 /**
@@ -143,8 +161,9 @@ export async function updateAdminIncidentStatut(
   id: string,
   statut: IncidentStatut
 ): Promise<AIIncident> {
-  return apiClient<AIIncident>(`${BASE}/${id}/statut`, {
+  const response = await apiClient<AIIncident | ApiEnvelope<AIIncident>>(`${BASE}/${id}/statut`, {
     method: "PATCH",
     body: JSON.stringify({ statut } satisfies UpdateIncidentStatutDto),
   });
+  return unwrapData(response);
 }
