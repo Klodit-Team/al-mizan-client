@@ -1,4 +1,4 @@
-import { WizardStepProps } from "./types";
+import { AiCdcSection, WizardStepProps } from "./types";
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import {
@@ -21,13 +21,12 @@ const AI_CDC_SECTIONS = [
   "Clauses administratives",
 ];
 
-type AiCdcSection = {
-  id: string;
-  section: string;
-  contenu: string;
-};
+const AI_CDC_SECTION_LABEL_BY_KEY = AI_CDC_SECTIONS.reduce<Record<string, string>>((acc, label) => {
+  acc[normalizeSectionKey(label)] = label;
+  return acc;
+}, {});
 
-const normalizeSectionId = (section: string) =>
+const normalizeSectionKey = (section: string) =>
   section
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -38,6 +37,7 @@ const normalizeSectionId = (section: string) =>
 const parseAiSectionResponse = (
   rawContent: string,
   fallbackSection: string,
+  fallbackSectionKey: string,
 ): AiCdcSection => {
   const parseJson = (value: string): unknown => {
     try {
@@ -59,6 +59,10 @@ const parseAiSectionResponse = (
       typeof record.section === "string" && record.section.trim()
         ? record.section.trim()
         : fallbackSection;
+    const sectionKey =
+      typeof record.sectionKey === "string" && record.sectionKey.trim()
+        ? normalizeSectionKey(record.sectionKey)
+        : fallbackSectionKey;
     const contenu =
       typeof record.contenu === "string"
         ? record.contenu
@@ -67,20 +71,36 @@ const parseAiSectionResponse = (
           : typeof record.draft === "string"
             ? record.draft
             : rawContent;
+    const now = new Date().toISOString();
 
     return {
-      id: normalizeSectionId(section),
+      id: `ai-cdc-${sectionKey}`,
+      sectionKey,
       section,
       contenu,
+      generatedAt: now,
+      updatedAt: now,
     };
   }
 
+  const now = new Date().toISOString();
   return {
-    id: normalizeSectionId(fallbackSection),
+    id: `ai-cdc-${fallbackSectionKey}`,
+    sectionKey: fallbackSectionKey,
     section: fallbackSection,
     contenu: rawContent,
+    generatedAt: now,
+    updatedAt: now,
   };
 };
+
+const formatSectionDate = (isoDate: string) =>
+  new Intl.DateTimeFormat("fr-FR", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(isoDate));
 
 export default function Step3({ props }: { props: WizardStepProps }) {
   const {
@@ -150,15 +170,34 @@ export default function Step3({ props }: { props: WizardStepProps }) {
   const [aiPrompt, setAiPrompt] = useState("");
   const [selectedAiSection, setSelectedAiSection] = useState(AI_CDC_SECTIONS[0]);
   const isAiMode = cdcCreationMode === "ai";
+  const selectedAiSectionKey = normalizeSectionKey(selectedAiSection);
+
+  const resolveSectionLabel = (sectionKey: string) =>
+    AI_CDC_SECTION_LABEL_BY_KEY[sectionKey] ?? sectionKey;
 
   const upsertAiSection = (nextSection: AiCdcSection) => {
-    const nextSections = aiCdcSections?.some(
-      (section: AiCdcSection) => section.id === nextSection.id,
-    )
-      ? aiCdcSections.map((section: AiCdcSection) =>
-          section.id === nextSection.id ? nextSection : section,
-        )
-      : [...(aiCdcSections || []), nextSection];
+    const existingIndex = (aiCdcSections || []).findIndex(
+      (section: AiCdcSection) => section.sectionKey === nextSection.sectionKey,
+    );
+
+    if (existingIndex === -1) {
+      setAiCdcSections([...(aiCdcSections || []), nextSection]);
+      return;
+    }
+
+    const existing = aiCdcSections[existingIndex];
+    const nextSections = (aiCdcSections || []).map((section: AiCdcSection, index: number) =>
+      index === existingIndex
+        ? {
+            ...existing,
+            ...nextSection,
+            id: existing.id,
+            sectionKey: existing.sectionKey,
+            generatedAt: existing.generatedAt,
+            updatedAt: nextSection.updatedAt,
+          }
+        : section,
+    );
 
     setAiCdcSections(nextSections);
   };
@@ -166,7 +205,9 @@ export default function Step3({ props }: { props: WizardStepProps }) {
   const updateAiSectionContent = (sectionId: string, contenu: string) => {
     setAiCdcSections(
       (aiCdcSections || []).map((section: AiCdcSection) =>
-        section.id === sectionId ? { ...section, contenu } : section,
+        section.id === sectionId
+          ? { ...section, contenu, updatedAt: new Date().toISOString() }
+          : section,
       ),
     );
   };
@@ -178,13 +219,14 @@ export default function Step3({ props }: { props: WizardStepProps }) {
           ? {
               ...section,
               section: title,
+              updatedAt: new Date().toISOString(),
             }
           : section,
       ),
     );
   };
 
-  const handleGenerateAi = async () => {
+  const handleGenerateAi = async (sectionKey = selectedAiSectionKey) => {
     if (!generateCdcDraftMutation) return;
     
     const aoId = props.draftId;
@@ -194,14 +236,15 @@ export default function Step3({ props }: { props: WizardStepProps }) {
     }
 
     try {
+      const sectionType = resolveSectionLabel(sectionKey);
       const result = await generateCdcDraftMutation.mutateAsync({
         aoId,
-        sectionType: selectedAiSection,
+        sectionType,
         userPrompt: aiPrompt,
       });
 
       const content = result.correctedDraft || result.draft || "";
-      upsertAiSection(parseAiSectionResponse(content, selectedAiSection));
+      upsertAiSection(parseAiSectionResponse(content, sectionType, sectionKey));
     } catch (err) {
       console.error("AI Generation failed", err);
     }
@@ -360,7 +403,9 @@ export default function Step3({ props }: { props: WizardStepProps }) {
                 />
                 <button
                   type="button"
-                  onClick={handleGenerateAi}
+                  onClick={() => {
+                    void handleGenerateAi();
+                  }}
                   disabled={generateCdcDraftMutation?.isPending}
                   className="mt-2 inline-flex h-8 items-center justify-center rounded-md bg-[#4CAF50] px-3 text-xs font-semibold text-white hover:opacity-95 disabled:opacity-50"
                 >
@@ -371,11 +416,16 @@ export default function Step3({ props }: { props: WizardStepProps }) {
               </div>
             </div>
             <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-1.5">
                   <PencilLine className="h-3.5 w-3.5 text-[#2F9E44]" />
-                  Sections CDC générées
-                </label>
+                  <label className="text-xs font-semibold text-slate-700">
+                    Sections CDC générées
+                  </label>
+                  <span className="rounded-full bg-[#E8F5E9] px-2 py-0.5 text-[11px] font-semibold text-[#256D2D]">
+                    {aiCdcSections?.length ?? 0}
+                  </span>
+                </div>
                 {cdcFile && (
                   <span className="text-[11px] font-medium text-slate-500">
                     {cdcFile.name} • {formatFileSize(cdcFile.size)}
@@ -387,19 +437,42 @@ export default function Step3({ props }: { props: WizardStepProps }) {
                   {aiCdcSections.map((section: AiCdcSection, index: number) => (
                     <div
                       key={section.id}
-                      className="rounded-md border border-slate-200 bg-slate-50 p-3"
+                      className="rounded-lg border border-slate-200 bg-slate-50 p-3 shadow-sm"
                     >
-                      <div className="mb-2 flex items-center gap-2">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#E8F5E9] text-[11px] font-bold text-[#2F9E44]">
-                          {index + 1}
-                        </span>
-                        <input
-                          value={section.section}
-                          onChange={(event) =>
-                            updateAiSectionTitle(section.id, event.target.value)
-                          }
-                          className="h-8 min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-2 text-sm font-semibold text-slate-800 outline-none focus:border-[#4CAF50]"
-                        />
+                      <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
+                        <div className="flex items-start gap-2">
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#E8F5E9] text-[11px] font-bold text-[#2F9E44]">
+                            {index + 1}
+                          </span>
+                          <div className="min-w-0">
+                            <input
+                              value={section.section}
+                              onChange={(event) =>
+                                updateAiSectionTitle(section.id, event.target.value)
+                              }
+                              className="h-8 min-w-[240px] rounded-md border border-slate-200 bg-white px-2 text-sm font-semibold text-slate-800 outline-none focus:border-[#4CAF50]"
+                            />
+                            <p className="mt-1 text-[11px] text-slate-500">
+                              Clé stable: <span className="font-mono">{section.sectionKey}</span>
+                              {" · "}
+                              généré {formatSectionDate(section.generatedAt)}
+                              {section.updatedAt !== section.generatedAt ? ` · mis à jour ${formatSectionDate(section.updatedAt)}` : ""}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedAiSection(resolveSectionLabel(section.sectionKey));
+                              void handleGenerateAi(section.sectionKey);
+                            }}
+                            disabled={generateCdcDraftMutation?.isPending}
+                            className="inline-flex h-8 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-[11px] font-semibold text-slate-700 transition-colors hover:bg-slate-100 disabled:opacity-50"
+                          >
+                            Régénérer
+                          </button>
+                        </div>
                       </div>
                       <textarea
                         value={section.contenu}
@@ -407,19 +480,15 @@ export default function Step3({ props }: { props: WizardStepProps }) {
                           updateAiSectionContent(section.id, event.target.value)
                         }
                         rows={7}
-                        className="min-h-[150px] w-full resize-y rounded-md border border-slate-200 bg-white p-3 text-sm leading-6 text-slate-800 outline-none focus:border-[#4CAF50]"
+                        className="min-h-[160px] w-full resize-y rounded-md border border-slate-200 bg-white p-3 text-sm leading-6 text-slate-800 outline-none focus:border-[#4CAF50]"
                       />
                     </div>
                   ))}
                 </div>
               ) : (
-                <div
-                  className={cn(
-                    "flex min-h-[180px] items-center justify-center rounded-md border border-dashed bg-slate-50 px-4 text-center text-xs text-slate-500",
-                    cdcErrors.file ? "border-red-300" : "border-slate-200",
-                  )}
-                >
-                  Sélectionnez une section, générez son contenu, puis modifiez uniquement les données affichées ici.
+                <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-xs text-slate-500">
+                  Sélectionnez une section, générez son contenu, puis continuez avec la section suivante.
+                  Chaque nouvelle génération s’ajoute sous la précédente; une régénération remplace uniquement la même section.
                 </div>
               )}
               {cdcErrors.file && (

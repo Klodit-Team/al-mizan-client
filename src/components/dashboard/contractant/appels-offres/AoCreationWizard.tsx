@@ -17,6 +17,7 @@ import {
   type SaveTenderDraftPayload,
 } from "@/services/tenders";
 import { useGenerateCdcDraftMutation } from "@/services/contractant-tenders/queries";
+import type { AiCdcSection } from "./ao-steps/types";
 
 export type WizardStep = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -61,12 +62,6 @@ export interface CdcForm {
 }
 
 type CdcCreationMode = "manual" | "ai";
-
-export interface AiCdcSection {
-  id: string;
-  section: string;
-  contenu: string;
-}
 
 export interface EligibilityCriterion {
   id: string;
@@ -1144,11 +1139,14 @@ export default function AoCreationWizard({
     sections
       .filter((section) => section.section.trim() || section.contenu.trim())
       .map((section) =>
-        [section.section.trim(), section.contenu.trim()]
+        [
+          `## ${section.section.trim()}`,
+          section.contenu.trim(),
+        ]
           .filter(Boolean)
           .join("\n\n"),
       )
-      .join("\n\n");
+      .join("\n\n---\n\n");
 
   const handleAiCdcTextChange = (content: string) => {
     setAiCdcText(content);
@@ -1169,7 +1167,18 @@ export default function AoCreationWizard({
     const content = serializeAiCdcSections(sections);
 
     setAiCdcSections(sections);
-    handleAiCdcTextChange(content);
+    setAiCdcText(content);
+    setCdcCreationMode("ai");
+    setSavedDraft(false);
+
+    if (content.trim()) {
+      setCdcFile(createAiCdcFile(content));
+      setExistingCdcFileName(null);
+      setCdcErrors((prev) => ({ ...prev, file: undefined }));
+      return;
+    }
+
+    setCdcFile(null);
   };
 
   const validateStep3 = () => {
