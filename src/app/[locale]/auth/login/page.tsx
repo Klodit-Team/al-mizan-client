@@ -1,5 +1,3 @@
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import LoginForm from "@/components/forms/LoginForm";
 import { getAuthDictionary,getDictionary} from "@/i18n/get-dictionaries";
 import type { Locale } from "@/i18n/config";
