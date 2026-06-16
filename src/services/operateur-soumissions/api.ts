@@ -691,11 +691,11 @@ export async function submitOperateurSoumissionWorkflow(
 
   const financialFormData = new FormData();
   financialFormData.append("fichierChiffre", financialFile);
-  if (financialHash) {
-    financialFormData.append("hashClient", financialHash);
-  }
-  financialFormData.append("signatureEcdsa", ecdsaProof.signatureEcdsa);
-  financialFormData.append("clePubliqueEcdsaPem", ecdsaProof.clePubliqueEcdsaPem);
+  financialFormData.append("donnees", JSON.stringify({
+    hashClient: financialHash || undefined,
+    signatureEcdsa: ecdsaProof.signatureEcdsa,
+    clePubliqueEcdsaPem: ecdsaProof.clePubliqueEcdsaPem,
+  }));
 
   await apiClient<unknown>(`/api/v1/soumissions/${draft.id}/offre-financiere`, {
     method: "POST",
