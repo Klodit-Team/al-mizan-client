@@ -9,6 +9,79 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
+
+const AI_CDC_SECTIONS = [
+  "Objet du cahier des charges",
+  "Spécifications techniques",
+  "Conditions de participation",
+  "Critères d'évaluation",
+  "Modalités d'exécution",
+  "Délais et livraison",
+  "Garanties et pénalités",
+  "Clauses administratives",
+];
+
+type AiCdcSection = {
+  id: string;
+  section: string;
+  contenu: string;
+};
+
+const normalizeSectionId = (section: string) =>
+  section
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+const parseAiSectionResponse = (
+  rawContent: string,
+  fallbackSection: string,
+): AiCdcSection => {
+  const parseJson = (value: string): unknown => {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return null;
+    }
+  };
+
+  let parsed = parseJson(rawContent.trim());
+
+  if (typeof parsed === "string") {
+    parsed = parseJson(parsed.trim()) ?? parsed;
+  }
+
+  if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+    const record = parsed as Record<string, unknown>;
+    const section =
+      typeof record.section === "string" && record.section.trim()
+        ? record.section.trim()
+        : fallbackSection;
+    const contenu =
+      typeof record.contenu === "string"
+        ? record.contenu
+        : typeof record.content === "string"
+          ? record.content
+          : typeof record.draft === "string"
+            ? record.draft
+            : rawContent;
+
+    return {
+      id: normalizeSectionId(section),
+      section,
+      contenu,
+    };
+  }
+
+  return {
+    id: normalizeSectionId(fallbackSection),
+    section: fallbackSection,
+    contenu: rawContent,
+  };
+};
+
 export default function Step3({ props }: { props: WizardStepProps }) {
   const {
     dict,
@@ -22,6 +95,8 @@ export default function Step3({ props }: { props: WizardStepProps }) {
     setCdcCreationMode,
     aiCdcText,
     setAiCdcText,
+    aiCdcSections,
+    setAiCdcSections,
     existingCdcFileName,
     removeCdcFile,
     cdcErrors,
@@ -73,7 +148,41 @@ export default function Step3({ props }: { props: WizardStepProps }) {
   } = props;
 
   const [aiPrompt, setAiPrompt] = useState("");
+  const [selectedAiSection, setSelectedAiSection] = useState(AI_CDC_SECTIONS[0]);
   const isAiMode = cdcCreationMode === "ai";
+
+  const upsertAiSection = (nextSection: AiCdcSection) => {
+    const nextSections = aiCdcSections?.some(
+      (section: AiCdcSection) => section.id === nextSection.id,
+    )
+      ? aiCdcSections.map((section: AiCdcSection) =>
+          section.id === nextSection.id ? nextSection : section,
+        )
+      : [...(aiCdcSections || []), nextSection];
+
+    setAiCdcSections(nextSections);
+  };
+
+  const updateAiSectionContent = (sectionId: string, contenu: string) => {
+    setAiCdcSections(
+      (aiCdcSections || []).map((section: AiCdcSection) =>
+        section.id === sectionId ? { ...section, contenu } : section,
+      ),
+    );
+  };
+
+  const updateAiSectionTitle = (sectionId: string, title: string) => {
+    setAiCdcSections(
+      (aiCdcSections || []).map((section: AiCdcSection) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              section: title,
+            }
+          : section,
+      ),
+    );
+  };
 
   const handleGenerateAi = async () => {
     if (!generateCdcDraftMutation) return;
@@ -87,12 +196,12 @@ export default function Step3({ props }: { props: WizardStepProps }) {
     try {
       const result = await generateCdcDraftMutation.mutateAsync({
         aoId,
-        sectionType: "CDC_GENERAL",
+        sectionType: selectedAiSection,
         userPrompt: aiPrompt,
       });
 
       const content = result.correctedDraft || result.draft || "";
-      setAiCdcText(content);
+      upsertAiSection(parseAiSectionResponse(content, selectedAiSection));
     } catch (err) {
       console.error("AI Generation failed", err);
     }
@@ -225,9 +334,26 @@ export default function Step3({ props }: { props: WizardStepProps }) {
                 <p className="mt-0.5 text-xs text-slate-600">
                   {dict.step3.aiDescription}
                 </p>
+                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                  {AI_CDC_SECTIONS.map((section) => (
+                    <button
+                      key={section}
+                      type="button"
+                      onClick={() => setSelectedAiSection(section)}
+                      className={cn(
+                        "min-h-9 rounded-md border px-2.5 py-2 text-left text-xs font-semibold transition-colors",
+                        selectedAiSection === section
+                          ? "border-[#4CAF50] bg-white text-[#256D2D] shadow-sm"
+                          : "border-[#CFE6D1] bg-white/70 text-slate-600 hover:bg-white hover:text-slate-900",
+                      )}
+                    >
+                      {section}
+                    </button>
+                  ))}
+                </div>
                 <textarea
                   className="mt-2 w-full rounded-md border border-slate-200 bg-white p-2 text-xs outline-none focus:border-[#4CAF50]"
-                  placeholder="Besoins spécifiques pour ce CDC..."
+                  placeholder={`Besoins spécifiques pour : ${selectedAiSection}`}
                   rows={2}
                   value={aiPrompt}
                   onChange={(e) => setAiPrompt(e.target.value)}
@@ -240,7 +366,7 @@ export default function Step3({ props }: { props: WizardStepProps }) {
                 >
                   {generateCdcDraftMutation?.isPending
                     ? "Génération en cours..."
-                    : dict.step3.aiButton}
+                    : `${dict.step3.aiButton} : ${selectedAiSection}`}
                 </button>
               </div>
             </div>
@@ -248,7 +374,7 @@ export default function Step3({ props }: { props: WizardStepProps }) {
               <div className="mb-2 flex items-center justify-between gap-3">
                 <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700">
                   <PencilLine className="h-3.5 w-3.5 text-[#2F9E44]" />
-                  Texte CDC généré
+                  Sections CDC générées
                 </label>
                 {cdcFile && (
                   <span className="text-[11px] font-medium text-slate-500">
@@ -256,16 +382,46 @@ export default function Step3({ props }: { props: WizardStepProps }) {
                   </span>
                 )}
               </div>
-              <textarea
-                value={aiCdcText}
-                onChange={(event) => setAiCdcText(event.target.value)}
-                rows={16}
-                placeholder="Le texte généré par l'IA apparaîtra ici. Vous pourrez le modifier avant de passer à l'étape suivante."
-                className={cn(
-                  "min-h-[320px] w-full resize-y rounded-md border bg-slate-50 p-3 font-mono text-xs leading-5 text-slate-800 outline-none focus:border-[#4CAF50] focus:bg-white",
-                  cdcErrors.file ? "border-red-300" : "border-slate-200",
-                )}
-              />
+              {aiCdcSections?.length ? (
+                <div className="space-y-3">
+                  {aiCdcSections.map((section: AiCdcSection, index: number) => (
+                    <div
+                      key={section.id}
+                      className="rounded-md border border-slate-200 bg-slate-50 p-3"
+                    >
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#E8F5E9] text-[11px] font-bold text-[#2F9E44]">
+                          {index + 1}
+                        </span>
+                        <input
+                          value={section.section}
+                          onChange={(event) =>
+                            updateAiSectionTitle(section.id, event.target.value)
+                          }
+                          className="h-8 min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-2 text-sm font-semibold text-slate-800 outline-none focus:border-[#4CAF50]"
+                        />
+                      </div>
+                      <textarea
+                        value={section.contenu}
+                        onChange={(event) =>
+                          updateAiSectionContent(section.id, event.target.value)
+                        }
+                        rows={7}
+                        className="min-h-[150px] w-full resize-y rounded-md border border-slate-200 bg-white p-3 text-sm leading-6 text-slate-800 outline-none focus:border-[#4CAF50]"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div
+                  className={cn(
+                    "flex min-h-[180px] items-center justify-center rounded-md border border-dashed bg-slate-50 px-4 text-center text-xs text-slate-500",
+                    cdcErrors.file ? "border-red-300" : "border-slate-200",
+                  )}
+                >
+                  Sélectionnez une section, générez son contenu, puis modifiez uniquement les données affichées ici.
+                </div>
+              )}
               {cdcErrors.file && (
                 <p className="mt-1 text-[11px] text-red-600">{cdcErrors.file}</p>
               )}

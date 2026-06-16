@@ -62,6 +62,12 @@ export interface CdcForm {
 
 type CdcCreationMode = "manual" | "ai";
 
+export interface AiCdcSection {
+  id: string;
+  section: string;
+  contenu: string;
+}
+
 export interface EligibilityCriterion {
   id: string;
   order: number;
@@ -453,6 +459,7 @@ export default function AoCreationWizard({
   const [cdcCreationMode, setCdcCreationMode] =
     useState<CdcCreationMode>("manual");
   const [aiCdcText, setAiCdcText] = useState("");
+  const [aiCdcSections, setAiCdcSections] = useState<AiCdcSection[]>([]);
   const [existingCdcFileName, setExistingCdcFileName] = useState<string | null>(
     () => initialDraft?.cdc.fileName || null,
   );
@@ -1133,6 +1140,16 @@ export default function AoCreationWizard({
       type: "text/plain",
     });
 
+  const serializeAiCdcSections = (sections: AiCdcSection[]) =>
+    sections
+      .filter((section) => section.section.trim() || section.contenu.trim())
+      .map((section) =>
+        [section.section.trim(), section.contenu.trim()]
+          .filter(Boolean)
+          .join("\n\n"),
+      )
+      .join("\n\n");
+
   const handleAiCdcTextChange = (content: string) => {
     setAiCdcText(content);
     setCdcCreationMode("ai");
@@ -1146,6 +1163,13 @@ export default function AoCreationWizard({
     }
 
     setCdcFile(null);
+  };
+
+  const handleAiCdcSectionsChange = (sections: AiCdcSection[]) => {
+    const content = serializeAiCdcSections(sections);
+
+    setAiCdcSections(sections);
+    handleAiCdcTextChange(content);
   };
 
   const validateStep3 = () => {
@@ -1750,6 +1774,8 @@ export default function AoCreationWizard({
     setCdcCreationMode,
     aiCdcText,
     setAiCdcText: handleAiCdcTextChange,
+    aiCdcSections,
+    setAiCdcSections: handleAiCdcSectionsChange,
     existingCdcFileName,
     setExistingCdcFileName,
     triggerCdcFileInput,
