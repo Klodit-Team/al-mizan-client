@@ -127,8 +127,7 @@ export default function CommissionDetailContent({ locale, commissionId, dict }: 
     useMembresEvaluationQuery(commissionId);
 
   const aoId = commission?.id ?? commissionId;
-  const { data: allSeances } = useSeancesOuvertureQuery();
-  const seancesLiees = (allSeances ?? []).filter((s) => s.appelOffreId === aoId);
+  const { data: seancesLiees = [], isLoading: loadingSeances } = useSeancesOuvertureQuery(commissionId);
 
   const seanceActive =
     seancesLiees.find((s) => s.statut === "EN_COURS") ??
@@ -145,7 +144,7 @@ export default function CommissionDetailContent({ locale, commissionId, dict }: 
   };
 
   // ── Loading skeleton ────────────────────────────────────────────────────────
-  if (loadingCommission) {
+  if (loadingCommission || loadingSeances) {
     return (
       <div className="p-6 max-w-6xl mx-auto space-y-6" style={{ direction: isAr ? "rtl" : "ltr" }}>
         <div className="flex items-center gap-3">

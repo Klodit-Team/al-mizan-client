@@ -64,6 +64,6 @@ export const commissionDashboardKeys = {
   },
 
   // ── Agrégation "mes commissions" ───────────────────────────────────────────
-  mesCommissions: () =>
-    [...commissionDashboardKeys.all, "mes-commissions"] as const,
+  mesCommissions: (scope?: string) =>
+    [...commissionDashboardKeys.all, "mes-commissions", scope ?? "all"] as const,
 };

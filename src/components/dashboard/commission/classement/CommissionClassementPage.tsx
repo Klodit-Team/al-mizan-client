@@ -8,6 +8,7 @@ import {
   useMembresEvaluationQuery,
   useChangeStatutEvaluationMutation,
 } from "@/services/commission-dashboard/queries";
+import { useCommissionClassementQuery } from "@/services/commission/queries";
 import { exportCommissionEvaluationPdf } from "@/services/commission-dashboard/api";
 
 interface Props {
@@ -163,6 +164,7 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
 
   const { data: commission, isLoading } = useCommissionEvaluationQuery(aoId);
   const { data: membres } = useMembresEvaluationQuery(aoId);
+  const { data: backendClassement, isLoading: loadingClassement } = useCommissionClassementQuery(aoId);
   const changeStatutMutation = useChangeStatutEvaluationMutation(aoId);
 
   // Les lignes de classement viendront du service évaluations
@@ -171,6 +173,30 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [validated, setValidated] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+
+  useEffect(() => {
+    const mappedRows: LigneClassement[] = (backendClassement ?? []).map((row) => {
+      const decision = row.decision === "retenu"
+        ? "Retenir"
+        : row.decision === "elimine"
+          ? "Elimine"
+          : "En attente";
+
+      return {
+        rang: row.rank,
+        operateur: row.operatorName,
+        scoreCommission: row.scoreGlobal,
+        scoreIA: row.scoreGlobal,
+        ecart: 0,
+        divergence: false,
+        recommandationIA: decision === "Elimine" ? "Eliminer" : decision === "Retenir" ? "Retenir" : "Analyser Plus",
+        decisionFinale: decision,
+        elimine: row.decision === "elimine",
+      };
+    });
+
+    setLignes(mappedRows);
+  }, [backendClassement]);
 
   const handleDecision = (idx: number, d: DecType) =>
     setLignes((prev) => prev.map((l, i) => (i === idx ? { ...l, decisionFinale: d } : l)));
@@ -192,6 +218,7 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
   const totalSoumissions = lignes.length;
   const rejetees = lignes.filter((l) => l.elimine).length;
   const eligibles = totalSoumissions - rejetees;
+  const isPageLoading = isLoading || loadingClassement;
 
   return (
     <div style={{ minHeight: "100%", direction: isAr ? "rtl" : "ltr" }}>
@@ -271,7 +298,7 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
           </div>
         )}
 
-        {isLoading ? (
+        {isPageLoading ? (
           Array.from({ length: 3 }).map((_, i) => <SkeletonRow key={i} />)
         ) : lignes.length === 0 ? (
           <EmptyClassement isAr={isAr} />
@@ -308,7 +335,7 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
       </div>
 
       {/* Footer */}
-      {!isLoading && (
+      {!isPageLoading && (
         <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 14, padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#6F7A6B" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">

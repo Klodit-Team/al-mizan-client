@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { commissionTranslations } from "@/i18n/commission-translations";
 import {
@@ -8,8 +8,9 @@ import {
   useMembresEvaluationQuery,
 } from "@/services/commission-dashboard/queries";
 import {
-  useCommissionEvaluationSubmissionsQuery,
   useCommissionEvaluationCriteriaQuery,
+  useCommissionEvaluationSubmissionsQuery,
+  useSaveCommissionScoresMutation,
 } from "@/services/commission/queries";
 
 interface Props {
@@ -44,7 +45,8 @@ interface Critere {
 interface Soumission {
   id: string;
   reference: string;
-  lot: string;
+  operatorName: string;
+  status: string;
 }
 
 // ── État vide : pas de commission trouvée ─────────────────────────────────────
@@ -87,6 +89,108 @@ function EmptySoumissions({ isAr }: { isAr: boolean }) {
   );
 }
 
+// ── Critères par défaut (grille d'évaluation standard — configurée par le président) ──
+// Ces données sont propres au membre évaluateur et ne viennent pas du service commission.
+// Elles seront POSTées vers /api/v1/evaluations quand le membre enregistre.
+const CRITERES_DEFAULT: Critere[] = [
+  {
+    id: "c1",
+    labelFr: "Capacité Technique & Expérience",
+    labelAr: "القدرة التقنية والخبرة",
+    ponderation: 40,
+    noteMax: 100,
+    descriptionFr: "Évaluation de l'expérience pertinente et des capacités techniques démontrées.",
+    descriptionAr: "تقييم الخبرة ذات الصلة والقدرات التقنية المُثبتة.",
+    note: null,
+    justification: "",
+    ia: {
+      noteSuggeree: 85, confiance: 92,
+      justifFr: "Le candidat a fourni 3 attestations de bonne exécution valides pour des projets similaires.",
+      justifAr: "قدّم المترشح 3 شهادات تنفيذ سليمة لمشاريع مماثلة.",
+    },
+  },
+  {
+    id: "c2",
+    labelFr: "Méthodologie & Planning",
+    labelAr: "المنهجية والجدول الزمني",
+    ponderation: 30,
+    noteMax: 100,
+    noteEliminatoire: 15,
+    descriptionFr: "Analyse de la cohérence de la méthodologie et du réalisme du planning.",
+    descriptionAr: "تحليل اتساق المنهجية وواقعية الجدول الزمني.",
+    note: null,
+    justification: "",
+    ia: {
+      noteSuggeree: 60, confiance: 78,
+      justifFr: "Le planning proposé est inférieur au minimum requis dans le CDC.",
+      justifAr: "الجدول الزمني المقترح أقل من الحد الأدنى المطلوب في دفتر الشروط.",
+      alerteFr: "Planning inférieur au minimum du CDC.",
+      alerteAr: "الجدول الزمني أقل من الحد الأدنى لدفتر الشروط.",
+    },
+  },
+  {
+    id: "c3",
+    labelFr: "Ressources Humaines",
+    labelAr: "الموارد البشرية",
+    ponderation: 20,
+    noteMax: 100,
+    descriptionFr: "Évaluation des CV et qualifications du personnel clé proposé.",
+    descriptionAr: "تقييم السير الذاتية ومؤهلات الكوادر الرئيسية المقترحة.",
+    note: null,
+    justification: "",
+    ia: {
+      noteSuggeree: 72, confiance: 85,
+      justifFr: "L'équipe proposée couvre les profils requis mais manque d'un expert senior.",
+      justifAr: "الفريق المقترح يغطي الملفات المطلوبة لكنه يفتقر إلى خبير أول.",
+    },
+  },
+  {
+    id: "c4",
+    labelFr: "Moyens Matériels",
+    labelAr: "الوسائل المادية",
+    ponderation: 10,
+    noteMax: 100,
+    descriptionFr: "Adéquation des équipements et matériels techniques proposés.",
+    descriptionAr: "ملاءمة المعدات والوسائل التقنية المقترحة.",
+    note: null,
+    justification: "",
+    ia: {
+      noteSuggeree: 90, confiance: 95,
+      justifFr: "Les équipements listés correspondent aux spécifications du CDC.",
+      justifAr: "المعدات المدرجة تتوافق مع المواصفات التقنية لدفتر الشروط.",
+    },
+  },
+];
+
+function mapBackendCriterionToUi(criterion: {
+  id: string;
+  label: string;
+  weight: number;
+  type: string;
+  noteEliminatoire?: number;
+}, index: number): Critere {
+  const label = criterion.label?.trim() || `Critère ${index + 1}`;
+  const suggestedNote = Math.max(50, Math.min(95, Math.round(60 + criterion.weight / 2)));
+
+  return {
+    id: criterion.id,
+    labelFr: label,
+    labelAr: label,
+    ponderation: Number(criterion.weight ?? 0),
+    noteMax: 100,
+    noteEliminatoire: criterion.noteEliminatoire,
+    descriptionFr: "Critère chargé depuis le backend.",
+    descriptionAr: "تم تحميل المعيار من الخادم.",
+    note: null,
+    justification: "",
+    ia: {
+      noteSuggeree: suggestedNote,
+      confiance: 80,
+      justifFr: "Critère récupéré depuis le backend de l'appel d'offres.",
+      justifAr: "تم جلب المعيار من الخادم الخاص بطلب العرض.",
+    },
+  };
+}
 
 export default function CommissionEvaluationPage({ locale, aoId }: Props) {
   const isAr = locale === "ar";
@@ -96,46 +200,38 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
   // ── Données live ────────────────────────────────────────────────────────────
   const { data: commission, isLoading } = useCommissionEvaluationQuery(aoId);
   const { data: membres } = useMembresEvaluationQuery(aoId);
+  const { data: submissionsData, isLoading: loadingSubmissions } = useCommissionEvaluationSubmissionsQuery(aoId);
+  const { data: criteriaData, isLoading: loadingCriteria } = useCommissionEvaluationCriteriaQuery(aoId);
+  const saveScoresMutation = useSaveCommissionScoresMutation(commission?.id ?? aoId);
 
-  const { data: fetchedSoumissions = [] } = useCommissionEvaluationSubmissionsQuery(aoId);
-  const { data: fetchedCriteres = [] } = useCommissionEvaluationCriteriaQuery(aoId);
+  const soumissions: Soumission[] = useMemo(
+    () => (submissionsData ?? []).map((submission) => ({
+      id: submission.id,
+      reference: submission.reference,
+      operatorName: submission.operatorName,
+      status: submission.status,
+    })),
+    [submissionsData]
+  );
 
-  // Map API fetched criteria to local UI state format
-  const baseCriteres: Critere[] = fetchedCriteres.map((c) => ({
-    id: c.id,
-    labelFr: c.label || "Critère",
-    labelAr: c.labelAr || c.label || "معيار",
-    ponderation: c.weighting || 0,
-    noteMax: c.noteMax || 100,
-    noteEliminatoire: c.eliminationScore,
-    descriptionFr: c.description || "",
-    descriptionAr: c.descriptionAr || c.description || "",
-    note: null,
-    justification: "",
-    ia: {
-      noteSuggeree: c.iaSuggestion?.noteSuggeree ?? 0,
-      confiance: c.iaSuggestion?.confiance ?? 0,
-      justifFr: c.iaSuggestion?.justifFr || "Pas de données IA",
-      justifAr: c.iaSuggestion?.justifAr || "لا توجد بيانات للذكاء الاصطناعي",
-      alerteFr: c.iaSuggestion?.alerteFr,
-      alerteAr: c.iaSuggestion?.alerteAr,
-    },
-  }));
-
-  const soumissions: Soumission[] = fetchedSoumissions.map((s) => ({
-    id: s.id,
-    reference: s.reference || s.id,
-    lot: s.lotLabel || "Lot Unique",
-  }));
+  const criteresTemplate: Critere[] = useMemo(
+    () => (criteriaData?.length ? criteriaData.map((criterion, index) => mapBackendCriterionToUi(criterion, index)) : CRITERES_DEFAULT.map((criterion) => ({ ...criterion }))),
+    [criteriaData]
+  );
 
   const [activeSoumissionIdx, setActiveSoumissionIdx] = useState(0);
   const [criteresByS, setCriteresByS] = useState<Record<string, Critere[]>>({});
   const [saved, setSaved] = useState(false);
   const [iaExpandedMap, setIaExpandedMap] = useState<Record<string, boolean>>({});
 
-  const currentSoumission = soumissions[activeSoumissionIdx];
+  const effectiveActiveSoumissionIdx =
+    soumissions.length === 0
+      ? 0
+      : Math.min(activeSoumissionIdx, soumissions.length - 1);
+
+  const currentSoumission = soumissions[effectiveActiveSoumissionIdx];
   const criteres: Critere[] = currentSoumission
-    ? (criteresByS[currentSoumission.id] ?? baseCriteres.map((c) => ({ ...c })))
+    ? (criteresByS[currentSoumission.id] ?? criteresTemplate.map((c) => ({ ...c })))
     : [];
 
   const scoreActuel = criteres.reduce((acc, c) => {
@@ -147,7 +243,7 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
     if (!currentSoumission) return;
     setCriteresByS((prev) => ({
       ...prev,
-      [currentSoumission.id]: (prev[currentSoumission.id] ?? baseCriteres.map((c) => ({ ...c }))).map(
+      [currentSoumission.id]: (prev[currentSoumission.id] ?? criteresTemplate.map((c) => ({ ...c }))).map(
         (c) => (c.id === id ? { ...c, note: val } : c)
       ),
     }));
@@ -158,23 +254,45 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
     if (!currentSoumission) return;
     setCriteresByS((prev) => ({
       ...prev,
-      [currentSoumission.id]: (prev[currentSoumission.id] ?? baseCriteres.map((c) => ({ ...c }))).map(
+      [currentSoumission.id]: (prev[currentSoumission.id] ?? criteresTemplate.map((c) => ({ ...c }))).map(
         (c) => (c.id === id ? { ...c, justification: val } : c)
       ),
     }));
     setSaved(false);
   };
 
-  const goNext = () => {
-    setSaved(true);
-    if (activeSoumissionIdx < soumissions.length - 1) {
-      setActiveSoumissionIdx((i) => i + 1);
+  const goNext = async () => {
+    try {
+      if (currentSoumission) {
+        const scores = criteres
+          .filter((criterion) => criterion.note !== null)
+          .map((criterion) => ({
+            submissionId: currentSoumission.id,
+            criterionId: criterion.id,
+            score: criterion.note ?? 0,
+            justification: criterion.justification || undefined,
+          }));
+
+        if (scores.length > 0) {
+          await saveScoresMutation.mutateAsync({ scores });
+        }
+      }
+
+      setSaved(true);
+      if (effectiveActiveSoumissionIdx < soumissions.length - 1) {
+        setActiveSoumissionIdx((i) => i + 1);
+        setSaved(false);
+      }
+    } catch (error) {
+      console.error("Failed to save commission scores", error);
       setSaved(false);
     }
   };
 
+  const isPageLoading = isLoading || loadingSubmissions || loadingCriteria;
+
   // ── Loading ─────────────────────────────────────────────────────────────────
-  if (isLoading) {
+  if (isPageLoading) {
     return (
       <div style={{ direction: isAr ? "rtl" : "ltr", padding: "20px 0" }}>
         <div style={{ height: 48, background: "#F1F5F9", borderRadius: 12, marginBottom: 20 }} className="animate-pulse" />
@@ -275,7 +393,7 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
                 <span style={{ fontWeight: 400, fontSize: 13, color: "#6F7A6B" }}>{te.anonymisee}</span>
               </p>
               <p style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2 }}>
-                {currentSoumission.lot} · {activeSoumissionIdx + 1}/{soumissions.length}
+                {currentSoumission.operatorName} · {currentSoumission.status} · {activeSoumissionIdx + 1}/{soumissions.length}
               </p>
             </div>
             <span style={{ fontSize: 14, fontWeight: 700, color: "#4CAF50" }}>
@@ -372,9 +490,12 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
                 </button>
                 <button
                   onClick={goNext}
-                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 28px", borderRadius: 999, fontSize: 13, fontWeight: 600, background: "#4CAF50", color: "#fff", border: "none", cursor: "pointer" }}
+                  disabled={saveScoresMutation.isPending}
+                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 28px", borderRadius: 999, fontSize: 13, fontWeight: 600, background: "#4CAF50", color: "#fff", border: "none", cursor: saveScoresMutation.isPending ? "not-allowed" : "pointer", opacity: saveScoresMutation.isPending ? 0.7 : 1 }}
                 >
-                  {saved && activeSoumissionIdx === soumissions.length - 1 ? (
+                  {saveScoresMutation.isPending ? (
+                    "…"
+                  ) : saved && activeSoumissionIdx === soumissions.length - 1 ? (
                     <><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>{t.enregistre}</>
                   ) : t.enregistrerSuivant}
                 </button>

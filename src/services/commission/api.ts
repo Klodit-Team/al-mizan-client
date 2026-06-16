@@ -22,6 +22,7 @@ export interface CommissionEvaluationCriterion {
   label: string;
   weight: number;
   type: string;
+  noteEliminatoire?: number;
 }
 
 export interface CommissionDocumentItem {
@@ -70,6 +71,26 @@ export interface CommissionScoresPayload {
   scores: { submissionId: string; criterionId: string; score: number; justification?: string }[];
 }
 
+interface ApiEnvelope<T> {
+  data?: T;
+  success?: boolean;
+  statusCode?: number;
+}
+
+function unwrapEnvelope<T>(payload: unknown): T {
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "data" in (payload as Record<string, unknown>) &&
+    ("success" in (payload as Record<string, unknown>) ||
+      "statusCode" in (payload as Record<string, unknown>))
+  ) {
+    return (payload as ApiEnvelope<T>).data as T;
+  }
+
+  return payload as T;
+}
+
 // ─── API Functions ───────────────────────────────────────────────────────────
 
 export async function getCommissionEvaluationsOverview(): Promise<CommissionEvaluationOverviewItem[]> {
@@ -90,10 +111,30 @@ export async function getCommissionEvaluationSubmissions(aoId: string): Promise<
 
 export async function getCommissionEvaluationCriteria(aoId: string): Promise<CommissionEvaluationCriterion[]> {
   const raw = await apiClient<unknown>(
-    `/api/v1/appels-offres/${aoId}/criteres-evaluation`,
+    `/api/v1/appels-offres/${aoId}`,
     { method: "GET" },
   );
-  return Array.isArray(raw) ? raw : [];
+  const ao = unwrapEnvelope<{
+    criteresEvaluation?: Array<{
+      id: string;
+      libelle?: string;
+      categorie?: string;
+      poids?: number;
+      noteEliminatoire?: number;
+    }>;
+  }>(raw);
+
+  return Array.isArray(ao?.criteresEvaluation)
+    ? ao.criteresEvaluation.map((criterion) => ({
+        id: criterion.id,
+        label: criterion.libelle ?? "",
+        weight: Number(criterion.poids ?? 0),
+        type: String(criterion.categorie ?? "TECHNIQUE").toUpperCase() === "FINANCIER"
+          ? "financier"
+          : "technique",
+        noteEliminatoire: criterion.noteEliminatoire,
+      }))
+    : [];
 }
 
 export async function saveCommissionEvaluationScores(

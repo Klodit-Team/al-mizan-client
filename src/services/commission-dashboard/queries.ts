@@ -77,10 +77,10 @@ import {
 // Dashboard aggregation
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function useMesCommissionsQuery(): UseQueryResult<MesCommissionsData, Error> {
+export function useMesCommissionsQuery(userId?: string): UseQueryResult<MesCommissionsData, Error> {
   return useQuery<MesCommissionsData, Error>({
-    queryKey: commissionDashboardKeys.mesCommissions(),
-    queryFn: getMesCommissionsData,
+    queryKey: commissionDashboardKeys.mesCommissions(userId),
+    queryFn: () => getMesCommissionsData(userId),
   });
 }
 
