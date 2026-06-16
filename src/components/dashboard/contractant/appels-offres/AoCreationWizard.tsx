@@ -967,7 +967,7 @@ export default function AoCreationWizard({
     return Object.keys(nextErrors).length === 0;
   };
 
-  const goNextAfterValidation = () => {
+  const goNextAfterValidation = async () => {
     if (step === 1) {
       const isValid = validateStep1();
       if (!isValid) {
@@ -994,6 +994,11 @@ export default function AoCreationWizard({
       if (!isValid) {
         return;
       }
+    }
+
+    const success = await performSaveDraft();
+    if (!success) {
+      return;
     }
 
     setStep((current) => {
@@ -1035,27 +1040,28 @@ export default function AoCreationWizard({
     });
   };
 
-  const saveDraft = () => {
-    const persistDraft = async () => {
-      setIsSubmittingAction(true);
-      try {
-        const result =
-          await saveServiceContractantTenderDraft(buildDraftPayload());
-        setDraftId(result.id);
-        setSavedDraft(true);
-        setReviewActionError(null);
-        setReviewActionMessage(dict.messages.draftSaved);
-      } catch (error) {
-        console.error("Unable to save AO draft", error);
-        setSavedDraft(false);
-        setReviewActionMessage(null);
-        setReviewActionError(dict.errors.draftSaveFailed);
-      } finally {
-        setIsSubmittingAction(false);
-      }
-    };
+  const performSaveDraft = async (): Promise<boolean> => {
+    setIsSubmittingAction(true);
+    try {
+      const result = await saveServiceContractantTenderDraft(buildDraftPayload());
+      setDraftId(result.id);
+      setSavedDraft(true);
+      setReviewActionError(null);
+      setReviewActionMessage(dict.messages.draftSaved);
+      return true;
+    } catch (error) {
+      console.error("Unable to save AO draft", error);
+      setSavedDraft(false);
+      setReviewActionMessage(null);
+      setReviewActionError(dict.errors.draftSaveFailed);
+      return false;
+    } finally {
+      setIsSubmittingAction(false);
+    }
+  };
 
-    void persistDraft();
+  const saveDraft = () => {
+    void performSaveDraft();
   };
 
   const updateLotField = <K extends keyof LotEditorForm>(

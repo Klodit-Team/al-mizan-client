@@ -338,13 +338,19 @@ export default function Step3({ props }: { props: WizardStepProps }) {
           <button
             type="button"
             onClick={goNextAfterValidation}
-            className="inline-flex h-9 items-center justify-center gap-1 rounded-md bg-[#4CAF50] px-3 text-xs font-semibold text-white hover:opacity-95"
+            disabled={isSubmittingAction}
+            className="inline-flex h-9 items-center justify-center gap-1 rounded-md bg-[#4CAF50] px-3 text-xs font-semibold text-white hover:opacity-95 disabled:opacity-50"
           >
             {dict.buttons.next}
             <ChevronRight className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
+      {reviewActionError && (
+        <p className="mt-2 text-[11px] font-medium text-red-600">
+          {reviewActionError}
+        </p>
+      )}
     </section>
   );
 }
