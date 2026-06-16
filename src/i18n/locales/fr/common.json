@@ -272,6 +272,7 @@
           "save": "Enregistrer"
         },
         "actions": {
+          "viewDetails": "Détails",
           "edit": "Modifier",
           "delete": "Supprimer",
           "deleting": "Suppression..."

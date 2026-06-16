@@ -7,7 +7,6 @@ export * from "./users";
 export * from "./profile";
 export * from "./notifications";
 export * from "./operateurs";
-export * from "./sessions";
 
 // Re-export all hooks
 export * from "./queries";

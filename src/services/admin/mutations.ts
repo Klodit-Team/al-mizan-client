@@ -30,4 +30,3 @@ export {
   useBlacklistOperateurMutation,
   useUnblacklistOperateurMutation,
 } from "./operateurs/queries";
-export { useRevokeSessionMutation } from "./sessions/queries";

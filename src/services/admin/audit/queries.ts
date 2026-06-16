@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getAdminAuditLogs,
+  getAdminAuditLogById,
   getAdminAuditIntegrityStatus,
   verifyAdminAuditIntegrity,
   type ListAuditLogsParams,
@@ -13,6 +14,14 @@ export function useAuditQuery(params: ListAuditLogsParams) {
   return useQuery<AuditLog[], Error>({
     queryKey: auditKeys.list(params),
     queryFn: () => getAdminAuditLogs(params),
+  });
+}
+
+export function useAuditDetailQuery(id: string) {
+  return useQuery<AuditLog, Error>({
+    queryKey: [...auditKeys.all, "detail", id],
+    queryFn: () => getAdminAuditLogById(id),
+    enabled: Boolean(id),
   });
 }
 

@@ -108,37 +108,58 @@ export async function getAdminUserProfiles(): Promise<ProfileEntity[]> {
 // ─── Roles ───────────────────────────────────────────────────────────────────
 
 /**
- * GET /api/v1/users/roles
+ * GET /api/v1/roles
  * Returns all available system roles.
  * Used to resolve role name ↔ roleId UUID for AssignRoleDto.
  */
 export async function getAdminRoles(): Promise<RoleEntity[]> {
-  return apiClient<RoleEntity[]>(`${USERS_BASE}/roles`, {
+  return apiClient<RoleEntity[]>("/api/v1/roles", {
     method: "GET",
+  });
+}
+
+/**
+ * POST /api/v1/roles
+ * Create a new system role.
+ */
+export async function createRole(payload: { name: string; description: string }): Promise<RoleEntity> {
+  return apiClient<RoleEntity>("/api/v1/roles", {
+    method: "POST",
+    body: JSON.stringify(payload),
   });
 }
 
 // ─── User-Role Assignments ────────────────────────────────────────────────────
 
 /**
- * POST /api/v1/users/user-roles
+ * POST /api/v1/user-roles
  * Assigns a role to a user.
  * Body matches AssignRoleDto exactly: { userId (UUID), roleId (UUID) }
  * Returns the created UserRoleEntity join record.
  */
 export async function assignUserRole(payload: AssignRoleDto): Promise<UserRoleEntity> {
-  return apiClient<UserRoleEntity>(`${USERS_BASE}/user-roles`, {
+  return apiClient<UserRoleEntity>("/api/v1/user-roles", {
     method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
 /**
- * GET /api/v1/users/user-roles/{userId}
+ * GET /api/v1/user-roles/{userId}
  * Returns all role assignments for a specific user.
  */
 export async function getUserRoles(userId: string): Promise<UserRoleEntity[]> {
-  return apiClient<UserRoleEntity[]>(`${USERS_BASE}/user-roles/${userId}`, {
+  return apiClient<UserRoleEntity[]>(`/api/v1/user-roles/${userId}`, {
     method: "GET",
+  });
+}
+
+/**
+ * DELETE /api/v1/user-roles/{userId}/{roleId}
+ * Removes a role from a user.
+ */
+export async function removeUserRole(userId: string, roleId: string): Promise<{ deleted: boolean }> {
+  return apiClient<{ deleted: boolean }>(`/api/v1/user-roles/${userId}/${roleId}`, {
+    method: "DELETE",
   });
 }

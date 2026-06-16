@@ -33,8 +33,4 @@ export const adminKeys = {
   notifications: () => [...adminKeys.all, "notifications"] as const,
   notificationList: (filters: Record<string, any>) => [...adminKeys.notifications(), "list", filters] as const,
   unreadNotificationsCount: () => [...adminKeys.notifications(), "unreadCount"] as const,
-
-  // Sessions
-  sessions: () => [...adminKeys.all, "sessions"] as const,
-  sessionList: () => [...adminKeys.sessions(), "list"] as const,
 };

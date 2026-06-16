@@ -272,6 +272,7 @@
           "save": "حفظ"
         },
         "actions": {
+          "viewDetails": "تفاصيل",
           "edit": "تعديل",
           "delete": "حذف",
           "deleting": "جار الحذف..."

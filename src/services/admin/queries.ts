@@ -7,4 +7,3 @@ export * from "./users/queries";
 export * from "./profile/queries";
 export * from "./notifications/queries";
 export * from "./operateurs/queries";
-export * from "./sessions/queries";

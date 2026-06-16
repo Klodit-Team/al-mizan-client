@@ -1,17 +1,26 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getAdminOperateurs,
+  getOperateurById,
   blacklistAdminOperateur,
   unblacklistAdminOperateur,
-  type AdminOperateur,
+  type OperateurListResponse,
   type OperateurEconomiqueEntity,
 } from "./api";
 import { operateursKeys } from "./keys";
 
-export function useOperateursQuery() {
-  return useQuery<AdminOperateur[], Error>({
-    queryKey: operateursKeys.list(),
-    queryFn: getAdminOperateurs,
+export function useOperateursQuery(page: number = 1, limit: number = 20) {
+  return useQuery<OperateurListResponse, Error>({
+    queryKey: operateursKeys.list(page, limit),
+    queryFn: () => getAdminOperateurs(page, limit),
+  });
+}
+
+export function useOperateurDetailQuery(id: string) {
+  return useQuery<OperateurEconomiqueEntity, Error>({
+    queryKey: operateursKeys.detail(id),
+    queryFn: () => getOperateurById(id),
+    enabled: Boolean(id),
   });
 }
 
@@ -21,7 +30,7 @@ export function useBlacklistOperateurMutation() {
   return useMutation<OperateurEconomiqueEntity, Error, { oeId: string; reason: string }>({
     mutationFn: ({ oeId, reason }) => blacklistAdminOperateur(oeId, reason),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: operateursKeys.list() });
+      queryClient.invalidateQueries({ queryKey: operateursKeys.lists() });
     },
   });
 }
@@ -32,7 +41,7 @@ export function useUnblacklistOperateurMutation() {
   return useMutation<OperateurEconomiqueEntity, Error, string>({
     mutationFn: unblacklistAdminOperateur,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: operateursKeys.list() });
+      queryClient.invalidateQueries({ queryKey: operateursKeys.lists() });
     },
   });
 }

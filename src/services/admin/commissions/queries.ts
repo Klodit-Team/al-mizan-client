@@ -5,6 +5,7 @@ import {
   updateCommissionMarche,
   deleteCommissionMarche,
   changeCommissionMarcheStatut,
+  getCommissionMarcheById,
   type PaginatedCommissions,
   type CommissionMarche,
   type CommissionMarcheDto,
@@ -17,6 +18,14 @@ export function useCommissionsQuery() {
   return useQuery<PaginatedCommissions, Error>({
     queryKey: commissionsKeys.list(),
     queryFn: () => listCommissionsMarche(),
+  });
+}
+
+export function useCommissionDetailQuery(id: string) {
+  return useQuery<CommissionMarche, Error>({
+    queryKey: commissionsKeys.detail(id),
+    queryFn: () => getCommissionMarcheById(id),
+    enabled: !!id,
   });
 }
 
