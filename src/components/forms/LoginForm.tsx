@@ -143,7 +143,7 @@ export default function LoginForm({ dict }: LoginFormProps) {
     };
 
     return (
-        <div className="w-full max-w-md bg-white  p-8">
+        <div className="w-full max-w-md bg-white p-8 mt-40 lg:mt-52">
             <div className="mb-8 text-center">
 
                 <h1 className="text-2xl font-bold text-gray-900 text-left">{dict.title}</h1>

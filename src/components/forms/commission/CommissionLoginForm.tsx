@@ -133,7 +133,7 @@ export default function CommissionLoginForm({ dict, locale }: CommissionLoginFor
   const isLoading = isSubmitting || loginMutation.isPending;
 
   return (
-    <div className="w-full">
+    <div className="w-full mt-40 lg:mt-52">
 
       {/* Header */}
       <div className="mb-7">
