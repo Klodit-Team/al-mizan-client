@@ -99,6 +99,7 @@ export default function CommissionsPage({ locale, dict }: CommissionsPageProps) 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCommission, setEditingCommission] = useState<Commission | null>(null);
   const [formData, setFormData] = useState<CommissionFormData>(emptyForm);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const { data: response, isLoading, isError } = useCommissionsQuery();
   const { mutateAsync: createMutate } = useCreateCommissionMutation();
@@ -198,9 +199,11 @@ export default function CommissionsPage({ locale, dict }: CommissionsPageProps) 
       setCommissions((current) =>
         current.map((item) => (item.id === mapped.id ? mapped : item)),
       );
+      setErrorMsg(null);
     } catch (err) {
       console.error("Error changing commission status:", err);
       setCommissions(previous);
+      setErrorMsg("Erreur lors du changement de statut. Veuillez réessayer.");
     }
   };
 
@@ -262,6 +265,15 @@ export default function CommissionsPage({ locale, dict }: CommissionsPageProps) 
       {isError && (
         <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
           {labels.error}
+        </div>
+      )}
+
+      {errorMsg && (
+        <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2">
+          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {errorMsg}
         </div>
       )}
 

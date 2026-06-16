@@ -29,8 +29,9 @@ export function useVerifyOrganisationMutation() {
 
   return useMutation<OrganisationEntity, Error, string>({
     mutationFn: (id) => verifyOrganisation(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: organisationsKeys.lists() });
+    onSuccess: (data, id) => {
+      queryClient.setQueryData(organisationsKeys.detail(id), data);
+      queryClient.invalidateQueries({ queryKey: organisationsKeys.all });
     },
   });
 }
@@ -41,7 +42,7 @@ export function useUpdateOrganisationMutation() {
   return useMutation<OrganisationEntity, Error, { id: string; payload: Record<string, any> }>({
     mutationFn: ({ id, payload }) => updateOrganisation(id, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: organisationsKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: organisationsKeys.all });
     },
   });
 }
@@ -52,7 +53,7 @@ export function useDeleteOrganisationMutation() {
   return useMutation<{ deleted: boolean }, Error, string>({
     mutationFn: (id) => deleteOrganisation(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: organisationsKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: organisationsKeys.all });
     },
   });
 }

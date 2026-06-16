@@ -51,26 +51,32 @@ export default function OrganisationDetailPage({ locale, orgId, dict }: Organisa
     const [users, setUsers] = useState<OrgUser[]>([]);
     const [rejecting, setRejecting] = useState(false);
     const [showConfirm, setShowConfirm] = useState<"verify" | "reject" | null>(null);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     const handleVerify = async () => {
+        setErrorMsg(null);
         try {
             await verifyMutate(orgId);
             setShowConfirm(null);
         } catch (error) {
             console.error("Error verifying organisation:", error);
+            setErrorMsg("Erreur lors de la vérification de l'organisation. Veuillez vérifier les détails et réessayer.");
             setShowConfirm(null);
         }
     };
 
     const handleReject = async () => {
+        setErrorMsg(null);
         setRejecting(true);
         try {
             await new Promise((r) => setTimeout(r, 800));
             router.push(`/${locale}/dashboard/admin/organisations`);
         } catch (error) {
             console.error("Error rejecting organisation:", error);
+            setErrorMsg("Erreur lors du rejet de l'organisation. Veuillez réessayer.");
         } finally {
             setRejecting(false);
+            setShowConfirm(null);
         }
     };
 
@@ -104,6 +110,15 @@ export default function OrganisationDetailPage({ locale, orgId, dict }: Organisa
                 </svg>
                 {dict.backButton}
             </button>
+
+            {errorMsg && (
+                <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2">
+                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {errorMsg}
+                </div>
+            )}
 
             {/* Header */}
             <div className="flex items-start justify-between">
