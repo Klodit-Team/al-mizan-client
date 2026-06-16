@@ -60,6 +60,8 @@ export interface CdcForm {
   isPublished: boolean;
 }
 
+type CdcCreationMode = "manual" | "ai";
+
 export interface EligibilityCriterion {
   id: string;
   order: number;
@@ -448,6 +450,9 @@ export default function AoCreationWizard({
   const [showLotForm, setShowLotForm] = useState(false);
   const [editingLotId, setEditingLotId] = useState<string | null>(null);
   const [cdcFile, setCdcFile] = useState<File | null>(null);
+  const [cdcCreationMode, setCdcCreationMode] =
+    useState<CdcCreationMode>("manual");
+  const [aiCdcText, setAiCdcText] = useState("");
   const [existingCdcFileName, setExistingCdcFileName] = useState<string | null>(
     () => initialDraft?.cdc.fileName || null,
   );
@@ -505,7 +510,7 @@ export default function AoCreationWizard({
     title: initialDraft?.cdc.title || "",
     version: initialDraft?.cdc.version || "v1.0.0",
     withdrawalPrice: initialDraft?.cdc.withdrawalPrice || "0.00",
-    isPublished: initialDraft?.cdc.isPublished || false,
+    isPublished: true,
   }));
 
   const [criteria, setCriteria] = useState<EligibilityCriterion[]>(() =>
@@ -656,7 +661,7 @@ export default function AoCreationWizard({
           title: draft.cdc.title || "",
           version: draft.cdc.version || "v1.0.0",
           withdrawalPrice: draft.cdc.withdrawalPrice || "0.00",
-          isPublished: draft.cdc.isPublished || false,
+          isPublished: true,
         });
 
         setExistingCdcFileName(draft.cdc.fileName || null);
@@ -730,7 +735,7 @@ export default function AoCreationWizard({
       title: cdcForm.title,
       version: cdcForm.version,
       withdrawalPrice: cdcForm.withdrawalPrice,
-      isPublished: cdcForm.isPublished,
+      isPublished: true,
       fileName: cdcFile?.name || existingCdcFileName || undefined,
     },
     lots: lots.map((lot) => ({
@@ -1118,8 +1123,29 @@ export default function AoCreationWizard({
     }
 
     setCdcFile(file);
+    setCdcCreationMode("manual");
     setExistingCdcFileName(null);
     setCdcErrors((prev) => ({ ...prev, file: undefined }));
+  };
+
+  const createAiCdcFile = (content: string) =>
+    new File([content], "CDC_Draft_AI.txt", {
+      type: "text/plain",
+    });
+
+  const handleAiCdcTextChange = (content: string) => {
+    setAiCdcText(content);
+    setCdcCreationMode("ai");
+    setSavedDraft(false);
+
+    if (content.trim()) {
+      setCdcFile(createAiCdcFile(content));
+      setExistingCdcFileName(null);
+      setCdcErrors((prev) => ({ ...prev, file: undefined }));
+      return;
+    }
+
+    setCdcFile(null);
   };
 
   const validateStep3 = () => {
@@ -1720,6 +1746,10 @@ export default function AoCreationWizard({
     updateCdcField,
     cdcFile,
     handleCdcFileChange,
+    cdcCreationMode,
+    setCdcCreationMode,
+    aiCdcText,
+    setAiCdcText: handleAiCdcTextChange,
     existingCdcFileName,
     setExistingCdcFileName,
     triggerCdcFileInput,
