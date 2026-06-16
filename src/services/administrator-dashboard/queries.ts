@@ -1,4 +1,4 @@
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   getAdministratorDashboardActivities,
   getAdministratorDashboardAiAlerts,
@@ -15,70 +15,13 @@ import {
 import { administratorDashboardKeys } from "./keys";
 
 export function useAdministratorDashboardQuery() {
-  const [
-    detailsQuery,
-    statsQuery,
-    activitiesQuery,
-    aiAlertsQuery,
-    deadlinesQuery,
-    supportLinksQuery,
-  ] = useQueries({
-    queries: [
-      {
-        queryKey: administratorDashboardKeys.details(),
-        queryFn: getAdministratorDashboardData,
-      },
-      {
-        queryKey: administratorDashboardKeys.stats(),
-        queryFn: getAdministratorDashboardStats,
-      },
-      {
-        queryKey: administratorDashboardKeys.activities(),
-        queryFn: getAdministratorDashboardActivities,
-      },
-      {
-        queryKey: administratorDashboardKeys.aiAlerts(),
-        queryFn: getAdministratorDashboardAiAlerts,
-      },
-      {
-        queryKey: administratorDashboardKeys.deadlines(),
-        queryFn: getAdministratorDashboardDeadlines,
-      },
-      {
-        queryKey: administratorDashboardKeys.supportLinks(),
-        queryFn: getAdministratorDashboardSupportLinks,
-      },
-    ],
+  const detailsQuery = useQuery({
+    queryKey: administratorDashboardKeys.details(),
+    queryFn: getAdministratorDashboardData,
   });
-
-  const data = detailsQuery.data
-    ? {
-        ...detailsQuery.data,
-        stats: statsQuery.data ?? detailsQuery.data.stats,
-        activities: activitiesQuery.data ?? detailsQuery.data.activities,
-        aiAlerts: aiAlertsQuery.data ?? detailsQuery.data.aiAlerts,
-        deadlines: deadlinesQuery.data ?? detailsQuery.data.deadlines,
-        supportLinks: supportLinksQuery.data ?? detailsQuery.data.supportLinks,
-      }
-    : undefined;
 
   return {
     ...detailsQuery,
-    data,
-    error:
-      detailsQuery.error ||
-      statsQuery.error ||
-      activitiesQuery.error ||
-      aiAlertsQuery.error ||
-      deadlinesQuery.error ||
-      supportLinksQuery.error,
-    isLoading:
-      detailsQuery.isLoading ||
-      statsQuery.isLoading ||
-      activitiesQuery.isLoading ||
-      aiAlertsQuery.isLoading ||
-      deadlinesQuery.isLoading ||
-      supportLinksQuery.isLoading,
   };
 }
 
