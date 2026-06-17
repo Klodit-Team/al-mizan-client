@@ -189,9 +189,19 @@ export async function getCommissionEvaluationSubmissions(evaluationId: string): 
     `/api/v1/evaluations/${evaluationId}/soumissions`,
     { method: "GET" },
   );
-  const items = extractArrayPayload(raw);
+  return mapCommissionEvaluationSubmissions(raw);
+}
 
-  return items
+export async function getCommissionAoSubmissions(aoId: string): Promise<CommissionEvaluationSubmission[]> {
+  const raw = await apiClient<unknown>(
+    `/api/v1/soumissions/appel-offre/${aoId}`,
+    { method: "GET" },
+  );
+  return mapCommissionEvaluationSubmissions(raw);
+}
+
+function mapCommissionEvaluationSubmissions(payload: unknown): CommissionEvaluationSubmission[] {
+  return extractArrayPayload(payload)
     .map((item) => {
       if (!item || typeof item !== "object") return null;
       const record = item as Record<string, unknown>;

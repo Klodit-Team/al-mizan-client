@@ -3,6 +3,7 @@ import {
   getCommissionEvaluationsOverview,
   getCommissionEvaluationByContext,
   getCommissionEvaluationSubmissions,
+  getCommissionAoSubmissions,
   getCommissionEvaluationCriteria,
   saveCommissionEvaluationScores,
   getCommissionDocuments,
@@ -53,6 +54,14 @@ export function useCommissionEvaluationSubmissionsQuery(evaluationId: string) {
     queryKey: commissionKeys.evaluationSubmissions(evaluationId),
     queryFn: () => getCommissionEvaluationSubmissions(evaluationId),
     enabled: Boolean(evaluationId),
+  });
+}
+
+export function useCommissionAoSubmissionsQuery(aoId: string, enabled = true) {
+  return useQuery<CommissionEvaluationSubmission[], Error>({
+    queryKey: commissionKeys.aoSubmissions(aoId),
+    queryFn: () => getCommissionAoSubmissions(aoId),
+    enabled: Boolean(aoId) && enabled,
   });
 }
 

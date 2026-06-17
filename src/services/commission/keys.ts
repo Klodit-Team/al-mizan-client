@@ -5,6 +5,7 @@ export const commissionKeys = {
     [...commissionKeys.all, "evaluation-context", commissionId, aoId] as const,
   evaluationDetail: (aoId: string) => [...commissionKeys.all, "evaluation", aoId] as const,
   evaluationSubmissions: (aoId: string) => [...commissionKeys.all, "evaluation-submissions", aoId] as const,
+  aoSubmissions: (aoId: string) => [...commissionKeys.all, "ao-submissions", aoId] as const,
   evaluationCriteria: (aoId: string) => [...commissionKeys.all, "evaluation-criteria", aoId] as const,
   documents: (soumissionId: string) => [...commissionKeys.all, "documents", soumissionId] as const,
   classement: (aoId: string) => [...commissionKeys.all, "classement", aoId] as const,

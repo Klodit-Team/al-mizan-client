@@ -8,6 +8,7 @@ import {
   useMembresEvaluationQuery,
 } from "@/services/commission-dashboard/queries";
 import {
+  useCommissionAoSubmissionsQuery,
   useCommissionEvaluationCriteriaQuery,
   useCommissionEvaluationContextQuery,
   useCommissionEvaluationSubmissionsQuery,
@@ -213,14 +214,20 @@ export default function CommissionEvaluationPage({
     useCommissionEvaluationContextQuery({
       commissionId: evaluationRecord ? undefined : resolvedCommissionId,
       aoId: evaluationRecord ? undefined : resolvedAoId,
-      evaluationId: evaluationRecord ? undefined : selectedCommissionId,
+      evaluationId:
+        evaluationRecord || resolvedCommissionId || resolvedAoId
+          ? undefined
+          : selectedCommissionId,
     });
 
   const effectiveEvaluationRecord = evaluationRecord ?? resolvedEvaluation;
   const evaluationId = effectiveEvaluationRecord?.id ?? "";
 
   const { data: membres } = useMembresEvaluationQuery(resolvedCommissionId);
-  const { data: submissionsData, isLoading: loadingSubmissions } = useCommissionEvaluationSubmissionsQuery(evaluationId);
+  const { data: evaluationSubmissionsData, isLoading: loadingEvaluationSubmissions } =
+    useCommissionEvaluationSubmissionsQuery(evaluationId);
+  const { data: aoSubmissionsData, isLoading: loadingAoSubmissions } =
+    useCommissionAoSubmissionsQuery(resolvedAoId, !evaluationId);
   const { data: criteriaData, isLoading: loadingCriteria } = useCommissionEvaluationCriteriaQuery(evaluationId);
   const saveScoresMutation = useSaveCommissionScoresMutation(evaluationId);
 
@@ -230,13 +237,13 @@ export default function CommissionEvaluationPage({
   );
 
   const soumissions: Soumission[] = useMemo(
-    () => (submissionsData ?? []).map((submission) => ({
+    () => (evaluationSubmissionsData ?? aoSubmissionsData ?? []).map((submission) => ({
       id: submission.id,
       reference: submission.reference,
       operatorName: submission.operatorName,
       status: submission.status,
     })),
-    [submissionsData]
+    [aoSubmissionsData, evaluationSubmissionsData]
   );
 
   const criteresTemplate: Critere[] = useMemo(
@@ -319,7 +326,8 @@ export default function CommissionEvaluationPage({
     loadingEvaluations ||
     loadingOverview ||
     loadingResolvedEvaluation ||
-    loadingSubmissions ||
+    loadingEvaluationSubmissions ||
+    loadingAoSubmissions ||
     loadingCriteria;
 
   // ── Loading ─────────────────────────────────────────────────────────────────
