@@ -42,6 +42,7 @@ import {
   deleteSeanceOuverture,
   demarrerSeance,
   terminerSeance,
+  ouvrirPlis,
   generatePV,
   listResultats,
   addResultat,
@@ -497,6 +498,23 @@ export function useTerminerSeanceMutation(id: string) {
     },
   });
 }
+
+export function useOuvrirPlisMutation(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation<SeanceOuverture, Error, string[]>({
+    mutationFn: (membresPresentsIds: string[]) => ouvrirPlis(id, membresPresentsIds),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(
+        commissionDashboardKeys.seance.detail(id),
+        updated
+      );
+      queryClient.invalidateQueries({
+        queryKey: commissionDashboardKeys.seance.lists(),
+      });
+    },
+  });
+}
+
 
 export function useGeneratePVMutation(id: string) {
   const queryClient = useQueryClient();

@@ -600,3 +600,24 @@ export async function unlockCommissionDechiffrement(offreId: string): Promise<vo
     { method: "PATCH" },
   );
 }
+
+export interface FragmentSoumis {
+  index: number;
+  valeur: string;
+  membreId: string;
+}
+
+export async function getFragments(aoId: string): Promise<FragmentSoumis[]> {
+  const raw = await apiClient<unknown>(`/api/v1/cles-chiffrement/${aoId}/fragments`, {
+    method: "GET",
+  });
+  return unwrapEnvelope<FragmentSoumis[]>(raw) || [];
+}
+
+export async function dechiffrerOffres(aoId: string, fragments: FragmentSoumis[]): Promise<unknown> {
+  return apiClient<unknown>(`/api/v1/offres-financieres/dechiffrer/${aoId}`, {
+    method: "POST",
+    body: JSON.stringify({ fragments }),
+  });
+}
+

@@ -17,6 +17,9 @@ import {
   getCommissionPreDechiffrement,
   getCommissionDechiffrement,
   unlockCommissionDechiffrement,
+  getFragments,
+  dechiffrerOffres,
+  type FragmentSoumis,
   type CommissionEvaluationOverviewItem,
   type CommissionEvaluationSubmission,
   type CommissionEvaluationCriterion,
@@ -191,3 +194,23 @@ export function useUnlockCommissionDechiffrementMutation(offreId: string) {
     },
   });
 }
+
+export function useCommissionFragmentsQuery(aoId: string, enabled = true) {
+  return useQuery<FragmentSoumis[], Error>({
+    queryKey: [...commissionKeys.all, "fragments", aoId] as const,
+    queryFn: () => getFragments(aoId),
+    enabled: Boolean(aoId) && enabled,
+  });
+}
+
+export function useDechiffrerOffresMutation(aoId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<unknown, Error, FragmentSoumis[]>({
+    mutationFn: (fragments: FragmentSoumis[]) => dechiffrerOffres(aoId, fragments),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: commissionKeys.all });
+    },
+  });
+}
+
