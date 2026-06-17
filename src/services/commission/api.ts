@@ -114,6 +114,16 @@ export interface CommissionScoresPayload {
   scores: { submissionId: string; criterionId: string; score: number; justification?: string }[];
 }
 
+export interface CommissionEvaluationSubmissionRegistrationPayload {
+  externalSubmissionId: string;
+  operateurEconomiqueId?: string;
+  operateurNom?: string;
+  lotId?: string;
+  montantOffre?: number;
+  devise?: string;
+  metadata?: Record<string, unknown>;
+}
+
 interface ApiEnvelope<T> {
   data?: T;
   success?: boolean;
@@ -230,6 +240,25 @@ export async function getCommissionEvaluationSubmissions(evaluationId: string): 
   return mapCommissionEvaluationSubmissions(raw, "evaluation");
 }
 
+export async function registerCommissionEvaluationSubmission(
+  evaluationId: string,
+  payload: CommissionEvaluationSubmissionRegistrationPayload,
+): Promise<CommissionEvaluationSubmission> {
+  const raw = await apiClient<unknown>(
+    `/api/v1/evaluations/${evaluationId}/soumissions`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+  const submission = mapCommissionEvaluationSubmission(
+    unwrapEnvelope<unknown>(raw),
+    "evaluation",
+  );
+  if (submission) return submission;
+  throw new Error("Impossible de transformer la soumission créée.");
+}
+
 export async function getCommissionAoSubmissions(aoId: string): Promise<CommissionEvaluationSubmission[]> {
   const raw = await apiClient<unknown>(
     `/api/v1/soumissions/appel-offre/${aoId}`,
@@ -244,38 +273,45 @@ function mapCommissionEvaluationSubmissions(
 ): CommissionEvaluationSubmission[] {
   return extractArrayPayload(payload)
     .map((item) => {
-      if (!item || typeof item !== "object") return null;
-      const record = item as Record<string, unknown>;
-      const id = String(record.id ?? "");
-      const externalSubmissionId = String(record.externalSubmissionId ?? record.soumissionId ?? id);
-      const alias = String(record.aliasAnonyme ?? "");
-      const reference = String(record.reference ?? alias) || externalSubmissionId;
-      const operatorRaw =
-        record.operatorName ??
-        record.operateurNom ??
-        record.operatorOrganizationName ??
-        record.operateurId ??
-        alias;
-
-      return {
-        id,
-        externalSubmissionId,
-        reference,
-        operatorName: operatorRaw ? String(operatorRaw) : "Soumission",
-        status: String(record.status ?? record.statut ?? ""),
-        lotId: typeof record.lotId === "string" ? record.lotId : null,
-        scoreTechnique: toNullableNumber(record.scoreTechnique),
-        scoreGlobal: toNullableNumber(record.scoreGlobal),
-        rang: toNullableNumber(record.rang),
-        recommandation:
-          typeof record.recommandation === "string" ? record.recommandation : null,
-        source,
-      } as CommissionEvaluationSubmission;
+      return mapCommissionEvaluationSubmission(item, source);
     })
     .filter(
       (item): item is CommissionEvaluationSubmission =>
         Boolean(item?.id) && Boolean(item?.reference),
     );
+}
+
+function mapCommissionEvaluationSubmission(
+  item: unknown,
+  source: "evaluation" | "ao",
+): CommissionEvaluationSubmission | null {
+  if (!item || typeof item !== "object") return null;
+  const record = item as Record<string, unknown>;
+  const id = String(record.id ?? "");
+  const externalSubmissionId = String(record.externalSubmissionId ?? record.soumissionId ?? id);
+  const alias = String(record.aliasAnonyme ?? "");
+  const reference = String(record.reference ?? alias) || externalSubmissionId;
+  const operatorRaw =
+    record.operatorName ??
+    record.operateurNom ??
+    record.operatorOrganizationName ??
+    record.operateurId ??
+    alias;
+
+  return {
+    id,
+    externalSubmissionId,
+    reference,
+    operatorName: operatorRaw ? String(operatorRaw) : "Soumission",
+    status: String(record.status ?? record.statut ?? ""),
+    lotId: typeof record.lotId === "string" ? record.lotId : null,
+    scoreTechnique: toNullableNumber(record.scoreTechnique),
+    scoreGlobal: toNullableNumber(record.scoreGlobal),
+    rang: toNullableNumber(record.rang),
+    recommandation:
+      typeof record.recommandation === "string" ? record.recommandation : null,
+    source,
+  };
 }
 
 function toNullableNumber(value: unknown): number | null {

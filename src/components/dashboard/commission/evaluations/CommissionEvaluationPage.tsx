@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   useMembresEvaluationQuery,
@@ -17,11 +17,14 @@ import {
   useCommissionEvaluationsOverviewQuery,
   useSaveCommissionScoresMutation,
 } from "@/services/commission/queries";
+import { commissionKeys } from "@/services/commission/keys";
+import { useQueryClient } from "@tanstack/react-query";
 import type {
   CommissionEvaluationCriterion,
   CommissionEvaluationNote,
   CommissionEvaluationSubmission,
 } from "@/services/commission/api";
+import { registerCommissionEvaluationSubmission } from "@/services/commission/api";
 
 interface Props {
   locale: string;
@@ -253,6 +256,8 @@ export default function CommissionEvaluationPage({
   const { data: aoCriteria, isLoading: loadingAoCriteria } =
     useCommissionAoCriteriaQuery(resolvedAoId, !evaluationCriteria?.length);
   const { data: anomalies } = useCommissionAoAnomaliesQuery(resolvedAoId);
+  const queryClient = useQueryClient();
+  const autoRegisterKeyRef = useRef<string | null>(null);
 
   const submissions = useMemo(() => {
     const evalItems = evaluationSubmissions ?? [];
@@ -322,20 +327,66 @@ export default function CommissionEvaluationPage({
   const hasEvaluation = Boolean(evaluationId);
   const hasCriteria = criteria.length > 0;
   const hasEvaluationCriteria = Boolean(evaluationCriteria?.length);
+  const isEvaluationOpen = evaluationStatus === "PRETE" || evaluationStatus === "EN_COURS";
   const canSaveNotes =
     Boolean(evaluationId) &&
     activeSubmission?.source === "evaluation" &&
-    evaluationStatus === "EN_COURS" &&
+    isEvaluationOpen &&
     hasEvaluationCriteria;
   const saveDisabledReason = !hasEvaluation
     ? "Le service evaluation n'a pas encore cree cette session."
     : activeSubmission?.source !== "evaluation"
       ? "Cette soumission vient de l'AO et n'est pas encore rattachee a l'evaluation."
-      : evaluationStatus !== "EN_COURS"
+      : !isEvaluationOpen
         ? `La notation est verrouillee car le statut est ${evaluationStatus || "inconnu"}.`
         : !hasEvaluationCriteria
           ? "Aucun critere d'evaluation n'est disponible dans le service evaluation."
           : "";
+
+  const submissionsToRegister = useMemo(() => {
+    if (!evaluationId || !isEvaluationOpen) return [];
+    const registered = new Set(
+      (evaluationSubmissions ?? []).map((item) => item.externalSubmissionId),
+    );
+    return (aoSubmissions ?? []).filter(
+      (item) => item.externalSubmissionId && !registered.has(item.externalSubmissionId),
+    );
+  }, [aoSubmissions, evaluationId, evaluationSubmissions, isEvaluationOpen]);
+
+  useEffect(() => {
+    if (!evaluationId || !isEvaluationOpen || submissionsToRegister.length === 0) return;
+
+    const autoRegisterKey = `${evaluationId}:${submissionsToRegister
+      .map((item) => item.externalSubmissionId)
+      .join("|")}`;
+    if (autoRegisterKeyRef.current === autoRegisterKey) return;
+    autoRegisterKeyRef.current = autoRegisterKey;
+
+    let cancelled = false;
+
+    (async () => {
+      for (const submission of submissionsToRegister) {
+        try {
+          await registerCommissionEvaluationSubmission(evaluationId, {
+            externalSubmissionId: submission.externalSubmissionId,
+            operateurNom: submission.operatorName || undefined,
+            lotId: submission.lotId || undefined,
+            metadata: { source: submission.source },
+          });
+        } catch (error) {
+          console.warn("Auto-registration of evaluation submission failed", error);
+        }
+      }
+
+      if (!cancelled) {
+        await queryClient.invalidateQueries({ queryKey: commissionKeys.evaluationSubmissions(evaluationId) });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [evaluationId, isEvaluationOpen, queryClient, submissionsToRegister]);
 
   const aiInsights = buildAiInsights({
     hasEvaluation,
