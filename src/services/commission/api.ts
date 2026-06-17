@@ -68,6 +68,19 @@ export interface CommissionAoAnomalies {
   }[];
 }
 
+export interface CommissionAoDetail {
+  id: string;
+  reference?: string;
+  objet?: string;
+  criteresEvaluation: {
+    id: string;
+    libelle?: string;
+    categorie?: string;
+    poids?: number;
+    noteEliminatoire?: number;
+  }[];
+}
+
 export interface CommissionDocumentItem {
   id: string;
   label: string;
@@ -364,6 +377,22 @@ export async function getCommissionAoCriteria(aoId: string): Promise<CommissionE
     { method: "GET" },
   ).catch(() => []);
   return mapCommissionEvaluationCriteria(raw, "ao");
+}
+
+export async function getCommissionAoDetail(aoId: string): Promise<CommissionAoDetail | null> {
+  if (!aoId) return null;
+  const raw = await apiClient<unknown>(`/api/v1/appels-offres/${aoId}`, { method: "GET" }).catch(() => null);
+  const data = unwrapEnvelope<unknown>(raw);
+  if (!data || typeof data !== "object") return null;
+  const record = data as Record<string, unknown>;
+  return {
+    id: String(record.id ?? ""),
+    reference: typeof record.reference === "string" ? record.reference : undefined,
+    objet: typeof record.objet === "string" ? record.objet : undefined,
+    criteresEvaluation: Array.isArray(record.criteresEvaluation)
+      ? (record.criteresEvaluation as CommissionAoDetail["criteresEvaluation"])
+      : [],
+  };
 }
 
 function mapCommissionEvaluationCriteria(

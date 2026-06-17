@@ -8,6 +8,7 @@ import {
 } from "@/services/commission-dashboard/queries";
 import {
   useCommissionAoAnomaliesQuery,
+  useCommissionAoDetailQuery,
   useCommissionAoCriteriaQuery,
   useCommissionAoSubmissionsQuery,
   useCommissionEvaluationContextQuery,
@@ -258,6 +259,8 @@ export default function CommissionEvaluationPage({
     useCommissionEvaluationCriteriaQuery(evaluationId);
   const { data: aoCriteria, isLoading: loadingAoCriteria } =
     useCommissionAoCriteriaQuery(resolvedAoId, !evaluationCriteria?.length);
+  const { data: aoDetail, isLoading: loadingAoDetail } =
+    useCommissionAoDetailQuery(resolvedAoId, !evaluationCriteria?.length);
   const { data: anomalies } = useCommissionAoAnomaliesQuery(resolvedAoId);
   const queryClient = useQueryClient();
   const autoRegisterKeyRef = useRef<string | null>(null);
@@ -281,8 +284,25 @@ export default function CommissionEvaluationPage({
   const criteria = useMemo(() => {
     const evalCriteria = evaluationCriteria ?? [];
     if (evalCriteria.length > 0) return evalCriteria;
+    const aoDetailCriteria =
+      (aoDetail?.criteresEvaluation ?? []).map((criterion, index) => ({
+        id: criterion.id,
+        code: `AO-${String(index + 1).padStart(2, "0")}`,
+        label: criterion.libelle || `Critère ${index + 1}`,
+        weight: Number(criterion.poids ?? 0),
+        type: "technique",
+        noteMax: 100,
+        description: "",
+        noteEliminatoire:
+          typeof criterion.noteEliminatoire === "number"
+            ? criterion.noteEliminatoire
+            : undefined,
+        eliminatoire: Boolean(criterion.noteEliminatoire),
+        source: "ao" as const,
+      })) ?? [];
+    if (aoDetailCriteria.length > 0) return aoDetailCriteria;
     return aoCriteria ?? [];
-  }, [aoCriteria, evaluationCriteria]);
+  }, [aoCriteria, aoDetail, evaluationCriteria]);
 
   const activeEvaluationSubmissionId =
     activeSubmission?.source === "evaluation" ? activeSubmission.id : "";
@@ -331,34 +351,30 @@ export default function CommissionEvaluationPage({
   const hasEvaluation = Boolean(evaluationId);
   const hasCriteria = criteria.length > 0;
   const hasEvaluationCriteria = Boolean(evaluationCriteria?.length);
-  const isEvaluationOpen = evaluationStatus === "PRETE" || evaluationStatus === "EN_COURS";
   const canSaveNotes =
     Boolean(evaluationId) &&
     activeSubmission?.source === "evaluation" &&
-    isEvaluationOpen &&
     hasEvaluationCriteria;
   const saveDisabledReason = !hasEvaluation
     ? "Le service evaluation n'a pas encore cree cette session."
     : activeSubmission?.source !== "evaluation"
       ? "Cette soumission vient de l'AO et n'est pas encore rattachee a l'evaluation."
-      : !isEvaluationOpen
-        ? `La notation est verrouillee car le statut est ${evaluationStatus || "inconnu"}.`
-        : !hasEvaluationCriteria
+      : !hasEvaluationCriteria
           ? "Aucun critere d'evaluation n'est disponible dans le service evaluation."
           : "";
 
   const submissionsToRegister = useMemo(() => {
-    if (!evaluationId || !isEvaluationOpen) return [];
+    if (!evaluationId) return [];
     const registered = new Set(
       (evaluationSubmissions ?? []).map((item) => item.externalSubmissionId),
     );
     return (aoSubmissions ?? []).filter(
       (item) => item.externalSubmissionId && !registered.has(item.externalSubmissionId),
     );
-  }, [aoSubmissions, evaluationId, evaluationSubmissions, isEvaluationOpen]);
+  }, [aoSubmissions, evaluationId, evaluationSubmissions]);
 
   useEffect(() => {
-    if (!evaluationId || !isEvaluationOpen || submissionsToRegister.length === 0) return;
+    if (!evaluationId || submissionsToRegister.length === 0) return;
 
     const autoRegisterKey = `${evaluationId}:${submissionsToRegister
       .map((item) => item.externalSubmissionId)
@@ -390,14 +406,14 @@ export default function CommissionEvaluationPage({
     return () => {
       cancelled = true;
     };
-  }, [evaluationId, isEvaluationOpen, queryClient, submissionsToRegister]);
+  }, [evaluationId, queryClient, submissionsToRegister]);
 
   useEffect(() => {
-    if (!evaluationId || !isEvaluationOpen || hasEvaluationCriteria || aoCriteria.length === 0) {
+    if (!evaluationId || hasEvaluationCriteria || aoDetail?.criteresEvaluation.length === 0) {
       return;
     }
 
-    const seedKey = `${evaluationId}:${aoCriteria
+    const seedKey = `${evaluationId}:${aoDetail?.criteresEvaluation
       .map((criterion) => criterion.id)
       .join("|")}`;
     if (autoSeedCriteriaKeyRef.current === seedKey) return;
@@ -406,16 +422,18 @@ export default function CommissionEvaluationPage({
     let cancelled = false;
 
     (async () => {
-      for (const [index, criterion] of aoCriteria.entries()) {
+      for (const [index, criterion] of (aoDetail?.criteresEvaluation ?? []).entries()) {
         try {
           await createCommissionEvaluationCriterion(evaluationId, {
-            code: criterion.code || `AO-${String(index + 1).padStart(2, "0")}`,
-            libelle: criterion.label,
-            description: criterion.description || undefined,
-            poids: criterion.weight,
-            noteMax: criterion.noteMax || undefined,
-            noteMinimale: criterion.noteEliminatoire,
-            eliminatoire: criterion.eliminatoire,
+            code: `AO-${String(index + 1).padStart(2, "0")}`,
+            libelle: criterion.libelle || `Critère ${index + 1}`,
+            poids: Number(criterion.poids ?? 0),
+            noteMax: 100,
+            noteMinimale:
+              typeof criterion.noteEliminatoire === "number"
+                ? criterion.noteEliminatoire
+                : undefined,
+            eliminatoire: Boolean(criterion.noteEliminatoire),
             ordre: index + 1,
           });
         } catch (error) {
@@ -431,7 +449,7 @@ export default function CommissionEvaluationPage({
     return () => {
       cancelled = true;
     };
-  }, [aoCriteria, evaluationId, hasEvaluationCriteria, isEvaluationOpen, queryClient]);
+  }, [aoDetail, evaluationId, hasEvaluationCriteria, queryClient]);
 
   const aiInsights = buildAiInsights({
     hasEvaluation,
@@ -452,6 +470,7 @@ export default function CommissionEvaluationPage({
     loadingAoSubmissions ||
     loadingEvaluationCriteria ||
     loadingAoCriteria ||
+    loadingAoDetail ||
     loadingNotes;
 
   const updateDraft = (
@@ -714,17 +733,11 @@ export default function CommissionEvaluationPage({
                 </div>
               </div>
 
-              {!hasEvaluation || !hasEvaluationCriteria ? (
+              {!hasEvaluationCriteria && hasEvaluation ? (
                 <div className="rounded-[28px] border border-amber-200 bg-amber-50 p-5 text-amber-950">
-                  <p className="font-black">
-                    {hasEvaluation
-                      ? "Evaluation creee, mais grille absente"
-                      : "Session de notation non initialisee"}
-                  </p>
+                  <p className="font-black">Grille en cours de chargement</p>
                   <p className="mt-2 text-sm leading-6 text-amber-800">
-                    Les soumissions sont bien chargees depuis le service soumission.
-                    La notation reste verrouillee tant que le service evaluation ne renvoie
-                    pas une evaluation EN_COURS avec des criteres et des soumissions rattachees.
+                    La page essaie de reconstruire la grille depuis l&apos;appel d&apos;offres pour rendre la notation modifiable.
                   </p>
                 </div>
               ) : null}

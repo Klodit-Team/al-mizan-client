@@ -6,6 +6,7 @@ import {
   getCommissionAoSubmissions,
   getCommissionEvaluationCriteria,
   getCommissionAoCriteria,
+  getCommissionAoDetail,
   getCommissionEvaluationNotes,
   getCommissionAoAnomalies,
   saveCommissionEvaluationScores,
@@ -19,6 +20,7 @@ import {
   type CommissionEvaluationOverviewItem,
   type CommissionEvaluationSubmission,
   type CommissionEvaluationCriterion,
+  type CommissionAoDetail,
   type CommissionEvaluationNote,
   type CommissionAoAnomalies,
   type CommissionDocumentItem,
@@ -82,6 +84,14 @@ export function useCommissionAoCriteriaQuery(aoId: string, enabled = true) {
   return useQuery<CommissionEvaluationCriterion[], Error>({
     queryKey: commissionKeys.aoCriteria(aoId),
     queryFn: () => getCommissionAoCriteria(aoId),
+    enabled: Boolean(aoId) && enabled,
+  });
+}
+
+export function useCommissionAoDetailQuery(aoId: string, enabled = true) {
+  return useQuery<CommissionAoDetail | null, Error>({
+    queryKey: [...commissionKeys.all, "ao-detail", aoId] as const,
+    queryFn: () => getCommissionAoDetail(aoId),
     enabled: Boolean(aoId) && enabled,
   });
 }
