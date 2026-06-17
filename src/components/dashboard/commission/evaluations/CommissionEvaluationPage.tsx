@@ -50,6 +50,13 @@ interface Soumission {
   status: string;
 }
 
+interface MembreEvaluation {
+  id: string;
+  nom: string;
+  prenom: string;
+  role: string;
+}
+
 // ── État vide : pas de commission trouvée ─────────────────────────────────────
 function EmptyEvaluation({ isAr }: { isAr: boolean }) {
   return (
@@ -195,6 +202,11 @@ export default function CommissionEvaluationPage({
   const { data: criteriaData, isLoading: loadingCriteria } = useCommissionEvaluationCriteriaQuery(resolvedAoId);
   const saveScoresMutation = useSaveCommissionScoresMutation(evaluationId);
 
+  const membresList: MembreEvaluation[] = useMemo(
+    () => membres ?? [],
+    [membres]
+  );
+
   const soumissions: Soumission[] = useMemo(
     () => (submissionsData ?? []).map((submission) => ({
       id: submission.id,
@@ -298,7 +310,7 @@ export default function CommissionEvaluationPage({
   }
 
   // ── Pas de commission ────────────────────────────────────────────────────────
-  if ((!selectedCommission && !evaluationRecord) || !resolvedAoId) {
+  if (!selectedCommission && !evaluationRecord) {
     return (
       <div style={{ direction: isAr ? "rtl" : "ltr" }}>
         <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 16, overflow: "hidden" }}>
@@ -322,15 +334,26 @@ export default function CommissionEvaluationPage({
             {selectedCommission?.statut ?? evaluationRecord?.statut ?? "ACTIVE"}
           </span>
         </div>
-        <Link
-          href={`/${locale}/dashboard/commission/classement/${resolvedAoId}`}
-          style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "#1E293B", color: "#fff", textDecoration: "none" }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-          </svg>
-          {t.voirClassement}
-        </Link>
+        {resolvedAoId ? (
+          <Link
+            href={`/${locale}/dashboard/commission/classement/${resolvedAoId}`}
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "#1E293B", color: "#fff", textDecoration: "none" }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+            {t.voirClassement}
+          </Link>
+        ) : (
+          <div
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "#F8FAFC", color: "#94A3B8", border: "1px solid #E2E8F0" }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M12 8v4m0 4h.01M12 21a9 9 0 100-18 9 9 0 000 18z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+            {isAr ? "التصنيف غير متاح بعد" : "Classement indisponible"}
+          </div>
+        )}
       </div>
 
       {/* Commission info strip */}
@@ -344,11 +367,68 @@ export default function CommissionEvaluationPage({
           {selectedCommission?.dateReunion && (
             <> · {isAr ? "اجتماع" : "Réunion"} {new Date(selectedCommission.dateReunion).toLocaleDateString(isAr ? "ar-DZ" : "fr-DZ")}</>
           )}
-          {membres && membres.length > 0 && (
-            <> · {membres.length} membre{membres.length > 1 ? "s" : ""}</>
+          {membresList.length > 0 && (
+            <> · {membresList.length} membre{membresList.length > 1 ? "s" : ""}</>
           )}
         </span>
       </div>
+
+      {!resolvedAoId && (
+        <div
+          style={{
+            background: "#FFF7ED",
+            border: "1px solid #FED7AA",
+            borderRadius: 12,
+            padding: "12px 16px",
+            marginBottom: 16,
+            fontSize: 13,
+            color: "#9A3412",
+          }}
+        >
+          {isAr
+            ? "تم تحميل اللجنة وأعضائها، لكن الربط مع طلب العرض أو جلسة الفتح غير متوفر بعد من الخادم."
+            : "La commission et ses membres sont bien chargés, mais le backend n'a pas encore lié cette commission a un appel d'offres ou a une seance d'ouverture."}
+        </div>
+      )}
+
+      {membresList.length > 0 && (
+        <div
+          style={{
+            background: "#fff",
+            border: "1px solid #E5E7EB",
+            borderRadius: 16,
+            padding: "16px 18px",
+            marginBottom: 16,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: "#1B1C1C", margin: 0 }}>
+              {isAr ? "أعضاء اللجنة" : "Membres de la commission"}
+            </h2>
+            <span style={{ fontSize: 12, color: "#6B7280" }}>
+              {membresList.length} {isAr ? "أعضاء" : membresList.length > 1 ? "membres" : "membre"}
+            </span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+            {membresList.map((membre) => (
+              <div
+                key={membre.id}
+                style={{
+                  border: "1px solid #E5E7EB",
+                  borderRadius: 12,
+                  padding: "12px 14px",
+                  background: "#F8FAFC",
+                }}
+              >
+                <p style={{ fontSize: 14, fontWeight: 700, color: "#1F2937", margin: 0 }}>
+                  {[membre.prenom, membre.nom].filter(Boolean).join(" ")}
+                </p>
+                <p style={{ fontSize: 12, color: "#6B7280", margin: "4px 0 0" }}>{membre.role}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Pas de soumissions */}
       {soumissions.length === 0 ? (
