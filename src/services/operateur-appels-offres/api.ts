@@ -84,36 +84,28 @@ interface SubmissionRecord {
 }
 
 function unwrapEnvelope<T>(payload: unknown): T {
-  if (
-    payload &&
-    typeof payload === "object" &&
-    "data" in (payload as Record<string, unknown>) &&
-    (
-      "success" in (payload as Record<string, unknown>) ||
-      "statusCode" in (payload as Record<string, unknown>)
-    )
-  ) {
-    return (payload as ApiEnvelope<T>).data as T;
+  if (!payload) return payload as T;
+  if (typeof payload === "object") {
+    const rec = payload as Record<string, unknown>;
+    if (("success" in rec || "statusCode" in rec) && "data" in rec) {
+      return rec.data as T;
+    }
   }
-
   return payload as T;
 }
 
 function extractList<T>(payload: unknown): T[] {
   const unwrapped = unwrapEnvelope<unknown>(payload);
-
-  if (Array.isArray(unwrapped)) {
-    return unwrapped as T[];
+  if (Array.isArray(unwrapped)) return unwrapped as T[];
+  
+  if (unwrapped && typeof unwrapped === "object") {
+    const rec = unwrapped as Record<string, unknown>;
+    if (Array.isArray(rec.data)) return rec.data as T[];
+    if (Array.isArray(rec.content)) return rec.content as T[];
+    if (Array.isArray(rec.items)) return rec.items as T[];
+    if (Array.isArray(rec.results)) return rec.results as T[];
+    if (Array.isArray(rec.rows)) return rec.rows as T[];
   }
-
-  if (
-    unwrapped &&
-    typeof unwrapped === "object" &&
-    Array.isArray((unwrapped as PaginatedPayload<T>).data)
-  ) {
-    return (unwrapped as PaginatedPayload<T>).data;
-  }
-
   return [];
 }
 
