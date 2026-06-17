@@ -149,7 +149,13 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
   // ── Données live ────────────────────────────────────────────────────────────
   const { data: evaluations, isLoading: loadingEvaluations } = useCommissionEvaluationsOverviewQuery();
   const evaluation = useMemo(
-    () => evaluations?.find((item) => item.aoId === aoId || item.id === aoId),
+    () =>
+      evaluations?.find(
+        (item) =>
+          item.aoId === aoId ||
+          item.id === aoId ||
+          item.commissionId === aoId
+      ),
     [evaluations, aoId]
   );
   const commissionId = evaluation?.commissionId ?? "";
