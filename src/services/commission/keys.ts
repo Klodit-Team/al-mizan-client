@@ -1,6 +1,8 @@
 export const commissionKeys = {
   all: ["commission"] as const,
   evaluationsOverview: () => [...commissionKeys.all, "evaluations-overview"] as const,
+  evaluationContext: (commissionId: string, aoId: string) =>
+    [...commissionKeys.all, "evaluation-context", commissionId, aoId] as const,
   evaluationDetail: (aoId: string) => [...commissionKeys.all, "evaluation", aoId] as const,
   evaluationSubmissions: (aoId: string) => [...commissionKeys.all, "evaluation-submissions", aoId] as const,
   evaluationCriteria: (aoId: string) => [...commissionKeys.all, "evaluation-criteria", aoId] as const,

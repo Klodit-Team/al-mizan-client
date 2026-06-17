@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getCommissionEvaluationsOverview,
+  getCommissionEvaluationByContext,
   getCommissionEvaluationSubmissions,
   getCommissionEvaluationCriteria,
   saveCommissionEvaluationScores,
@@ -28,6 +29,22 @@ export function useCommissionEvaluationsOverviewQuery() {
   return useQuery<CommissionEvaluationOverviewItem[], Error>({
     queryKey: commissionKeys.evaluationsOverview(),
     queryFn: getCommissionEvaluationsOverview,
+  });
+}
+
+export function useCommissionEvaluationContextQuery({
+  commissionId,
+  aoId,
+  evaluationId,
+}: {
+  commissionId?: string;
+  aoId?: string;
+  evaluationId?: string;
+}) {
+  return useQuery<CommissionEvaluationOverviewItem | null, Error>({
+    queryKey: commissionKeys.evaluationContext(commissionId ?? "", aoId ?? evaluationId ?? ""),
+    queryFn: () => getCommissionEvaluationByContext({ commissionId, aoId, evaluationId }),
+    enabled: Boolean(commissionId || aoId || evaluationId),
   });
 }
 

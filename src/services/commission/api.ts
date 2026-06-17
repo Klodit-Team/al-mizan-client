@@ -82,6 +82,12 @@ interface ApiEnvelope<T> {
   statusCode?: number;
 }
 
+interface EvaluationLookupParams {
+  commissionId?: string;
+  aoId?: string;
+  evaluationId?: string;
+}
+
 function unwrapEnvelope<T>(payload: unknown): T {
   if (
     payload &&
@@ -96,47 +102,86 @@ function unwrapEnvelope<T>(payload: unknown): T {
   return payload as T;
 }
 
+function extractArrayPayload(payload: unknown): unknown[] {
+  const data = unwrapEnvelope<unknown>(payload);
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === "object" && Array.isArray((data as { data?: unknown }).data)) {
+    return (data as { data: unknown[] }).data;
+  }
+  return [];
+}
+
+function mapEvaluationOverviewItem(item: unknown): CommissionEvaluationOverviewItem | null {
+  if (!item || typeof item !== "object") return null;
+  const record = item as Record<string, unknown>;
+  const aoId = String(record.appelOffreId ?? record.aoId ?? "");
+  const commissionId = String(record.commissionId ?? "");
+  const reference = String(record.reference ?? "");
+  const objet = String(record.objet ?? "");
+  const statut = typeof record.statut === "string" ? record.statut : undefined;
+
+  if (!aoId && !commissionId && !reference && !objet) return null;
+
+  return {
+    id: String(record.id ?? ""),
+    commissionId,
+    aoId,
+    reference,
+    objet,
+    progressGlobal: typeof record.progressGlobal === "number" ? record.progressGlobal : 0,
+    phases: Array.isArray(record.phases) ? (record.phases as { phase: string; status: string }[]) : [],
+    statut,
+    dateReunion: typeof record.dateReunion === "string" ? record.dateReunion : null,
+    createdAt: typeof record.createdAt === "string" ? record.createdAt : undefined,
+  };
+}
+
+function mapEvaluationOverviewItems(payload: unknown): CommissionEvaluationOverviewItem[] {
+  return extractArrayPayload(payload)
+    .map(mapEvaluationOverviewItem)
+    .filter((item): item is CommissionEvaluationOverviewItem => Boolean(item));
+}
+
+async function fetchEvaluationOverviewItems(
+  params: Record<string, string> = {},
+): Promise<CommissionEvaluationOverviewItem[]> {
+  const query = new URLSearchParams({ page: "1", limit: "100", ...params }).toString();
+  const raw = await apiClient<unknown>(`/api/v1/evaluations?${query}`, { method: "GET" });
+  return mapEvaluationOverviewItems(raw);
+}
+
 // ─── API Functions ───────────────────────────────────────────────────────────
 
 export async function getCommissionEvaluationsOverview(): Promise<CommissionEvaluationOverviewItem[]> {
-  const raw = await apiClient<unknown>(
-    "/api/v1/evaluations?page=1&limit=100",
-    { method: "GET" },
-  );
-  const data = unwrapEnvelope<unknown>(raw);
-  const items =
-    Array.isArray(data)
-      ? data
-      : (data && typeof data === "object" && Array.isArray((data as { data?: unknown }).data)
-        ? (data as { data: unknown[] }).data
-        : []);
+  return fetchEvaluationOverviewItems();
+}
 
-  return items
-    .map((item) => {
-      if (!item || typeof item !== "object") return null;
-      const record = item as Record<string, unknown>;
-      const aoId = String(record.appelOffreId ?? record.aoId ?? "");
-      const commissionId = String(record.commissionId ?? "");
-      const reference = String(record.reference ?? "");
-      const objet = String(record.objet ?? "");
-      const statut = typeof record.statut === "string" ? record.statut : undefined;
+export async function getCommissionEvaluationByContext({
+  commissionId,
+  aoId,
+  evaluationId,
+}: EvaluationLookupParams): Promise<CommissionEvaluationOverviewItem | null> {
+  if (evaluationId) {
+    const raw = await apiClient<unknown>(`/api/v1/evaluations/${evaluationId}`, {
+      method: "GET",
+    }).catch(() => null);
+    const item = mapEvaluationOverviewItem(unwrapEnvelope<unknown>(raw));
+    if (item?.id) return item;
+  }
 
-      if (!aoId && !commissionId && !reference && !objet) return null;
+  if (commissionId) {
+    const byCommission = await fetchEvaluationOverviewItems({ commissionId }).catch(() => []);
+    const match = byCommission.find((item) => item.commissionId === commissionId) ?? byCommission[0];
+    if (match?.id) return match;
+  }
 
-      return {
-        id: String(record.id ?? ""),
-        commissionId,
-        aoId,
-        reference,
-        objet,
-        progressGlobal: typeof record.progressGlobal === "number" ? record.progressGlobal : 0,
-        phases: Array.isArray(record.phases) ? (record.phases as { phase: string; status: string }[]) : [],
-        statut,
-        dateReunion: typeof record.dateReunion === "string" ? record.dateReunion : null,
-        createdAt: typeof record.createdAt === "string" ? record.createdAt : undefined,
-      } as CommissionEvaluationOverviewItem;
-    })
-    .filter((item): item is CommissionEvaluationOverviewItem => Boolean(item));
+  if (aoId) {
+    const byAo = await fetchEvaluationOverviewItems({ appelOffreId: aoId }).catch(() => []);
+    const match = byAo.find((item) => item.aoId === aoId) ?? byAo[0];
+    if (match?.id) return match;
+  }
+
+  return null;
 }
 
 export async function getCommissionEvaluationSubmissions(evaluationId: string): Promise<CommissionEvaluationSubmission[]> {
@@ -144,8 +189,7 @@ export async function getCommissionEvaluationSubmissions(evaluationId: string): 
     `/api/v1/evaluations/${evaluationId}/soumissions`,
     { method: "GET" },
   );
-  const data = unwrapEnvelope<unknown>(raw);
-  const items = Array.isArray(data) ? data : [];
+  const items = extractArrayPayload(raw);
 
   return items
     .map((item) => {
@@ -166,7 +210,7 @@ export async function getCommissionEvaluationSubmissions(evaluationId: string): 
     })
     .filter(
       (item): item is CommissionEvaluationSubmission =>
-        Boolean(item?.id) && Boolean(item.reference),
+        Boolean(item?.id) && Boolean(item?.reference),
     );
 }
 
@@ -175,8 +219,7 @@ export async function getCommissionEvaluationCriteria(evaluationId: string): Pro
     `/api/v1/evaluations/${evaluationId}/criteres`,
     { method: "GET" },
   );
-  const data = unwrapEnvelope<unknown>(raw);
-  const items = Array.isArray(data) ? data : [];
+  const items = extractArrayPayload(raw);
 
   return items
     .map((item) => {
@@ -202,7 +245,7 @@ export async function getCommissionEvaluationCriteria(evaluationId: string): Pro
     })
     .filter(
       (item): item is CommissionEvaluationCriterion =>
-        Boolean(item?.id) && Boolean(item.label),
+        Boolean(item?.id) && Boolean(item?.label),
     );
 }
 
