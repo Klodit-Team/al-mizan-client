@@ -1737,19 +1737,18 @@
                 "resultPublished": "Résultat publié",
                 "toPlan": "À planifier"
               }
-            }
+            },
+            "conformite": {
+              "title": "Infos de conformité",
+              "legalDelay": "Dans délai légal :",
+              "deadlineAo": "Date limite AO :",
+              "yes": "Oui",
+              "no": "Non",
+              "unspecified": "Non précisé"
+            },
+            "notFound": "Soumission introuvable"
           },
-          "conformite": {
-            "title": "Infos de conformité",
-            "legalDelay": "Dans délai légal :",
-            "deadlineAo": "Date limite AO :",
-            "yes": "Oui",
-            "no": "Non",
-            "unspecified": "Non précisé"
-          },
-          "notFound": "Soumission introuvable"
-        },
-        "wizard": {
+          "wizard": {
             "success": {
               "title": "Soumission déposée avec succès !",
               "desc1": "Votre offre",

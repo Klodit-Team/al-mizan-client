@@ -1737,19 +1737,18 @@
                 "resultPublished": "تم نشر النتيجة",
                 "toPlan": "للتخطيط"
               }
-            }
+            },
+            "conformite": {
+              "title": "معلومات المطابقة",
+              "legalDelay": "ضمن المهلة القانونية :",
+              "deadlineAo": "الموعد النهائي لطلب العروض :",
+              "yes": "نعم",
+              "no": "لا",
+              "unspecified": "غير محدد"
+            },
+            "notFound": "العرض غير موجود"
           },
-          "conformite": {
-            "title": "معلومات المطابقة",
-            "legalDelay": "ضمن المهلة القانونية :",
-            "deadlineAo": "الموعد النهائي لطلب العروض :",
-            "yes": "نعم",
-            "no": "لا",
-            "unspecified": "غير محدد"
-          },
-          "notFound": "العرض غير موجود"
-        },
-        "wizard": {
+          "wizard": {
             "success": {
               "title": "تم تقديم العرض بنجاح !",
               "desc1": "عرضكم",
