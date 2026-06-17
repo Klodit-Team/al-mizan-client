@@ -69,7 +69,7 @@ export async function getOperateurProfile(): Promise<OperateurProfile> {
 
   if (userId) {
     try {
-      const profileRaw = await apiClient<unknown>(`/api/v1/users/profiles/user/${userId}`, { method: "GET" });
+      const profileRaw = await apiClient<unknown>(`/api/v1/profiles/user/${userId}`, { method: "GET" });
       const profile = unwrapEnvelope<UserProfilePayload>(profileRaw);
       firstName = profile?.prenom || "";
       lastName = profile?.nom || "";
@@ -99,7 +99,7 @@ export async function updateOperateurProfile(payload: Partial<OperateurProfile>)
   const userId = me?.user?.userId;
 
   if (userId) {
-    await apiClient<unknown>(`/api/v1/users/profiles/user/${userId}`, {
+    await apiClient<unknown>(`/api/v1/profiles/user/${userId}`, {
       method: "PATCH",
       body: JSON.stringify({
         nom: payload.lastName,

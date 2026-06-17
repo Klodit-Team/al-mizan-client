@@ -172,7 +172,7 @@ export default function MyProfilePage({ dict }: { dict?: any }) {
         }
 
         // Fetch operateur + organisation data
-        const oeListRaw = await apiClient<unknown>("/api/v1/users/operateurs-economiques?page=1&limit=100", { method: "GET" }).catch(() => null);
+        const oeListRaw = await apiClient<unknown>("/api/v1/operateurs-economiques?page=1&limit=100", { method: "GET" }).catch(() => null);
         if (oeListRaw) {
           const list = Array.isArray(oeListRaw) ? oeListRaw : (oeListRaw as { data?: unknown[] })?.data || [];
           const normalizedUserId = userId.trim().toLowerCase();

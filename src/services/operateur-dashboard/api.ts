@@ -308,8 +308,8 @@ async function getIdentityData(): Promise<IdentityData> {
     }
 
     const [profileRaw, oeRaw] = await Promise.all([
-      apiClient<unknown>(`/api/v1/users/profiles/user/${userId}`, { method: "GET" }).catch(() => null),
-      apiClient<unknown>("/api/v1/users/operateurs-economiques?page=1&limit=100", { method: "GET" }).catch(() => null),
+      apiClient<unknown>(`/api/v1/profiles/user/${userId}`, { method: "GET" }).catch(() => null),
+      apiClient<unknown>("/api/v1/operateurs-economiques?page=1&limit=100", { method: "GET" }).catch(() => null),
     ]);
 
     if (profileRaw) {
