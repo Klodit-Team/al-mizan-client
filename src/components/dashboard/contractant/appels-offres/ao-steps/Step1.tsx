@@ -2,6 +2,22 @@ import { WizardStepProps } from "./types";
 import React from "react";
 import { cn } from "@/lib/utils";
 import { ChevronRight } from "lucide-react";
+
+const wilayasOptions = [
+  "01 - Adrar", "02 - Chlef", "03 - Laghouat", "04 - Oum El Bouaghi", "05 - Batna",
+  "06 - Béjaïa", "07 - Biskra", "08 - Béchar", "09 - Blida", "10 - Bouira",
+  "11 - Tamanrasset", "12 - Tébessa", "13 - Tlemcen", "14 - Tiaret", "15 - Tizi Ouzou",
+  "16 - Alger", "17 - Djelfa", "18 - Jijel", "19 - Sétif", "20 - Saïda",
+  "21 - Skikda", "22 - Sidi Bel Abbès", "23 - Annaba", "24 - Guelma", "25 - Constantine",
+  "26 - Médéa", "27 - Mostaganem", "28 - M'Sila", "29 - Mascara", "30 - Ouargla",
+  "31 - Oran", "32 - El Bayadh", "33 - Illizi", "34 - Bordj Bou Arréridj", "35 - Boumerdès",
+  "36 - El Tarf", "37 - Tindouf", "38 - Tissemsilt", "39 - El Oued", "40 - Khenchela",
+  "41 - Souk Ahras", "42 - Tipaza", "43 - Mila", "44 - Aïn Defla", "45 - Naâma",
+  "46 - Aïn Témouchent", "47 - Ghardaïa", "48 - Relizane", "49 - Timimoun", "50 - Bordj Badji Mokhtar",
+  "51 - Ouled Djellal", "52 - Béni Abbès", "53 - In Salah", "54 - In Guezzam", "55 - Touggourt",
+  "56 - Djanet", "57 - El M'Ghair", "58 - El Meniaa"
+];
+
 export default function Step1({ props }: { props: WizardStepProps }) {
   const {
     dict,
@@ -10,13 +26,12 @@ export default function Step1({ props }: { props: WizardStepProps }) {
     form,
     updateField,
     errors,
-   
     goNextAfterValidation,
     isSubmittingAction,
-   
     saveDraft,
     savedDraft,
   } = props;
+
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-3">
@@ -156,19 +171,25 @@ export default function Step1({ props }: { props: WizardStepProps }) {
           <label className="mb-1.5 block text-[11px] font-semibold text-slate-600">
             {dict.step1.wilayaLabel}
           </label>
-          <input
+          <select
             value={form.executionWilaya}
-            onChange={(event) =>
-              updateField("executionWilaya", event.target.value)
-            }
-            placeholder={dict.step1.wilayaPlaceholder}
+            onChange={(event) => updateField("executionWilaya", event.target.value)}
             className={cn(
               "h-10 w-full rounded-md border px-3 text-sm outline-none focus:border-[#4CAF50]",
               errors.executionWilaya
                 ? "border-red-300 bg-red-50"
                 : "border-slate-200 bg-white",
             )}
-          />
+          >
+            <option value="" disabled hidden>
+              {dict.step1.wilayaPlaceholder || "Sélectionnez une wilaya"}
+            </option>
+            {wilayasOptions.map((wilaya) => (
+              <option key={wilaya} value={wilaya}>
+                {wilaya}
+              </option>
+            ))}
+          </select>
           {errors.executionWilaya && (
             <p className="mt-1 text-[11px] text-red-600">
               {errors.executionWilaya}

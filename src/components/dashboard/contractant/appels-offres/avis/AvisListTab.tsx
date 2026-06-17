@@ -2,7 +2,16 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Eye, Loader2, Megaphone, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  CheckCircle2,
+  Eye,
+  Loader2,
+  Megaphone,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,11 +24,12 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import {
+  deleteServiceContractantTenderAvis,
+  getTenderAvisErrorMessage,
   listServiceContractantTenderAvis,
   publishServiceContractantTenderAvisById,
   type TenderAvisItem,
   type TenderAvisStatus,
-  type TenderAvisSupport,
   type TenderAvisType,
 } from "@/services/tendersAvis";
 
@@ -46,8 +56,18 @@ function getAvisTypeLabel(type: TenderAvisType) {
   }
 }
 
-function getSupportLabel(support: TenderAvisSupport) {
-  switch (support) {
+function getSupportLabel(item: TenderAvisItem) {
+  if (item.publieBomop && item.publiePresse) {
+    return "BOMOP + Presse";
+  }
+  if (item.publiePresse) {
+    return "Presse";
+  }
+  if (item.publieBomop) {
+    return "BOMOP";
+  }
+
+  switch (item.support) {
     case "bomop":
       return "BOMOP";
     case "presse":
@@ -55,7 +75,7 @@ function getSupportLabel(support: TenderAvisSupport) {
     case "plateforme":
       return "Plateforme";
     default:
-      return support;
+      return item.support;
   }
 }
 
@@ -83,10 +103,12 @@ function formatDate(dateValue: string, locale: string) {
 }
 
 export default function AvisListTab({ locale, aoId, isRtl }: AvisListTabProps) {
+  const router = useRouter();
   const [items, setItems] = useState<TenderAvisItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [publishingId, setPublishingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [recentlyPublishedId, setRecentlyPublishedId] = useState<string | null>(
     null,
@@ -101,8 +123,13 @@ export default function AvisListTab({ locale, aoId, isRtl }: AvisListTabProps) {
     try {
       const response = await listServiceContractantTenderAvis(aoId);
       setItems(response);
-    } catch {
-      setError("Impossible de charger la liste des avis.");
+    } catch (error) {
+      setError(
+        getTenderAvisErrorMessage(
+          error,
+          "Impossible de charger la liste des avis.",
+        ),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -127,10 +154,42 @@ export default function AvisListTab({ locale, aoId, isRtl }: AvisListTabProps) {
       );
       setSuccessMessage("Avis publie avec succes.");
       setRecentlyPublishedId(id);
-    } catch {
-      setError("Publication de l'avis impossible pour le moment.");
+    } catch (error) {
+      setError(
+        getTenderAvisErrorMessage(
+          error,
+          "Publication de l'avis impossible pour le moment.",
+        ),
+      );
     } finally {
       setPublishingId(null);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const confirmed = window.confirm(
+      "Confirmer la suppression de cet avis ? Cette action est irreversible.",
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setError(null);
+      setDeletingId(id);
+      await deleteServiceContractantTenderAvis(aoId, id);
+      setItems((current) => current.filter((item) => item.id !== id));
+      setSuccessMessage("Avis supprime avec succes.");
+      router.refresh();
+    } catch (error) {
+      setError(
+        getTenderAvisErrorMessage(
+          error,
+          "Suppression de l'avis impossible pour le moment.",
+        ),
+      );
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -222,7 +281,9 @@ export default function AvisListTab({ locale, aoId, isRtl }: AvisListTabProps) {
             <TableBody>
               {items.map((item) => {
                 const viewHref = `/${locale}/dashboard/contractant/appels-offres/${aoId}/avis/${item.id}`;
+                const editHref = `/${locale}/dashboard/contractant/appels-offres/${aoId}/avis/${item.id}/edit`;
                 const isPublishing = publishingId === item.id;
+                const isDeleting = deletingId === item.id;
 
                 return (
                   <TableRow
@@ -237,7 +298,7 @@ export default function AvisListTab({ locale, aoId, isRtl }: AvisListTabProps) {
                       {getAvisTypeLabel(item.type)}
                     </TableCell>
                     <TableCell className="px-3 py-2.5 text-xs text-slate-700">
-                      {getSupportLabel(item.support)}
+                      {getSupportLabel(item)}
                     </TableCell>
                     <TableCell className="px-3 py-2.5 text-xs text-slate-700">
                       {formatDate(item.publicationDate, locale)}
@@ -261,7 +322,7 @@ export default function AvisListTab({ locale, aoId, isRtl }: AvisListTabProps) {
                     >
                       <div
                         className={cn(
-                          "flex items-center gap-1",
+                          "flex flex-wrap items-center gap-1",
                           isRtl ? "justify-start" : "justify-end",
                         )}
                       >
@@ -272,7 +333,14 @@ export default function AvisListTab({ locale, aoId, isRtl }: AvisListTabProps) {
                           <Eye className="h-3 w-3" />
                           Voir
                         </Link>
-                        <button
+                        <Link
+                          href={editHref}
+                          className="inline-flex h-7 items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
+                        >
+                          <Pencil className="h-3 w-3" />
+                          Modifier
+                        </Link>
+                        {/*<button
                           type="button"
                           disabled={item.status === "publie" || isPublishing}
                           onClick={() => {
@@ -290,6 +358,22 @@ export default function AvisListTab({ locale, aoId, isRtl }: AvisListTabProps) {
                             : isPublishing
                               ? "Publication..."
                               : "Publier"}
+                        </button>*/}
+                        
+                        <button
+                          type="button"
+                          disabled={isDeleting}
+                          onClick={() => {
+                            void handleDelete(item.id);
+                          }}
+                          className="inline-flex h-7 items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2.5 text-[11px] font-semibold text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {isDeleting ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3 w-3" />
+                          )}
+                          Supprimer
                         </button>
                       </div>
                     </TableCell>

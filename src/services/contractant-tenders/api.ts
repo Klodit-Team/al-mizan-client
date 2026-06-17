@@ -102,35 +102,22 @@ export interface ServiceContractantTenderRecoursDetail extends ServiceContractan
   decisionDate: string | null;
 }
 
-// ─── Avis Types ──────────────────────────────────────────────────────────────
+// ─── Avis (re-exported from tendersAvis) ─────────────────────────────────────
 
-export type TenderAvisType = "ao" | "attribution_provisoire" | "attribution_definitive" | "annulation" | "rectificatif";
-export type TenderAvisSupport = "bomop" | "presse" | "plateforme";
-export type TenderAvisStatus = "brouillon" | "publie";
-
-export interface TenderAvisItem {
-  id: string;
-  aoId: string;
-  type: TenderAvisType;
-  title: string;
-  content: string;
-  support: TenderAvisSupport;
-  publicationDate: string;
-  publicationEndDate: string;
-  isPublished: boolean;
-  status: TenderAvisStatus;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface SaveTenderAvisPayload {
-  type: TenderAvisType;
-  title: string;
-  content: string;
-  support: TenderAvisSupport;
-  publicationDate: string;
-  publicationEndDate: string;
-}
+export {
+  type TenderAvisType,
+  type TenderAvisSupport,
+  type TenderAvisStatus,
+  type TenderAvisItem,
+  type SaveTenderAvisPayload,
+  listServiceContractantTenderAvis,
+  getServiceContractantTenderAvisById,
+  saveServiceContractantTenderAvisDraft,
+  publishServiceContractantTenderAvis,
+  updateServiceContractantTenderAvis,
+  publishServiceContractantTenderAvisById,
+  deleteServiceContractantTenderAvis,
+} from "@/services/tendersAvis";
 
 // ─── Soumissions API ─────────────────────────────────────────────────────────
 
@@ -279,67 +266,6 @@ export async function getServiceContractantTenderRecoursById(
   } catch {
     return null;
   }
-}
-
-// ─── Avis API ────────────────────────────────────────────────────────────────
-
-export async function listServiceContractantTenderAvis(
-  aoId: string,
-): Promise<TenderAvisItem[]> {
-  return apiClient<TenderAvisItem[]>(
-    `/api/v1/appels-offres/avis-ao?appelOffreId=${aoId}`,
-    { method: "GET" },
-  );
-}
-
-export async function getServiceContractantTenderAvisById(
-  aoId: string,
-  avisId: string,
-): Promise<TenderAvisItem | null> {
-  try {
-    return await apiClient<TenderAvisItem>(
-      `/api/v1/appels-offres/avis-ao/${avisId}`,
-      { method: "GET" },
-    );
-  } catch {
-    return null;
-  }
-}
-
-export async function saveServiceContractantTenderAvisDraft(
-  aoId: string,
-  payload: SaveTenderAvisPayload,
-): Promise<TenderAvisItem> {
-  return apiClient<TenderAvisItem>(
-    "/api/v1/appels-offres/avis-ao",
-    {
-      method: "POST",
-      body: JSON.stringify({ ...payload, appelOffreId: aoId, isPublished: false }),
-    },
-  );
-}
-
-export async function publishServiceContractantTenderAvis(
-  aoId: string,
-  payload: SaveTenderAvisPayload,
-): Promise<TenderAvisItem> {
-  return apiClient<TenderAvisItem>(
-    "/api/v1/appels-offres/avis-ao",
-    {
-      method: "POST",
-      body: JSON.stringify({ ...payload, appelOffreId: aoId, isPublished: true }),
-    },
-  );
-}
-
-export async function publishServiceContractantTenderAvisById(
-  aoId: string,
-  avisId: string,
-): Promise<TenderAvisItem> {
-  return apiClient<TenderAvisItem>(
-    `/api/v1/appels-offres/avis-ao/${avisId}`,
-    { method: "PATCH", body: JSON.stringify({ isPublished: true }) },
-  );
 }
 
 // ─── AI Orchestrator API ─────────────────────────────────────────────────────

@@ -14,7 +14,9 @@ import {
   getServiceContractantTenderAvisById,
   saveServiceContractantTenderAvisDraft,
   publishServiceContractantTenderAvis,
+  updateServiceContractantTenderAvis,
   publishServiceContractantTenderAvisById,
+  deleteServiceContractantTenderAvis,
   type ServiceContractantTenderSubmissionListItem,
   type ServiceContractantTenderSubmissionDetail,
   type TenderEvaluationPhaseOverviewItem,
@@ -175,6 +177,41 @@ export function usePublishTenderAvisByIdMutation(aoId: string) {
 
   return useMutation<TenderAvisItem, Error, string>({
     mutationFn: (avisId) => publishServiceContractantTenderAvisById(aoId, avisId),
+    onSuccess: async (_data, avisId) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: contractantTendersKeys.avis(aoId) }),
+        queryClient.invalidateQueries({ queryKey: contractantTendersKeys.avisDetail(aoId, avisId) }),
+      ]);
+    },
+  });
+}
+
+interface UpdateTenderAvisVariables {
+  avisId: string;
+  payload: SaveTenderAvisPayload;
+  publish?: boolean;
+}
+
+export function useUpdateTenderAvisMutation(aoId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<TenderAvisItem, Error, UpdateTenderAvisVariables>({
+    mutationFn: ({ avisId, payload, publish }) =>
+      updateServiceContractantTenderAvis(aoId, avisId, payload, publish),
+    onSuccess: async (_data, { avisId }) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: contractantTendersKeys.avis(aoId) }),
+        queryClient.invalidateQueries({ queryKey: contractantTendersKeys.avisDetail(aoId, avisId) }),
+      ]);
+    },
+  });
+}
+
+export function useDeleteTenderAvisMutation(aoId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, string>({
+    mutationFn: (avisId) => deleteServiceContractantTenderAvis(aoId, avisId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: contractantTendersKeys.avis(aoId) });
     },
