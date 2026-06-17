@@ -206,8 +206,9 @@ export default function Navbar({
       <div className="hidden md:flex items-center gap-6">
         {navLinks.map((link) => (
           <Link
-            key={link.href}
-            href={link.href}
+            key={link.label}
+            href="#"
+            onClick={(e) => e.preventDefault()}
             className="text-sm text-gray-300 hover:text-white transition-colors"
           >
             {link.label}
@@ -218,7 +219,7 @@ export default function Navbar({
       <div className="flex items-center gap-3">
         {languageSelector}
         <Link
-          href={`/${locale}/auth/login`}
+          href={`/${locale}/auth/login/commission`}
           className="text-sm font-semibold text-white px-4 py-2 rounded-lg transition-colors"
           style={{ backgroundColor: "#4CAF50" }}
         >
