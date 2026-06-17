@@ -417,12 +417,12 @@ export default function CommissionEvaluationPage({
 
   if (isPageLoading) {
     return (
-      <div className="space-y-6 p-2" style={{ direction: isAr ? "rtl" : "ltr" }}>
+      <div className="mx-auto w-full max-w-[1760px] space-y-6 p-4" style={{ direction: isAr ? "rtl" : "ltr" }}>
         <div className="h-36 animate-pulse rounded-[32px] bg-slate-100" />
-        <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)_320px]">
+        <div className="grid gap-5 xl:grid-cols-[300px_minmax(0,1fr)] 2xl:grid-cols-[300px_minmax(0,1fr)_320px]">
           <div className="h-96 animate-pulse rounded-[28px] bg-slate-100" />
           <div className="h-96 animate-pulse rounded-[28px] bg-slate-100" />
-          <div className="h-96 animate-pulse rounded-[28px] bg-slate-100" />
+          <div className="h-96 animate-pulse rounded-[28px] bg-slate-100 xl:col-span-2 2xl:col-span-1" />
         </div>
       </div>
     );
@@ -445,17 +445,18 @@ export default function CommissionEvaluationPage({
 
   return (
     <div
-      className="min-h-full space-y-6 bg-[radial-gradient(circle_at_top_left,#eef7ef_0,#f6f8fb_34%,#edf2f7_100%)] p-4 text-slate-950"
+      className="min-h-full bg-[radial-gradient(circle_at_top_left,#eef7ef_0,#f6f8fb_34%,#edf2f7_100%)] p-4 text-slate-950 sm:p-5"
       style={{ direction: isAr ? "rtl" : "ltr" }}
     >
+      <div className="mx-auto w-full max-w-[1760px] space-y-6">
       <section className="overflow-hidden rounded-[34px] border border-white/70 bg-white/85 shadow-[0_30px_90px_-45px_rgba(15,23,42,0.55)] backdrop-blur">
-        <div className="border-b border-slate-200/70 bg-[linear-gradient(135deg,#123524_0%,#1f4f37_48%,#d9b46f_100%)] p-6 text-white">
+        <div className="border-b border-slate-200/70 bg-[linear-gradient(135deg,#123524_0%,#1f4f37_48%,#d9b46f_100%)] p-5 text-white sm:p-6">
           <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-            <div>
+            <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-100">
                 {isAr ? "فضاء التقييم التقني" : "Chambre de notation technique"}
               </p>
-              <h1 className="mt-3 text-3xl font-black tracking-tight">
+              <h1 className="mt-3 max-w-5xl break-words text-2xl font-black tracking-tight sm:text-3xl">
                 {selectedCommission?.objet ?? evaluation?.objet ?? "Evaluation commission"}
               </h1>
               <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
@@ -483,7 +484,7 @@ export default function CommissionEvaluationPage({
           </div>
         </div>
 
-        <div className="grid gap-4 p-5 md:grid-cols-4">
+        <div className="grid gap-3 p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-4">
           {[
             { label: "Soumissions", value: submissions.length, detail: "offres chargees" },
             { label: "Criteres", value: criteria.length, detail: hasEvaluationCriteria ? "service evaluation" : "source AO/fallback" },
@@ -499,8 +500,8 @@ export default function CommissionEvaluationPage({
         </div>
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)_340px]">
-        <aside className="space-y-4">
+      <section className="grid items-start gap-5 xl:grid-cols-[300px_minmax(0,1fr)] 2xl:grid-cols-[300px_minmax(0,1fr)_320px]">
+        <aside className="space-y-4 xl:sticky xl:top-4">
           <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-sm font-black text-slate-950">
@@ -566,7 +567,7 @@ export default function CommissionEvaluationPage({
               </h2>
               <span className="text-xs font-bold text-slate-400">{membresList.length}</span>
             </div>
-            <div className="space-y-2">
+            <div className="max-h-[440px] space-y-2 overflow-y-auto pr-1">
               {membresList.map((membre) => (
                 <div key={membre.id} className="rounded-2xl bg-slate-50 p-3">
                   <p className="text-sm font-bold text-slate-900">
@@ -600,7 +601,7 @@ export default function CommissionEvaluationPage({
                       {activeSubmission.operatorName} · lot {activeSubmission.lotId ?? "non precise"}
                     </p>
                   </div>
-                  <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-3">
+                  <div className="grid w-full grid-cols-3 gap-3 text-center lg:w-auto">
                     <div className="rounded-2xl bg-slate-50 px-4 py-3">
                       <p className="text-xs font-bold text-slate-400">Score</p>
                       <p className="text-xl font-black text-emerald-700">{Math.round(scoreActuel)}</p>
@@ -757,8 +758,8 @@ export default function CommissionEvaluationPage({
           )}
         </main>
 
-        <aside className="space-y-4">
-          <div className="sticky top-4 overflow-hidden rounded-[30px] border border-[#123524]/20 bg-[#101f1a] text-white shadow-[0_30px_90px_-45px_rgba(16,31,26,0.8)]">
+        <aside className="space-y-4 xl:col-span-2 2xl:col-span-1">
+          <div className="overflow-hidden rounded-[30px] border border-[#123524]/20 bg-[#101f1a] text-white shadow-[0_30px_90px_-45px_rgba(16,31,26,0.8)] 2xl:sticky 2xl:top-4">
             <div className="border-b border-white/10 bg-white/5 p-5">
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#d9b46f]">
                 Assistant IA Al-Mizan
@@ -810,6 +811,7 @@ export default function CommissionEvaluationPage({
           </div>
         </aside>
       </section>
+      </div>
     </div>
   );
 }
