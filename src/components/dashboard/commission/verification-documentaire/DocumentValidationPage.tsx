@@ -139,7 +139,9 @@ export default function DocumentValidationPage({
           setDocs(realDocs);
           setActiveDocId(realDocs[0].id);
         }
-      } catch { /* keep mock fallback */ }
+      } catch {
+        // Keep the current state if the backend call fails.
+      }
     })();
   }, [soumissionId]);
   const [saved, setSaved] = useState(false);

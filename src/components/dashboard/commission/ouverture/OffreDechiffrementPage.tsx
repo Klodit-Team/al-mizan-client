@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import type { SoumissionRetenue, CommissionRole } from "./types";
+import type { SoumissionRetenue } from "./types";
 import {
   useSeancesOuvertureQuery,
   useDemarrerSeanceMutation,
@@ -15,11 +15,8 @@ import { downloadPV } from "@/services/commission-dashboard/api";
 interface OffreDechiffrementPageProps {
   locale: string;
   offreId: string;
-  roles?: Partial<Record<CommissionRole, string>>;
   dict: {
     roleHint: string;
-    memberButton: string;
-    presidentButton: string;
     pageTitle: string;
     pageSubTitle: string;
     infoBanner: string;
@@ -168,7 +165,6 @@ function SoumissionsTable({
 export default function OffreDechiffrementPage({
   locale,
   offreId,
-  roles,
   dict,
 }: OffreDechiffrementPageProps) {
   const isAr = locale === "ar";
@@ -197,30 +193,21 @@ export default function OffreDechiffrementPage({
     seanceActive?.statut === "EN_COURS" ? 2 : 0;
 
   // ── UI state ────────────────────────────────────────────────────────────────
-  const [simulatedRole, setSimulatedRole] = useState<CommissionRole>("membre");
-  const [localKeys, setLocalKeys] = useState(0);
   const [isUnlocking, setIsUnlocking] = useState(false);
 
-  const keysUnlocked = seanceId ? backendKeysUnlocked : localKeys;
+  const keysUnlocked = backendKeysUnlocked;
   const isFullyUnlocked = keysUnlocked >= 3;
-
-  const canUnlock =
-    (simulatedRole === "membre" && keysUnlocked < 2) ||
-    (simulatedRole === "president" && keysUnlocked === 2);
+  const canStart = seanceActive?.statut === "PROGRAMMEE";
+  const canFinish = seanceActive?.statut === "EN_COURS";
+  const canUnlock = canStart || canFinish;
 
   const handleUnlockClick = async () => {
     setIsUnlocking(true);
     try {
-      if (seanceId) {
-        if (simulatedRole === "membre" && keysUnlocked < 2) {
-          await demarrerMutation.mutateAsync();
-        } else if (simulatedRole === "president" && keysUnlocked === 2) {
-          await terminerMutation.mutateAsync();
-        }
-      } else {
-        // Pas de séance backend : simulation locale uniquement
-        if (simulatedRole === "membre" && localKeys < 2) setLocalKeys((p) => p + 1);
-        else if (simulatedRole === "president" && localKeys === 2) setLocalKeys(3);
+      if (canStart) {
+        await demarrerMutation.mutateAsync();
+      } else if (canFinish) {
+        await terminerMutation.mutateAsync();
       }
     } finally {
       setIsUnlocking(false);
@@ -233,8 +220,6 @@ export default function OffreDechiffrementPage({
     await generatePVMutation.mutateAsync().catch(() => null);
     await downloadPV(seanceId);
   };
-
-  const buttonLabel = isUnlocking ? dict.unlocking : isFullyUnlocked ? dict.unlocked : dict.unlockButton;
 
   // ── Loading ─────────────────────────────────────────────────────────────────
   if (loadingSeances) {
@@ -249,31 +234,16 @@ export default function OffreDechiffrementPage({
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6" style={{ direction: isAr ? "rtl" : "ltr" }}>
 
-      {/* Role simulator banner */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center justify-between shadow-sm">
+      {/* Session status banner */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center justify-between gap-3 shadow-sm">
         <span className="text-sm font-medium text-yellow-800">
           🔧 {dict.roleHint}
-          {seanceActive && (
-            <span className="ms-2 text-yellow-700 font-mono text-xs">[{seanceActive.statut}]</span>
-          )}
         </span>
-        <div className="flex bg-white rounded-lg p-0.5 border border-yellow-200 shadow-sm">
-          {(["membre", "president"] as CommissionRole[]).map((role) => (
-            <button
-              key={role}
-              onClick={() => setSimulatedRole(role)}
-              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
-                simulatedRole === role
-                  ? "bg-yellow-100 text-yellow-800 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {role === "membre"
-                ? roles?.membre ?? dict.memberButton
-                : roles?.president ?? dict.presidentButton}
-            </button>
-          ))}
-        </div>
+        {seanceActive && (
+          <span className="inline-flex items-center rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-yellow-800 border border-yellow-200">
+            [{seanceActive.statut}]
+          </span>
+        )}
       </div>
 
       {/* Header */}
@@ -370,13 +340,17 @@ export default function OffreDechiffrementPage({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
                   </svg>
                 )}
-                {buttonLabel}
+                {isUnlocking
+                  ? dict.unlocking
+                  : isFullyUnlocked
+                    ? dict.unlocked
+                    : canStart
+                      ? "Démarrer la séance"
+                      : "Terminer la séance"}
               </button>
               {!canUnlock && !isFullyUnlocked && (
                 <p className="text-xs text-red-400 mt-3 font-medium">
-                  {simulatedRole === "membre" && keysUnlocked >= 2 ? dict.waitingPresident
-                    : simulatedRole === "president" && keysUnlocked < 2 ? dict.waitingMembers
-                    : ""}
+                  {isAr ? "Cette séance n'est pas encore disponible." : "Cette séance n'est pas encore disponible."}
                 </p>
               )}
             </div>

@@ -95,7 +95,7 @@ export const commissionTranslations = {
 
     // CommissionOuverturePage
     ouverture: {
-      roleHint: "Simulez votre rôle pour avancer dans le flux",
+      roleHint: "La séance est synchronisée avec le backend",
       memberButton: "Membre",
       presidentButton: "Président",
       pageTitle: "Ouverture des Plis : Offre Financière",
@@ -234,7 +234,7 @@ export const commissionTranslations = {
 
     // CommissionOuverturePage
     ouverture: {
-      roleHint: "حاكي دورك للتقدم في التدفق",
+      roleHint: "الجلسة متزامنة مع الخادم",
       memberButton: "عضو",
       presidentButton: "رئيس اللجنة",
       pageTitle: "فتح الأظرف: العرض المالي",

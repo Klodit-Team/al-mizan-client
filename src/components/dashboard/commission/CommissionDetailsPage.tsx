@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import {
   useCommissionEvaluationQuery,
@@ -8,7 +8,7 @@ import {
   useCommissionMarcheQuery,
   useMembersMarcheQuery,
 } from "@/services/commission-dashboard/queries";
-import type { CommissionEvaluation, MembreEvaluation, CommissionMarche, MembreMarche } from "@/services/commission-dashboard/api";
+import type { CommissionEvaluation, CommissionMarche } from "@/services/commission-dashboard/api";
 
 interface Props {
   locale: string;
@@ -17,7 +17,11 @@ interface Props {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type CommissionType = "evaluation" | "marche";
-type Member = MembreEvaluation | MembreMarche;
+type MarcheView = CommissionMarche & {
+  montantEstime?: number;
+  soumissionnairesCount?: number;
+  dateOuvertureOffres?: string;
+};
 
 // ── Status mapping ─────────────────────────────────────────────────────────────
 const STATUS_STYLES = {
@@ -58,8 +62,8 @@ function SkeletonBlock({ h, w = "100%" }: { h: number; w?: string | number }) {
 function StatusBadge({ status, type }: { status: string; type: CommissionType }) {
   const styles =
     type === "evaluation"
-      ? (STATUS_STYLES.evaluation as Record<string, any>)[status] || STATUS_STYLES.evaluation.BROUILLON
-      : (STATUS_STYLES.marche as Record<string, any>)[status] || STATUS_STYLES.marche.EN_COURS;
+      ? (STATUS_STYLES.evaluation as Record<string, { label: string; bg: string; color: string }>)[status] || STATUS_STYLES.evaluation.BROUILLON
+      : (STATUS_STYLES.marche as Record<string, { label: string; bg: string; color: string }>)[status] || STATUS_STYLES.marche.EN_COURS;
 
   return (
     <span
@@ -79,7 +83,7 @@ function StatusBadge({ status, type }: { status: string; type: CommissionType })
 
 // ── Role Badge ────────────────────────────────────────────────────────────────
 function RoleBadge({ role }: { role: string }) {
-  const style = (ROLE_COLORS as Record<string, any>)[role] || ROLE_COLORS.MEMBRE;
+  const style = (ROLE_COLORS as Record<string, { bg: string; color: string }>)[role] || ROLE_COLORS.MEMBRE;
   return (
     <span
       style={{
@@ -123,32 +127,31 @@ function EmptyMembers({ isAr }: { isAr: boolean }) {
 // ── Main component ────────────────────────────────────────────────────────────
 export default function CommissionDetailsPage({ locale, commissionId }: Props) {
   const isAr = locale === "ar";
-  const [commissionType, setCommissionType] = useState<CommissionType | null>(null);
 
   // Try both evaluation and marche queries
   const { data: evalCommission, isLoading: evalLoading, isError: evalError } = useCommissionEvaluationQuery(commissionId);
-  const { data: marcheCommission, isLoading: marcheLoading, isError: marcheError } = useCommissionMarcheQuery(commissionId);
+  const { data: marcheCommission, isLoading: marcheLoading, isError: marcheError } = useCommissionMarcheQuery(
+    commissionId,
+    !evalLoading && !evalCommission
+  );
 
-  // Determine type based on successful fetch
-  useEffect(() => {
-    if (!evalLoading && !marcheLoading) {
-      if (evalCommission && !evalError) {
-        setCommissionType("evaluation");
-      } else if (marcheCommission && !marcheError) {
-        setCommissionType("marche");
-      }
-    }
-  }, [evalCommission, marcheCommission, evalLoading, marcheLoading, evalError, marcheError]);
+  const commissionType = useMemo<CommissionType | null>(() => {
+    if (evalCommission && !evalError) return "evaluation";
+    if (marcheCommission && !marcheError) return "marche";
+    return null;
+  }, [evalCommission, marcheCommission, evalError, marcheError]);
 
   const commission = commissionType === "evaluation" ? evalCommission : marcheCommission;
-  const isLoading = commissionType === "evaluation" ? evalLoading : marcheLoading;
+  const isLoading = evalLoading || (commissionType === null && marcheLoading);
 
   // Fetch members based on type
   const { data: evalMembers = [] } = useMembresEvaluationQuery(
-    commissionType === "evaluation" ? commissionId : ""
+    commissionType === "evaluation" ? commissionId : "",
+    commissionType === "evaluation"
   );
   const { data: marcheMembers = [] } = useMembersMarcheQuery(
-    commissionType === "marche" ? commissionId : ""
+    commissionType === "marche" ? commissionId : "",
+    commissionType === "marche"
   );
 
   const members = commissionType === "evaluation" ? evalMembers : marcheMembers;
@@ -204,7 +207,7 @@ export default function CommissionDetailsPage({ locale, commissionId }: Props) {
         { label: isAr ? "تاريخ الاجتماع" : "Date réunion", value: evaluationComm.dateReunion ? formatDate(evaluationComm.dateReunion, locale) : "-" },
       ];
     } else {
-      const marcheComm = marcheCommission as any;
+      const marcheComm = marcheCommission as MarcheView;
       return [
         { label: isAr ? "نوع السوق" : "Type marché", value: marcheComm.typeMarche || "-" },
         { label: isAr ? "المبلغ المقدر" : "Montant estimé", value: marcheComm.montantEstime ? `${(marcheComm.montantEstime as number).toLocaleString()}` : "-" },
@@ -327,7 +330,7 @@ export default function CommissionDetailsPage({ locale, commissionId }: Props) {
                     {commissionType === "marche" && (
                       <td className="px-6 py-4">
                         <p className="text-sm text-gray-600">
-                          {(member as any).fonction || "-"}
+                          {"fonction" in member ? member.fonction || "-" : "-"}
                         </p>
                       </td>
                     )}

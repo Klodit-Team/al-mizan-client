@@ -89,78 +89,27 @@ function EmptySoumissions({ isAr }: { isAr: boolean }) {
   );
 }
 
-// ── Critères par défaut (grille d'évaluation standard — configurée par le président) ──
-// Ces données sont propres au membre évaluateur et ne viennent pas du service commission.
-// Elles seront POSTées vers /api/v1/evaluations quand le membre enregistre.
-const CRITERES_DEFAULT: Critere[] = [
-  {
-    id: "c1",
-    labelFr: "Capacité Technique & Expérience",
-    labelAr: "القدرة التقنية والخبرة",
-    ponderation: 40,
-    noteMax: 100,
-    descriptionFr: "Évaluation de l'expérience pertinente et des capacités techniques démontrées.",
-    descriptionAr: "تقييم الخبرة ذات الصلة والقدرات التقنية المُثبتة.",
-    note: null,
-    justification: "",
-    ia: {
-      noteSuggeree: 85, confiance: 92,
-      justifFr: "Le candidat a fourni 3 attestations de bonne exécution valides pour des projets similaires.",
-      justifAr: "قدّم المترشح 3 شهادات تنفيذ سليمة لمشاريع مماثلة.",
-    },
-  },
-  {
-    id: "c2",
-    labelFr: "Méthodologie & Planning",
-    labelAr: "المنهجية والجدول الزمني",
-    ponderation: 30,
-    noteMax: 100,
-    noteEliminatoire: 15,
-    descriptionFr: "Analyse de la cohérence de la méthodologie et du réalisme du planning.",
-    descriptionAr: "تحليل اتساق المنهجية وواقعية الجدول الزمني.",
-    note: null,
-    justification: "",
-    ia: {
-      noteSuggeree: 60, confiance: 78,
-      justifFr: "Le planning proposé est inférieur au minimum requis dans le CDC.",
-      justifAr: "الجدول الزمني المقترح أقل من الحد الأدنى المطلوب في دفتر الشروط.",
-      alerteFr: "Planning inférieur au minimum du CDC.",
-      alerteAr: "الجدول الزمني أقل من الحد الأدنى لدفتر الشروط.",
-    },
-  },
-  {
-    id: "c3",
-    labelFr: "Ressources Humaines",
-    labelAr: "الموارد البشرية",
-    ponderation: 20,
-    noteMax: 100,
-    descriptionFr: "Évaluation des CV et qualifications du personnel clé proposé.",
-    descriptionAr: "تقييم السير الذاتية ومؤهلات الكوادر الرئيسية المقترحة.",
-    note: null,
-    justification: "",
-    ia: {
-      noteSuggeree: 72, confiance: 85,
-      justifFr: "L'équipe proposée couvre les profils requis mais manque d'un expert senior.",
-      justifAr: "الفريق المقترح يغطي الملفات المطلوبة لكنه يفتقر إلى خبير أول.",
-    },
-  },
-  {
-    id: "c4",
-    labelFr: "Moyens Matériels",
-    labelAr: "الوسائل المادية",
-    ponderation: 10,
-    noteMax: 100,
-    descriptionFr: "Adéquation des équipements et matériels techniques proposés.",
-    descriptionAr: "ملاءمة المعدات والوسائل التقنية المقترحة.",
-    note: null,
-    justification: "",
-    ia: {
-      noteSuggeree: 90, confiance: 95,
-      justifFr: "Les équipements listés correspondent aux spécifications du CDC.",
-      justifAr: "المعدات المدرجة تتوافق مع المواصفات التقنية لدفتر الشروط.",
-    },
-  },
-];
+function EmptyCriteria({ isAr }: { isAr: boolean }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 gap-3">
+      <div className="w-14 h-14 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      </div>
+      <div className="text-center">
+        <p className="text-sm font-semibold text-gray-500">
+          {isAr ? "لا توجد معايير للتقييم" : "Aucun critère d'évaluation"}
+        </p>
+        <p className="text-xs text-gray-400 mt-1">
+          {isAr
+            ? "لم يرسل الخادم معايير التقييم لهذه اللجنة بعد"
+            : "Le backend n'a pas encore renvoyé les critères de cette commission"}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 function mapBackendCriterionToUi(criterion: {
   id: string;
@@ -205,10 +154,11 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
   );
   const commissionId = evaluation?.commissionId ?? "";
   const evaluationId = evaluation?.id ?? "";
+  const resolvedAoId = evaluation?.aoId ?? aoId;
 
   const { data: membres } = useMembresEvaluationQuery(commissionId);
-  const { data: submissionsData, isLoading: loadingSubmissions } = useCommissionEvaluationSubmissionsQuery(aoId);
-  const { data: criteriaData, isLoading: loadingCriteria } = useCommissionEvaluationCriteriaQuery(aoId);
+  const { data: submissionsData, isLoading: loadingSubmissions } = useCommissionEvaluationSubmissionsQuery(resolvedAoId);
+  const { data: criteriaData, isLoading: loadingCriteria } = useCommissionEvaluationCriteriaQuery(resolvedAoId);
   const saveScoresMutation = useSaveCommissionScoresMutation(evaluationId);
 
   const soumissions: Soumission[] = useMemo(
@@ -222,9 +172,10 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
   );
 
   const criteresTemplate: Critere[] = useMemo(
-    () => (criteriaData?.length ? criteriaData.map((criterion, index) => mapBackendCriterionToUi(criterion, index)) : CRITERES_DEFAULT.map((criterion) => ({ ...criterion }))),
+    () => (criteriaData ?? []).map((criterion, index) => mapBackendCriterionToUi(criterion, index)),
     [criteriaData]
   );
+  const hasCriteria = criteresTemplate.length > 0;
 
   const [activeSoumissionIdx, setActiveSoumissionIdx] = useState(0);
   const [criteresByS, setCriteresByS] = useState<Record<string, Critere[]>>({});
@@ -337,7 +288,7 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
           </span>
         </div>
         <Link
-          href={`/${locale}/dashboard/commission/classement/${aoId}`}
+          href={`/${locale}/dashboard/commission/classement/${resolvedAoId}`}
           style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "#1E293B", color: "#fff", textDecoration: "none" }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -411,7 +362,11 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
           {/* Two-column */}
           <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              {criteres.map((c) => {
+              {!hasCriteria ? (
+                <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 16 }}>
+                  <EmptyCriteria isAr={isAr} />
+                </div>
+              ) : criteres.map((c) => {
                 const label = isAr ? c.labelAr : c.labelFr;
                 const desc = isAr ? c.descriptionAr : c.descriptionFr;
                 const iaJustif = isAr ? c.ia.justifAr : c.ia.justifFr;
@@ -497,8 +452,8 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
                 </button>
                 <button
                   onClick={goNext}
-                  disabled={saveScoresMutation.isPending}
-                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 28px", borderRadius: 999, fontSize: 13, fontWeight: 600, background: "#4CAF50", color: "#fff", border: "none", cursor: saveScoresMutation.isPending ? "not-allowed" : "pointer", opacity: saveScoresMutation.isPending ? 0.7 : 1 }}
+                  disabled={saveScoresMutation.isPending || !hasCriteria}
+                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 28px", borderRadius: 999, fontSize: 13, fontWeight: 600, background: "#4CAF50", color: "#fff", border: "none", cursor: saveScoresMutation.isPending || !hasCriteria ? "not-allowed" : "pointer", opacity: saveScoresMutation.isPending || !hasCriteria ? 0.7 : 1 }}
                 >
                   {saveScoresMutation.isPending ? (
                     "…"
@@ -520,7 +475,13 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
                   <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.4 }}>{te.iaPanel.sousTitre}</p>
                 </div>
                 <div style={{ padding: "14px", display: "flex", flexDirection: "column", gap: 10 }}>
-                  {criteres.map((c, idx) => {
+                  {!hasCriteria ? (
+                    <div style={{ border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "14px", textAlign: "center" }}>
+                      <p style={{ fontSize: 12, color: "#94A3B8", margin: 0 }}>
+                        {isAr ? "لا توجد معايير متاحة من الخادم" : "Aucun critère disponible depuis le backend"}
+                      </p>
+                    </div>
+                  ) : criteres.map((c, idx) => {
                     const label = isAr ? c.labelAr : c.labelFr;
                     const justif = isAr ? c.ia.justifAr : c.ia.justifFr;
                     return (

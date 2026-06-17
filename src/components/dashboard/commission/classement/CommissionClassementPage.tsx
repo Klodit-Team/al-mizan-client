@@ -170,9 +170,10 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
     [evaluations, aoId]
   );
   const commissionId = evaluation?.commissionId ?? "";
+  const resolvedAoId = evaluation?.aoId ?? aoId;
 
   const { data: membres } = useMembresEvaluationQuery(commissionId);
-  const { data: backendClassement, isLoading: loadingClassement } = useCommissionClassementQuery(aoId);
+  const { data: backendClassement, isLoading: loadingClassement } = useCommissionClassementQuery(resolvedAoId);
   const changeStatutMutation = useChangeStatutEvaluationMutation(commissionId);
 
   // Les lignes de classement viendront du service évaluations
@@ -217,7 +218,7 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
 
   const handleExportPdf = async () => {
     setIsExporting(true);
-    try { await exportCommissionEvaluationPdf(commissionId || aoId); } finally { setIsExporting(false); }
+    try { await exportCommissionEvaluationPdf(commissionId || resolvedAoId); } finally { setIsExporting(false); }
   };
 
   const recLabel = (rec: RecType) =>
@@ -370,7 +371,7 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
         </div>
       )}
 
-      <Link href={`/${locale}/dashboard/commission/evaluations/${aoId}`}
+      <Link href={`/${locale}/dashboard/commission/evaluations/${resolvedAoId}`}
         style={{ fontSize: 13, color: "#9CA3AF", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ transform: isAr ? "rotate(180deg)" : "none" }}>
           <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />

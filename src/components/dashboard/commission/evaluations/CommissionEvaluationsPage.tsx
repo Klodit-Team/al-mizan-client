@@ -10,6 +10,17 @@ interface Props {
 
 type StatutPhase = "terminee" | "en_cours" | "verrouillee";
 
+function normalizePhaseStatus(status: string): StatutPhase {
+  switch (status.toUpperCase()) {
+    case "TERMINEE":
+      return "terminee";
+    case "EN_COURS":
+      return "en_cours";
+    default:
+      return "verrouillee";
+  }
+}
+
 function PhaseIcon({ statut }: { statut: StatutPhase }) {
   if (statut === "terminee")
     return (
@@ -69,9 +80,10 @@ export default function CommissionEvaluationsPage({ locale }: Props) {
   const commissions = data?.commissionsEvaluation ?? [];
   const seances = data?.seancesOuverture ?? [];
   const activeCommission = commissions.find((c) => c.statut === "ACTIVE") ?? commissions[0];
-  const activeAoId = activeCommission
-    ? seances.find((s) => s.commissionId === activeCommission.id)?.appelOffreId ?? activeCommission.id
-    : "";
+  const activeSeance = activeCommission
+    ? seances.find((s) => s.commissionId === activeCommission.id)
+    : undefined;
+  const activeAoId = activeSeance?.appelOffreId ?? activeCommission?.id ?? "";
 
   // Loading skeleton
   if (isLoading) {
@@ -102,45 +114,28 @@ export default function CommissionEvaluationsPage({ locale }: Props) {
   const AO_REF = activeCommission.reference;
   const AO_OBJET = activeCommission.objet;
 
-  const progressGlobal = (() => {
-    switch (activeCommission.statut) {
-      case "ACTIVE": return 60;
-      case "CLOTUREE": return 100;
-      case "ANNULEE": return 0;
-      default: return 33;
-    }
-  })();
+  const rawPhases = activeCommission?.phases ?? [];
+  const phaseCards = rawPhases.map((phase, idx) => {
+    const statut = normalizePhaseStatus(phase.status);
+    const completedCount = rawPhases.filter((item) => normalizePhaseStatus(item.status) === "terminee").length;
+    const progress = statut === "terminee" ? 100 : statut === "en_cours" ? 60 : 0;
+    const actionHref = idx === rawPhases.length - 1
+      ? `/${locale}/dashboard/commission/classement/${activeAoId}`
+      : `/${locale}/dashboard/commission/evaluations/${activeAoId}`;
 
-  type PhaseData = {
-    statut: StatutPhase;
-    progress: number;
-    detailArgs: [number, number];
-    actionKey: "voirResultats" | "continuer" | "nonAccessible";
-    actionHref?: string;
-  };
-
-  const PHASES_DATA: PhaseData[] = (() => {
-    switch (activeCommission.statut) {
-      case "CLOTUREE":
-        return [
-          { statut: "terminee", progress: 100, detailArgs: [5, 5], actionKey: "voirResultats", actionHref: `/${locale}/dashboard/commission/evaluations/${AO_ID}` },
-          { statut: "terminee", progress: 100, detailArgs: [5, 5], actionKey: "voirResultats", actionHref: `/${locale}/dashboard/commission/evaluations/${AO_ID}` },
-          { statut: "terminee", progress: 100, detailArgs: [5, 5], actionKey: "voirResultats", actionHref: `/${locale}/dashboard/commission/classement/${AO_ID}` },
-        ];
-      case "ACTIVE":
-        return [
-          { statut: "terminee", progress: 100, detailArgs: [5, 5], actionKey: "voirResultats", actionHref: `/${locale}/dashboard/commission/evaluations/${AO_ID}` },
-          { statut: "en_cours", progress: 60, detailArgs: [3, 5], actionKey: "continuer" },
-          { statut: "verrouillee", progress: 0, detailArgs: [0, 0], actionKey: "nonAccessible" },
-        ];
-      default:
-        return [
-          { statut: "en_cours", progress: 20, detailArgs: [1, 5], actionKey: "continuer" },
-          { statut: "verrouillee", progress: 0, detailArgs: [0, 0], actionKey: "nonAccessible" },
-          { statut: "verrouillee", progress: 0, detailArgs: [0, 0], actionKey: "nonAccessible" },
-        ];
-    }
-  })();
+    return {
+      statut,
+      progress,
+      detailArgs: [completedCount, rawPhases.length] as [number, number],
+      actionHref,
+      label: phase.phase?.trim() || `Phase ${idx + 1}`,
+    };
+  });
+  const progressGlobal = activeCommission?.progressGlobal ?? (
+    rawPhases.length > 0
+      ? Math.round((rawPhases.filter((item) => normalizePhaseStatus(item.status) === "terminee").length / rawPhases.length) * 100)
+      : 0
+  );
 
   return (
     <div style={{ minHeight: "100%", direction: isAr ? "rtl" : "ltr" }}>
@@ -160,54 +155,59 @@ export default function CommissionEvaluationsPage({ locale }: Props) {
       </div>
 
       {/* Phases grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
-        {PHASES_DATA.map((phaseData, idx) => {
-          const phaseInfo = td.phases[idx];
-          const { statut, progress, detailArgs } = phaseData;
-          const isVerrouillee = statut === "verrouillee";
-          const isEnCours = statut === "en_cours";
-          const href = phaseData.actionHref ?? `/${locale}/dashboard/commission/evaluations/${AO_ID}`;
-          const detail = isVerrouillee ? td.detail.verrouillee : isEnCours ? td.detail.en_cours(...detailArgs) : td.detail.terminee(...detailArgs);
+      {phaseCards.length === 0 ? (
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
+          <EmptyState isAr={isAr} />
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+          {phaseCards.map((phaseData, idx) => {
+            const { statut, progress, detailArgs, label, actionHref } = phaseData;
+            const isVerrouillee = statut === "verrouillee";
+            const isEnCours = statut === "en_cours";
+            const href = actionHref ?? `/${locale}/dashboard/commission/evaluations/${activeAoId}`;
+            const detail = isVerrouillee ? td.detail.verrouillee : isEnCours ? td.detail.en_cours(...detailArgs) : td.detail.terminee(...detailArgs);
 
-          return (
-            <div key={idx} style={{ background: "#fff", border: `1px solid ${isEnCours ? "#4CAF50" : "#E5E7EB"}`, borderTopWidth: isEnCours ? 3 : 1, borderRadius: 16, display: "flex", flexDirection: "column", opacity: isVerrouillee ? 0.75 : 1, overflow: "hidden" }}>
-              <div style={{ padding: "20px 22px 14px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-                <PhaseIcon statut={statut} />
-                <span style={{ fontSize: 12, fontWeight: 600, padding: "4px 12px", borderRadius: 999, background: isEnCours ? "#4CAF50" : "#F0EDED", color: isEnCours ? "#fff" : "#364150" }}>
-                  {td.statuts[statut]}
-                </span>
-              </div>
-              <div style={{ padding: "0 22px 14px", flex: 1 }}>
-                <h3 style={{ fontSize: 15, fontWeight: 700, color: "#1B1C1C", margin: "0 0 4px" }}>{phaseInfo.numero}. {phaseInfo.label}</h3>
-                <p style={{ fontSize: 13, color: isVerrouillee ? "#BECAB9" : "#6F7A6B", margin: 0, fontStyle: isVerrouillee ? "italic" : "normal" }}>
-                  {detail}
-                  {isEnCours && <span style={{ marginInlineStart: 8, fontWeight: 700, color: "#4CAF50" }}>{progress}%</span>}
-                </p>
-              </div>
-              <div style={{ padding: "0 22px 18px" }}>
-                <div style={{ height: 6, borderRadius: 999, background: "#F0EDED" }}>
-                  <div style={{ height: 6, borderRadius: 999, width: `${progress}%`, background: statut === "terminee" ? "#4CAF50" : isEnCours ? "linear-gradient(90deg,#4CAF50,#81C784)" : "transparent", transition: "width 0.7s" }} />
+            return (
+              <div key={idx} style={{ background: "#fff", border: `1px solid ${isEnCours ? "#4CAF50" : "#E5E7EB"}`, borderTopWidth: isEnCours ? 3 : 1, borderRadius: 16, display: "flex", flexDirection: "column", opacity: isVerrouillee ? 0.75 : 1, overflow: "hidden" }}>
+                <div style={{ padding: "20px 22px 14px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+                  <PhaseIcon statut={statut} />
+                  <span style={{ fontSize: 12, fontWeight: 600, padding: "4px 12px", borderRadius: 999, background: isEnCours ? "#4CAF50" : "#F0EDED", color: isEnCours ? "#fff" : "#364150" }}>
+                    {td.statuts[statut]}
+                  </span>
+                </div>
+                <div style={{ padding: "0 22px 14px", flex: 1 }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, color: "#1B1C1C", margin: "0 0 4px" }}>{label}</h3>
+                  <p style={{ fontSize: 13, color: isVerrouillee ? "#BECAB9" : "#6F7A6B", margin: 0, fontStyle: isVerrouillee ? "italic" : "normal" }}>
+                    {detail}
+                    {isEnCours && <span style={{ marginInlineStart: 8, fontWeight: 700, color: "#4CAF50" }}>{progress}%</span>}
+                  </p>
+                </div>
+                <div style={{ padding: "0 22px 18px" }}>
+                  <div style={{ height: 6, borderRadius: 999, background: "#F0EDED" }}>
+                    <div style={{ height: 6, borderRadius: 999, width: `${progress}%`, background: statut === "terminee" ? "#4CAF50" : isEnCours ? "linear-gradient(90deg,#4CAF50,#81C784)" : "transparent", transition: "width 0.7s" }} />
+                  </div>
+                </div>
+                <div style={{ padding: "0 22px 22px" }}>
+                  {isVerrouillee ? (
+                    <div style={{ padding: "11px", borderRadius: 12, background: "#F0EDED", color: "#9CA3AF", fontSize: 13, fontWeight: 600, textAlign: "center" }}>
+                      {td.actions.nonAccessible}
+                    </div>
+                  ) : isEnCours ? (
+                    <Link href={href} style={{ display: "block", padding: "11px", borderRadius: 12, background: "#4CAF50", color: "#fff", fontSize: 13, fontWeight: 600, textAlign: "center", textDecoration: "none" }}>
+                      {td.actions.continuer}
+                    </Link>
+                  ) : (
+                    <Link href={href} style={{ display: "block", padding: "11px", borderRadius: 12, background: "#fff", color: "#364150", border: "1px solid #E5E7EB", fontSize: 13, fontWeight: 600, textAlign: "center", textDecoration: "none" }}>
+                      {td.actions.voirResultats}
+                    </Link>
+                  )}
                 </div>
               </div>
-              <div style={{ padding: "0 22px 22px" }}>
-                {isVerrouillee ? (
-                  <div style={{ padding: "11px", borderRadius: 12, background: "#F0EDED", color: "#9CA3AF", fontSize: 13, fontWeight: 600, textAlign: "center" }}>
-                    {td.actions.nonAccessible}
-                  </div>
-                ) : isEnCours ? (
-                  <Link href={href} style={{ display: "block", padding: "11px", borderRadius: 12, background: "#4CAF50", color: "#fff", fontSize: 13, fontWeight: 600, textAlign: "center", textDecoration: "none" }}>
-                    {td.actions.continuer}
-                  </Link>
-                ) : (
-                  <Link href={href} style={{ display: "block", padding: "11px", borderRadius: 12, background: "#fff", color: "#364150", border: "1px solid #E5E7EB", fontSize: 13, fontWeight: 600, textAlign: "center", textDecoration: "none" }}>
-                    {td.actions.voirResultats}
-                  </Link>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

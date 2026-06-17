@@ -97,19 +97,19 @@ export function useCommissionsEvaluationQuery(params: PaginationQuery = {}) {
   });
 }
 
-export function useCommissionEvaluationQuery(id: string) {
+export function useCommissionEvaluationQuery(id: string, enabled = true) {
   return useQuery<CommissionEvaluation, Error>({
     queryKey: commissionDashboardKeys.evaluation.detail(id),
     queryFn: () => getCommissionEvaluation(id),
-    enabled: Boolean(id),
+    enabled: Boolean(id) && enabled,
   });
 }
 
-export function useMembresEvaluationQuery(commissionId: string) {
+export function useMembresEvaluationQuery(commissionId: string, enabled = true) {
   return useQuery<MembreEvaluation[], Error>({
     queryKey: commissionDashboardKeys.evaluation.membres(commissionId),
     queryFn: () => listMembresEvaluation(commissionId),
-    enabled: Boolean(commissionId),
+    enabled: Boolean(commissionId) && enabled,
   });
 }
 
@@ -238,19 +238,19 @@ export function useCommissionsMarcheQuery(params: PaginationQuery = {}) {
   });
 }
 
-export function useCommissionMarcheQuery(id: string) {
+export function useCommissionMarcheQuery(id: string, enabled = true) {
   return useQuery<CommissionMarche, Error>({
     queryKey: commissionDashboardKeys.marche.detail(id),
     queryFn: () => getCommissionMarche(id),
-    enabled: Boolean(id),
+    enabled: Boolean(id) && enabled,
   });
 }
 
-export function useMembersMarcheQuery(commissionId: string) {
+export function useMembersMarcheQuery(commissionId: string, enabled = true) {
   return useQuery<MembreMarche[], Error>({
     queryKey: commissionDashboardKeys.marche.membres(commissionId),
     queryFn: () => listMembresMarche(commissionId),
-    enabled: Boolean(commissionId),
+    enabled: Boolean(commissionId) && enabled,
   });
 }
 
