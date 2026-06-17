@@ -99,6 +99,7 @@ export interface SeanceOuverture {
   dateSeance: string;
   statut: StatutSeance;
   pvUrl?: string;
+  membresPresentsIds?: string[];
   resultats?: ResultatOuverture[];
   createdAt: string;
   updatedAt: string;
@@ -583,6 +584,15 @@ export async function terminerSeance(id: string): Promise<SeanceOuverture> {
   });
   return unwrap<SeanceOuverture>(raw);
 }
+
+export async function ouvrirPlis(id: string, membresPresentsIds: string[]): Promise<SeanceOuverture> {
+  const raw = await apiClient<unknown>(`${SO}/${id}/ouvrir-plis`, {
+    method: "POST",
+    body: JSON.stringify({ membresPresentsIds }),
+  });
+  return unwrap<SeanceOuverture>(raw);
+}
+
 
 export async function generatePV(id: string): Promise<{ url: string }> {
   const raw = await apiClient<unknown>(`${SO}/${id}/pv`, { method: "POST" });

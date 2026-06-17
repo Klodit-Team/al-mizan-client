@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import type { SoumissionRetenue } from "./types";
 import {
@@ -11,6 +11,10 @@ import {
   useResultatsOuvertureQuery,
 } from "@/services/commission-dashboard/queries";
 import { downloadPV } from "@/services/commission-dashboard/api";
+import {
+  useCommissionFragmentsQuery,
+  useDechiffrerOffresMutation,
+} from "@/services/commission/queries";
 
 interface OffreDechiffrementPageProps {
   locale: string;
@@ -179,6 +183,17 @@ export default function OffreDechiffrementPage({
   const generatePVMutation = useGeneratePVMutation(seanceId);
   const { data: resultats } = useResultatsOuvertureQuery(seanceId);
 
+  // Real decryption and fragments queries
+  const { data: allFragments } = useCommissionFragmentsQuery(offreId, Boolean(seanceActive));
+  const dechiffrerMutation = useDechiffrerOffresMutation(offreId);
+
+  const presentFragments = useMemo(() => {
+    if (!allFragments || !seanceActive?.membresPresentsIds) return [];
+    return allFragments.filter((f) =>
+      seanceActive.membresPresentsIds.includes(f.membreId)
+    );
+  }, [allFragments, seanceActive?.membresPresentsIds]);
+
   // Soumissions extraites des résultats live (quand la séance existe)
   const soumissionsLive: SoumissionRetenue[] = (resultats ?? []).map((r) => ({
     id: r.soumissionId,
@@ -207,8 +222,16 @@ export default function OffreDechiffrementPage({
       if (canStart) {
         await demarrerMutation.mutateAsync();
       } else if (canFinish) {
+        // Trigger actual cryptographic decryption with the Shamir fragments of present members
+        if (presentFragments.length > 0) {
+          await dechiffrerMutation.mutateAsync(presentFragments);
+        } else {
+          console.warn("No fragments found for present members. Decryption might fail.");
+        }
         await terminerMutation.mutateAsync();
       }
+    } catch (error) {
+      console.error("Error during unlock / decryption:", error);
     } finally {
       setIsUnlocking(false);
     }
