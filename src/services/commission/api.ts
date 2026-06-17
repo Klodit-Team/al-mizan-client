@@ -139,40 +139,71 @@ export async function getCommissionEvaluationsOverview(): Promise<CommissionEval
     .filter((item): item is CommissionEvaluationOverviewItem => Boolean(item));
 }
 
-export async function getCommissionEvaluationSubmissions(aoId: string): Promise<CommissionEvaluationSubmission[]> {
+export async function getCommissionEvaluationSubmissions(evaluationId: string): Promise<CommissionEvaluationSubmission[]> {
   const raw = await apiClient<unknown>(
-    `/api/v1/soumissions/appel-offre/${aoId}`,
+    `/api/v1/evaluations/${evaluationId}/soumissions`,
     { method: "GET" },
   );
-  return Array.isArray(raw) ? raw : [];
+  const data = unwrapEnvelope<unknown>(raw);
+  const items = Array.isArray(data) ? data : [];
+
+  return items
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const record = item as Record<string, unknown>;
+
+      return {
+        id: String(record.id ?? ""),
+        reference: String(record.reference ?? record.aliasAnonyme ?? ""),
+        operatorName: String(
+          record.operatorName ??
+          record.operateurNom ??
+          record.aliasAnonyme ??
+          "Soumission",
+        ),
+        status: String(record.status ?? record.statut ?? ""),
+      } as CommissionEvaluationSubmission;
+    })
+    .filter(
+      (item): item is CommissionEvaluationSubmission =>
+        Boolean(item?.id) && Boolean(item.reference),
+    );
 }
 
-export async function getCommissionEvaluationCriteria(aoId: string): Promise<CommissionEvaluationCriterion[]> {
+export async function getCommissionEvaluationCriteria(evaluationId: string): Promise<CommissionEvaluationCriterion[]> {
   const raw = await apiClient<unknown>(
-    `/api/v1/appels-offres/${aoId}`,
+    `/api/v1/evaluations/${evaluationId}/criteres`,
     { method: "GET" },
   );
-  const ao = unwrapEnvelope<{
-    criteresEvaluation?: Array<{
-      id: string;
-      libelle?: string;
-      categorie?: string;
-      poids?: number;
-      noteEliminatoire?: number;
-    }>;
-  }>(raw);
+  const data = unwrapEnvelope<unknown>(raw);
+  const items = Array.isArray(data) ? data : [];
 
-  return Array.isArray(ao?.criteresEvaluation)
-    ? ao.criteresEvaluation.map((criterion) => ({
+  return items
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const criterion = item as Record<string, unknown>;
+
+      return {
         id: criterion.id,
-        label: criterion.libelle ?? "",
-        weight: Number(criterion.poids ?? 0),
-        type: String(criterion.categorie ?? "TECHNIQUE").toUpperCase() === "FINANCIER"
-          ? "financier"
-          : "technique",
-        noteEliminatoire: criterion.noteEliminatoire,
-      }))
-    : [];
+        label: String(criterion.libelle ?? criterion.label ?? ""),
+        weight: Number(criterion.poids ?? criterion.weight ?? 0),
+        type:
+          String(criterion.categorie ?? criterion.type ?? "TECHNIQUE").toUpperCase() ===
+          "FINANCIER"
+            ? "financier"
+            : "technique",
+        noteEliminatoire:
+          typeof criterion.noteMinimale === "number"
+            ? criterion.noteMinimale
+            : typeof criterion.noteEliminatoire === "number"
+              ? criterion.noteEliminatoire
+              : undefined,
+      } as CommissionEvaluationCriterion;
+    })
+    .filter(
+      (item): item is CommissionEvaluationCriterion =>
+        Boolean(item?.id) && Boolean(item.label),
+    );
 }
 
 export async function saveCommissionEvaluationScores(

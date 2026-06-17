@@ -31,19 +31,19 @@ export function useCommissionEvaluationsOverviewQuery() {
   });
 }
 
-export function useCommissionEvaluationSubmissionsQuery(aoId: string) {
+export function useCommissionEvaluationSubmissionsQuery(evaluationId: string) {
   return useQuery<CommissionEvaluationSubmission[], Error>({
-    queryKey: commissionKeys.evaluationSubmissions(aoId),
-    queryFn: () => getCommissionEvaluationSubmissions(aoId),
-    enabled: Boolean(aoId),
+    queryKey: commissionKeys.evaluationSubmissions(evaluationId),
+    queryFn: () => getCommissionEvaluationSubmissions(evaluationId),
+    enabled: Boolean(evaluationId),
   });
 }
 
-export function useCommissionEvaluationCriteriaQuery(aoId: string) {
+export function useCommissionEvaluationCriteriaQuery(evaluationId: string) {
   return useQuery<CommissionEvaluationCriterion[], Error>({
-    queryKey: commissionKeys.evaluationCriteria(aoId),
-    queryFn: () => getCommissionEvaluationCriteria(aoId),
-    enabled: Boolean(aoId),
+    queryKey: commissionKeys.evaluationCriteria(evaluationId),
+    queryFn: () => getCommissionEvaluationCriteria(evaluationId),
+    enabled: Boolean(evaluationId),
   });
 }
 

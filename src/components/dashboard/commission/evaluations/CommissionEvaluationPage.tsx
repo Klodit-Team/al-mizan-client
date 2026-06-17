@@ -143,8 +143,8 @@ function mapBackendCriterionToUi(criterion: {
     ia: {
       noteSuggeree: suggestedNote,
       confiance: 80,
-      justifFr: "Critère récupéré depuis le backend de l'appel d'offres.",
-      justifAr: "تم جلب المعيار من الخادم الخاص بطلب العرض.",
+      justifFr: "Critère récupéré depuis le backend d'évaluation.",
+      justifAr: "تم جلب المعيار من خدمة التقييم.",
     },
   };
 }
@@ -198,8 +198,8 @@ export default function CommissionEvaluationPage({
     "";
 
   const { data: membres } = useMembresEvaluationQuery(resolvedCommissionId);
-  const { data: submissionsData, isLoading: loadingSubmissions } = useCommissionEvaluationSubmissionsQuery(resolvedAoId);
-  const { data: criteriaData, isLoading: loadingCriteria } = useCommissionEvaluationCriteriaQuery(resolvedAoId);
+  const { data: submissionsData, isLoading: loadingSubmissions } = useCommissionEvaluationSubmissionsQuery(evaluationId);
+  const { data: criteriaData, isLoading: loadingCriteria } = useCommissionEvaluationCriteriaQuery(evaluationId);
   const saveScoresMutation = useSaveCommissionScoresMutation(evaluationId);
 
   const membresList: MembreEvaluation[] = useMemo(
