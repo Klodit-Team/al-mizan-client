@@ -75,7 +75,7 @@ export interface ListIncidentsParams {
 
 // ─── Base path ────────────────────────────────────────────────────────────────
 
-const BASE = "/api/v1/incidents";
+const BASE = "/api/v1/audit/incidents";
 
 interface ApiEnvelope<T> {
   success?: boolean;
