@@ -49,7 +49,7 @@ export default  function Footer({ dict, locale }: FooterProps) {
                     <ul className="space-y-2.5">
                         {["Tenders Search", "Awarded Contracts", "Sector Statistics", "Operator Directory"].map((item) => (
                             <li key={item}>
-                                <Link href={`/${locale}`} className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link href="#" onClick={(e) => e.preventDefault()} className="text-sm text-gray-400 hover:text-white transition-colors">
                                     {item}
                                 </Link>
                             </li>
@@ -65,7 +65,7 @@ export default  function Footer({ dict, locale }: FooterProps) {
                     <ul className="space-y-2.5">
                         {["Privacy Policy", "Terms of Service", "Technical Helpdesk", "Legislative Texts"].map((item) => (
                             <li key={item}>
-                                <Link href="#" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link href="#" onClick={(e) => e.preventDefault()} className="text-sm text-gray-400 hover:text-white transition-colors">
                                     {item}
                                 </Link>
                             </li>
