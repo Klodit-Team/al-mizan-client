@@ -173,12 +173,13 @@ function fileNameFromUrl(url?: string): string {
   return pieces[pieces.length - 1] || url;
 }
 
-function openFile(url?: string) {
-  if (!url) {
+function openFile(subId: string, docType?: string, url?: string) {
+  if (!url || !docType) {
     return;
   }
 
-  window.open(url, "_blank", "noopener,noreferrer");
+  const downloadUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/soumissions/${subId}/documents/${docType}/download`;
+  window.open(downloadUrl, "_blank", "noopener,noreferrer");
 }
 
 export default function SoumissionDetailPage({ subId, dict, locale }: { subId: string; dict: any; locale: Locale }) {
@@ -345,6 +346,7 @@ export default function SoumissionDetailPage({ subId, dict, locale }: { subId: s
                   label: dict.documents.labels.technique,
                   file: fileNameFromUrl(sub.offreTechnique?.fichierUrl) || dict.documents.unavailable,
                   url: sub.offreTechnique?.fichierUrl,
+                  type: "offre-technique",
                   color: "text-blue-600 bg-blue-50",
                 },
                 {
@@ -352,6 +354,7 @@ export default function SoumissionDetailPage({ subId, dict, locale }: { subId: s
                   label: dict.documents.labels.caution,
                   file: fileNameFromUrl(sub.caution?.fichierUrl) || dict.documents.unavailable,
                   url: sub.caution?.fichierUrl,
+                  type: "caution",
                   color: "text-amber-600 bg-amber-50",
                 },
                 {
@@ -359,6 +362,7 @@ export default function SoumissionDetailPage({ subId, dict, locale }: { subId: s
                   label: dict.documents.labels.financiere,
                   file: fileNameFromUrl(sub.offreFinanciere?.fichierChiffreUrl) || dict.documents.unavailable,
                   url: sub.offreFinanciere?.fichierChiffreUrl,
+                  type: "offre-financiere",
                   color: "text-violet-600 bg-violet-50",
                 },
               ].map((doc) => (
@@ -370,7 +374,7 @@ export default function SoumissionDetailPage({ subId, dict, locale }: { subId: s
                   </div>
                   <button
                     type="button"
-                    onClick={() => openFile(doc.url)}
+                    onClick={() => openFile(sub.id, doc.type, doc.url)}
                     disabled={!doc.url}
                     className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-[10px] font-medium text-slate-600 hover:border-[#4CAF50] hover:text-[#4CAF50] transition-colors disabled:cursor-not-allowed disabled:opacity-40"
                   >
