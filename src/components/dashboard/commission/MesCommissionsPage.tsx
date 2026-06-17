@@ -1,9 +1,27 @@
 "use client";
 import { useState } from "react";
-import CommissionRow from "./CommissionRow";
+import Link from "next/link";
+import StatutBadge from "./StatutBadge";
 import type { CommissionDict, MembreCommission, CommissionStatut } from "./types";
 import { useMesCommissionsQuery } from "@/services/commission-dashboard/queries";
-import type { CommissionEvaluation } from "@/services/commission-dashboard/api";
+import type { CommissionEvaluation, CommissionMarche } from "@/services/commission-dashboard/api";
+
+type CommissionListItem = MembreCommission & {
+  kind: "evaluation" | "marche";
+};
+
+function getRoleLabel(role: string, dict: CommissionDict) {
+  const roleKeyMap: Record<string, string> = {
+    "Président": "president",
+    "Évaluateur": "evaluateur",
+    "Rapporteur": "rapporteur",
+    "Membre": "membre",
+    "Observateur": "observateur",
+  };
+
+  const roleKey = roleKeyMap[role];
+  return dict.roles?.[roleKey ?? "membre"] ?? role;
+}
 
 // ── Mapping statut backend → statut UI ──────────────────────────────────────
 function mapStatutEval(statut: string): CommissionStatut {
@@ -24,7 +42,7 @@ function mapRoleEval(role: string): string {
   }
 }
 
-function transformEvaluationToCommission(ce: CommissionEvaluation, aoId?: string): MembreCommission {
+function transformEvaluationToCommission(ce: CommissionEvaluation, aoId?: string): CommissionListItem {
   return {
     id: ce.id,
     designation: ce.objet,
@@ -32,6 +50,31 @@ function transformEvaluationToCommission(ce: CommissionEvaluation, aoId?: string
     monRole: mapRoleEval(ce.membres?.[0]?.role ?? "MEMBRE") as MembreCommission["monRole"],
     dateConstitution: ce.dateCreation,
     statut: mapStatutEval(ce.statut),
+    kind: "evaluation",
+  };
+}
+
+function mapStatutMarche(statut: string): CommissionStatut {
+  switch (statut) {
+    case "ATTRIBUEE":
+      return "DISSOUTE";
+    case "ANNULEE":
+    case "INFRUCTUEUSE":
+      return "DISSOUTE";
+    default:
+      return "ACTIVE";
+  }
+}
+
+function transformMarcheToCommission(cm: CommissionMarche): CommissionListItem {
+  return {
+    id: cm.id,
+    designation: cm.intitule,
+    appelOffre: { id: cm.id, reference: cm.reference, objet: cm.intitule },
+    monRole: "Membre",
+    dateConstitution: cm.dateCreation,
+    statut: mapStatutMarche(cm.statut),
+    kind: "marche",
   };
 }
 
@@ -56,10 +99,17 @@ export default function MesCommissionsPage({ locale, dict }: MesCommissionsPageP
     (data?.seancesOuverture ?? []).map((seance) => [seance.commissionId, seance.appelOffreId])
   );
 
-  const commissions: MembreCommission[] =
+  const evaluationCommissions: CommissionListItem[] =
     (data?.commissionsEvaluation ?? []).map((commission) =>
       transformEvaluationToCommission(commission, aoIdByCommissionId.get(commission.id))
     );
+
+  const marcheCommissions: CommissionListItem[] =
+    (data?.commissionsMarche ?? []).map((commission) =>
+      transformMarcheToCommission(commission)
+    );
+
+  const commissions = [...evaluationCommissions, ...marcheCommissions];
 
   const filtered = commissions.filter((c) => {
     const matchSearch =
@@ -75,6 +125,11 @@ export default function MesCommissionsPage({ locale, dict }: MesCommissionsPageP
     active: commissions.filter((c) => c.statut === "ACTIVE").length,
     constituee: commissions.filter((c) => c.statut === "CONSTITUEE").length,
     dissoute: commissions.filter((c) => c.statut === "DISSOUTE").length,
+  };
+
+  const typeLabels = {
+    evaluation: locale === "ar" ? "تقييم" : "Évaluation",
+    marche: locale === "ar" ? "سوق" : "Marché",
   };
 
   return (
@@ -179,8 +234,8 @@ export default function MesCommissionsPage({ locale, dict }: MesCommissionsPageP
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-gray-500">
-                          {search || statusFilter !== "ALL" ? dict.noResults ?? "Aucun résultat" : dict.noCommissions}
-                        </p>
+                        {search || statusFilter !== "ALL" ? dict.noResults ?? "Aucun résultat" : dict.noCommissions}
+                      </p>
                         <p className="text-xs text-gray-400 mt-1">
                           {search || statusFilter !== "ALL"
                             ? dict.noResultsSub ?? "Essayez d'autres critères de recherche"
@@ -197,9 +252,61 @@ export default function MesCommissionsPage({ locale, dict }: MesCommissionsPageP
                   </td>
                 </tr>
               ) : (
-                filtered.map((commission) => (
-                  <CommissionRow key={commission.id} commission={commission} locale={locale} dict={dict} />
-                ))
+                filtered.map((commission) => {
+                  const typeLabel = commission.kind === "marche" ? typeLabels.marche : typeLabels.evaluation;
+                  return (
+                    <tr key={commission.id} className="hover:bg-emerald-50/30 transition-colors group">
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-800 group-hover:text-emerald-700 transition-colors">
+                              {commission.designation}
+                            </p>
+                            <span className="mt-1 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500">
+                              {typeLabel}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-5 py-4">
+                        <p className="text-sm font-medium text-gray-700">{commission.appelOffre.reference}</p>
+                        <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{commission.appelOffre.objet}</p>
+                      </td>
+
+                      <td className="px-5 py-4">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                          {getRoleLabel(commission.monRole, dict)}
+                        </span>
+                      </td>
+
+                      <td className="px-5 py-4 text-sm text-gray-500 whitespace-nowrap">
+                        {new Date(commission.dateConstitution).toLocaleDateString(
+                          locale === "ar" ? "ar-DZ" : "fr-DZ",
+                          { day: "2-digit", month: "short", year: "numeric" }
+                        )}
+                      </td>
+
+                      <td className="px-5 py-4">
+                        <StatutBadge statut={commission.statut} dict={dict.statuts ?? {}} />
+                      </td>
+
+                      <td className="px-5 py-4">
+                        <Link
+                          href={`/${locale}/dashboard/commission/details/${commission.id}`}
+                          title={dict.actions}
+                          className="inline-flex items-center gap-2 rounded-full bg-[#4CAF50] px-4 py-2 text-white text-sm font-semibold shadow-sm shadow-emerald-200 hover:bg-[#43A047] transition-all"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5l7 7-7 7" />
+                          </svg>
+                          {locale === "ar" ? "عرض التفاصيل" : "Voir détails"}
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
