@@ -24,7 +24,10 @@ import type {
   CommissionEvaluationNote,
   CommissionEvaluationSubmission,
 } from "@/services/commission/api";
-import { registerCommissionEvaluationSubmission } from "@/services/commission/api";
+import {
+  createCommissionEvaluationCriterion,
+  registerCommissionEvaluationSubmission,
+} from "@/services/commission/api";
 
 interface Props {
   locale: string;
@@ -258,6 +261,7 @@ export default function CommissionEvaluationPage({
   const { data: anomalies } = useCommissionAoAnomaliesQuery(resolvedAoId);
   const queryClient = useQueryClient();
   const autoRegisterKeyRef = useRef<string | null>(null);
+  const autoSeedCriteriaKeyRef = useRef<string | null>(null);
 
   const submissions = useMemo(() => {
     const evalItems = evaluationSubmissions ?? [];
@@ -387,6 +391,47 @@ export default function CommissionEvaluationPage({
       cancelled = true;
     };
   }, [evaluationId, isEvaluationOpen, queryClient, submissionsToRegister]);
+
+  useEffect(() => {
+    if (!evaluationId || !isEvaluationOpen || hasEvaluationCriteria || aoCriteria.length === 0) {
+      return;
+    }
+
+    const seedKey = `${evaluationId}:${aoCriteria
+      .map((criterion) => criterion.id)
+      .join("|")}`;
+    if (autoSeedCriteriaKeyRef.current === seedKey) return;
+    autoSeedCriteriaKeyRef.current = seedKey;
+
+    let cancelled = false;
+
+    (async () => {
+      for (const [index, criterion] of aoCriteria.entries()) {
+        try {
+          await createCommissionEvaluationCriterion(evaluationId, {
+            code: criterion.code || `AO-${String(index + 1).padStart(2, "0")}`,
+            libelle: criterion.label,
+            description: criterion.description || undefined,
+            poids: criterion.weight,
+            noteMax: criterion.noteMax || undefined,
+            noteMinimale: criterion.noteEliminatoire,
+            eliminatoire: criterion.eliminatoire,
+            ordre: index + 1,
+          });
+        } catch (error) {
+          console.warn("Auto-seeding evaluation criteria failed", error);
+        }
+      }
+
+      if (!cancelled) {
+        await queryClient.invalidateQueries({ queryKey: commissionKeys.evaluationCriteria(evaluationId) });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [aoCriteria, evaluationId, hasEvaluationCriteria, isEvaluationOpen, queryClient]);
 
   const aiInsights = buildAiInsights({
     hasEvaluation,

@@ -124,6 +124,17 @@ export interface CommissionEvaluationSubmissionRegistrationPayload {
   metadata?: Record<string, unknown>;
 }
 
+export interface CommissionEvaluationCriterionCreationPayload {
+  code: string;
+  libelle: string;
+  description?: string;
+  poids: number;
+  noteMax?: number;
+  noteMinimale?: number;
+  eliminatoire?: boolean;
+  ordre?: number;
+}
+
 interface ApiEnvelope<T> {
   data?: T;
   success?: boolean;
@@ -259,6 +270,25 @@ export async function registerCommissionEvaluationSubmission(
   throw new Error("Impossible de transformer la soumission créée.");
 }
 
+export async function createCommissionEvaluationCriterion(
+  evaluationId: string,
+  payload: CommissionEvaluationCriterionCreationPayload,
+): Promise<CommissionEvaluationCriterion> {
+  const raw = await apiClient<unknown>(
+    `/api/v1/evaluations/${evaluationId}/criteres`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+  const criterion = mapCommissionEvaluationCriterion(
+    unwrapEnvelope<unknown>(raw),
+    "evaluation",
+  );
+  if (criterion) return criterion;
+  throw new Error("Impossible de transformer le critère créé.");
+}
+
 export async function getCommissionAoSubmissions(aoId: string): Promise<CommissionEvaluationSubmission[]> {
   const raw = await apiClient<unknown>(
     `/api/v1/soumissions/appel-offre/${aoId}`,
@@ -342,45 +372,52 @@ function mapCommissionEvaluationCriteria(
 ): CommissionEvaluationCriterion[] {
   return extractArrayPayload(payload)
     .map((item) => {
-      if (!item || typeof item !== "object") return null;
-      const criterion = item as Record<string, unknown>;
-      const code =
-        typeof criterion.code === "string"
-          ? criterion.code
-          : typeof criterion.categorie === "string"
-            ? criterion.categorie
-            : undefined;
-      const label = String(criterion.libelle ?? criterion.label ?? "");
-      const noteMax = Number(criterion.noteMax ?? 100);
-
-      return {
-        id: String(criterion.id ?? ""),
-        code,
-        label,
-        weight: Number(criterion.poids ?? criterion.weight ?? 0),
-        type:
-          String(criterion.categorie ?? criterion.type ?? "TECHNIQUE").toUpperCase() ===
-          "FINANCIER"
-            ? "financier"
-            : "technique",
-        noteMax: Number.isFinite(noteMax) && noteMax > 0 ? noteMax : 100,
-        description:
-          typeof criterion.description === "string" ? criterion.description : null,
-        noteEliminatoire:
-          toNullableNumber(criterion.noteMinimale) ??
-          toNullableNumber(criterion.noteEliminatoire) ??
-          undefined,
-        eliminatoire:
-          typeof criterion.eliminatoire === "boolean"
-            ? criterion.eliminatoire
-            : Boolean(criterion.noteEliminatoire ?? criterion.noteMinimale),
-        source,
-      } as CommissionEvaluationCriterion;
+      return mapCommissionEvaluationCriterion(item, source);
     })
     .filter(
       (item): item is CommissionEvaluationCriterion =>
         Boolean(item?.id) && Boolean(item?.label),
     );
+}
+
+function mapCommissionEvaluationCriterion(
+  item: unknown,
+  source: "evaluation" | "ao",
+): CommissionEvaluationCriterion | null {
+  if (!item || typeof item !== "object") return null;
+  const criterion = item as Record<string, unknown>;
+  const code =
+    typeof criterion.code === "string"
+      ? criterion.code
+      : typeof criterion.categorie === "string"
+        ? criterion.categorie
+        : undefined;
+  const label = String(criterion.libelle ?? criterion.label ?? "");
+  const noteMax = Number(criterion.noteMax ?? 100);
+
+  return {
+    id: String(criterion.id ?? ""),
+    code,
+    label,
+    weight: Number(criterion.poids ?? criterion.weight ?? 0),
+    type:
+      String(criterion.categorie ?? criterion.type ?? "TECHNIQUE").toUpperCase() ===
+      "FINANCIER"
+        ? "financier"
+        : "technique",
+    noteMax: Number.isFinite(noteMax) && noteMax > 0 ? noteMax : 100,
+    description:
+      typeof criterion.description === "string" ? criterion.description : null,
+    noteEliminatoire:
+      toNullableNumber(criterion.noteMinimale) ??
+      toNullableNumber(criterion.noteEliminatoire) ??
+      undefined,
+    eliminatoire:
+      typeof criterion.eliminatoire === "boolean"
+        ? criterion.eliminatoire
+        : Boolean(criterion.noteEliminatoire ?? criterion.noteMinimale),
+    source,
+  };
 }
 
 export async function getCommissionEvaluationNotes(
