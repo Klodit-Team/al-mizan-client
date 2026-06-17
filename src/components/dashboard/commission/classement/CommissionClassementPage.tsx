@@ -4,12 +4,12 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { commissionTranslations } from "@/i18n/commission-translations";
 import {
+  useMesCommissionsQuery,
   useMembresEvaluationQuery,
   useChangeStatutEvaluationMutation,
 } from "@/services/commission-dashboard/queries";
 import {
   useCommissionClassementQuery,
-  useCommissionEvaluationsOverviewQuery,
 } from "@/services/commission/queries";
 import { exportCommissionEvaluationPdf } from "@/services/commission-dashboard/api";
 
@@ -35,6 +35,12 @@ interface LigneClassement {
   motifEliminationAr?: string;
   elimine: boolean;
 }
+
+type CommissionEvaluationWithAo = {
+  id: string;
+  aoId?: string | null;
+  appelOffreId?: string | null;
+};
 
 const REC_STYLES: Record<RecType, { bg: string; color: string }> = {
   Retenir: { bg: "rgba(76,175,80,0.12)", color: "#2e7d32" },
@@ -164,13 +170,24 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
   const t = commissionTranslations[isAr ? "ar" : "fr"];
   const tc = t.classement;
 
-  const { data: evaluations, isLoading: loadingEvaluations } = useCommissionEvaluationsOverviewQuery();
+  const { data: mesCommissions, isLoading: loadingEvaluations } = useMesCommissionsQuery();
   const evaluation = useMemo(
-    () => evaluations?.find((item) => item.aoId === aoId || item.id === aoId),
-    [evaluations, aoId]
+    () =>
+      (mesCommissions?.commissionsEvaluation as CommissionEvaluationWithAo[] | undefined)?.find(
+        (item) => item.id === aoId,
+      ) ?? null,
+    [mesCommissions, aoId]
   );
-  const commissionId = evaluation?.commissionId ?? "";
-  const resolvedAoId = evaluation?.aoId ?? aoId;
+  const seance = useMemo(
+    () => mesCommissions?.seancesOuverture.find((item) => item.commissionId === evaluation?.id) ?? null,
+    [mesCommissions, evaluation?.id]
+  );
+  const commissionId = evaluation?.id ?? "";
+  const resolvedAoId =
+    seance?.appelOffreId ??
+    evaluation?.appelOffreId ??
+    evaluation?.aoId ??
+    "";
 
   const { data: membres } = useMembresEvaluationQuery(commissionId);
   const { data: backendClassement, isLoading: loadingClassement } = useCommissionClassementQuery(resolvedAoId);

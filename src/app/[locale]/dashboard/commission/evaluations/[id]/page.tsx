@@ -6,5 +6,5 @@ interface PageProps {
 
 export default async function EvaluationPage({ params }: PageProps) {
   const { locale, id } = await params;
-  return <CommissionEvaluationPage locale={locale} aoId={id} />;
+  return <CommissionEvaluationPage locale={locale} selectedCommissionId={id} />;
 }

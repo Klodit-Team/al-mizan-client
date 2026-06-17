@@ -48,6 +48,9 @@ export interface CommissionEvaluation {
   statut: StatutEvaluation;
   presidentId: string;
   observations?: string;
+  aoId?: string | null;
+  appelOffreId?: string | null;
+  seanceId?: string | null;
   membres?: MembreEvaluation[];
   createdAt: string;
   updatedAt: string;
@@ -137,8 +140,8 @@ export interface CreateCommissionEvaluationDto {
   observations?: string;
 }
 
-export interface UpdateCommissionEvaluationDto
-  extends Partial<CreateCommissionEvaluationDto> {}
+export type UpdateCommissionEvaluationDto =
+  Partial<CreateCommissionEvaluationDto>;
 
 export interface ChangeStatutEvaluationDto {
   statut: StatutEvaluation;
@@ -166,8 +169,7 @@ export interface CreateCommissionMarcheDto {
   presidentId: string;
 }
 
-export interface UpdateCommissionMarcheDto
-  extends Partial<CreateCommissionMarcheDto> {}
+export type UpdateCommissionMarcheDto = Partial<CreateCommissionMarcheDto>;
 
 export interface ChangeStatutMarcheDto {
   statut: StatutMarche;
@@ -203,7 +205,7 @@ export interface CreateSeanceDto {
   dateSeance: string;
 }
 
-export interface UpdateSeanceDto extends Partial<CreateSeanceDto> {}
+export type UpdateSeanceDto = Partial<CreateSeanceDto>;
 
 export interface CreateResultatDto {
   soumissionId: string;
@@ -212,7 +214,7 @@ export interface CreateResultatDto {
   observations?: string;
 }
 
-export interface UpdateResultatDto extends Partial<CreateResultatDto> {}
+export type UpdateResultatDto = Partial<CreateResultatDto>;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers

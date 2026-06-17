@@ -4,18 +4,18 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { commissionTranslations } from "@/i18n/commission-translations";
 import {
+  useMesCommissionsQuery,
   useMembresEvaluationQuery,
 } from "@/services/commission-dashboard/queries";
 import {
   useCommissionEvaluationCriteriaQuery,
   useCommissionEvaluationSubmissionsQuery,
   useSaveCommissionScoresMutation,
-  useCommissionEvaluationsOverviewQuery,
 } from "@/services/commission/queries";
 
 interface Props {
   locale: string;
-  aoId: string;
+  selectedCommissionId: string;
 }
 
 // ── Types critère (définis côté client — données d'évaluation saisies par le membre) ──
@@ -141,28 +141,36 @@ function mapBackendCriterionToUi(criterion: {
   };
 }
 
-export default function CommissionEvaluationPage({ locale, aoId }: Props) {
+export default function CommissionEvaluationPage({
+  locale,
+  selectedCommissionId,
+}: Props) {
   const isAr = locale === "ar";
   const t = commissionTranslations[isAr ? "ar" : "fr"];
   const te = t.evaluation;
 
   // ── Données live ────────────────────────────────────────────────────────────
-  const { data: evaluations, isLoading: loadingEvaluations } = useCommissionEvaluationsOverviewQuery();
+  const { data: mesCommissions, isLoading: loadingEvaluations } = useMesCommissionsQuery();
   const evaluation = useMemo(
     () =>
-      evaluations?.find(
-        (item) =>
-          item.aoId === aoId ||
-          item.id === aoId ||
-          item.commissionId === aoId
-      ),
-    [evaluations, aoId]
+      mesCommissions?.commissionsEvaluation.find(
+        (item) => item.id === selectedCommissionId,
+      ) ?? null,
+    [mesCommissions, selectedCommissionId]
   );
-  const commissionId = evaluation?.commissionId ?? "";
+  const seance = useMemo(
+    () => mesCommissions?.seancesOuverture.find((item) => item.commissionId === evaluation?.id) ?? null,
+    [mesCommissions, evaluation?.id]
+  );
+  const resolvedCommissionId = evaluation?.id ?? "";
   const evaluationId = evaluation?.id ?? "";
-  const resolvedAoId = evaluation?.aoId ?? aoId;
+  const resolvedAoId =
+    seance?.appelOffreId ??
+    evaluation?.appelOffreId ??
+    evaluation?.aoId ??
+    "";
 
-  const { data: membres } = useMembresEvaluationQuery(commissionId);
+  const { data: membres } = useMembresEvaluationQuery(resolvedCommissionId);
   const { data: submissionsData, isLoading: loadingSubmissions } = useCommissionEvaluationSubmissionsQuery(resolvedAoId);
   const { data: criteriaData, isLoading: loadingCriteria } = useCommissionEvaluationCriteriaQuery(resolvedAoId);
   const saveScoresMutation = useSaveCommissionScoresMutation(evaluationId);
@@ -269,7 +277,7 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
   }
 
   // ── Pas de commission ────────────────────────────────────────────────────────
-  if (!evaluation) {
+  if (!evaluation || !resolvedAoId) {
     return (
       <div style={{ direction: isAr ? "rtl" : "ltr" }}>
         <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 16, overflow: "hidden" }}>
