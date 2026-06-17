@@ -2,13 +2,16 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Bold, Italic, List, ListOrdered, Underline } from "lucide-react";
 
 import {
   publishServiceContractantTenderAvis,
   saveServiceContractantTenderAvisDraft,
+  updateServiceContractantTenderAvis,
+  getTenderAvisErrorMessage,
   type SaveTenderAvisPayload,
+  type TenderAvisItem,
   type TenderAvisSupport,
   type TenderAvisType,
 } from "@/services/tendersAvis";
@@ -17,6 +20,7 @@ import { cn } from "@/lib/utils";
 interface AvisEditorFormProps {
   locale: string;
   aoId: string;
+  initialAvis?: TenderAvisItem;
 }
 
 type SubmitIntent = "draft" | "publish";
@@ -41,19 +45,43 @@ const avisTypeOptions: Array<{ value: TenderAvisType; label: string }> = [
 const supportOptions: Array<{ value: TenderAvisSupport; label: string }> = [
   { value: "bomop", label: "BOMOP" },
   { value: "presse", label: "Presse" },
-  { value: "plateforme", label: "Plateforme" },
+  { value: "plateforme", label: "Plateforme (BOMOP + Presse)" },
 ];
 
-export default function AvisEditorForm({ locale, aoId }: AvisEditorFormProps) {
+function toDateInputValue(dateValue: string) {
+  if (!dateValue) {
+    return "";
+  }
+
+  const parsed = new Date(dateValue);
+  if (Number.isNaN(parsed.getTime())) {
+    return dateValue.slice(0, 10);
+  }
+
+  return parsed.toISOString().slice(0, 10);
+}
+
+export default function AvisEditorForm({
+  locale,
+  aoId,
+  initialAvis,
+}: AvisEditorFormProps) {
   const router = useRouter();
   const editorRef = useRef<HTMLDivElement | null>(null);
+  const isEditMode = Boolean(initialAvis);
 
-  const [type, setType] = useState<TenderAvisType>("ao");
-  const [title, setTitle] = useState("");
-  const [support, setSupport] = useState<TenderAvisSupport>("plateforme");
-  const [publicationDate, setPublicationDate] = useState("");
-  const [publicationEndDate, setPublicationEndDate] = useState("");
-  const [contentHtml, setContentHtml] = useState("");
+  const [type, setType] = useState<TenderAvisType>(initialAvis?.type ?? "ao");
+  const [title, setTitle] = useState(initialAvis?.title ?? "");
+  const [support, setSupport] = useState<TenderAvisSupport>(
+    initialAvis?.support ?? "plateforme",
+  );
+  const [publicationDate, setPublicationDate] = useState(
+    toDateInputValue(initialAvis?.publicationDate ?? ""),
+  );
+  const [publicationEndDate, setPublicationEndDate] = useState(
+    toDateInputValue(initialAvis?.publicationEndDate ?? ""),
+  );
+  const [contentHtml, setContentHtml] = useState(initialAvis?.content ?? "");
   const [fieldErrors, setFieldErrors] = useState<AvisFormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -62,6 +90,12 @@ export default function AvisEditorForm({ locale, aoId }: AvisEditorFormProps) {
     () => `/${locale}/dashboard/contractant/appels-offres/${aoId}?tab=avis`,
     [aoId, locale],
   );
+
+  useEffect(() => {
+    if (editorRef.current && initialAvis?.content) {
+      editorRef.current.innerHTML = initialAvis.content;
+    }
+  }, [initialAvis?.content]);
 
   const fieldClass = (error?: string) =>
     cn(
@@ -139,7 +173,14 @@ export default function AvisEditorForm({ locale, aoId }: AvisEditorFormProps) {
     };
 
     try {
-      if (intent === "publish") {
+      if (isEditMode && initialAvis) {
+        await updateServiceContractantTenderAvis(
+          aoId,
+          initialAvis.id,
+          payload,
+          intent === "publish",
+        );
+      } else if (intent === "publish") {
         await publishServiceContractantTenderAvis(aoId, payload);
       } else {
         await saveServiceContractantTenderAvisDraft(aoId, payload);
@@ -147,8 +188,13 @@ export default function AvisEditorForm({ locale, aoId }: AvisEditorFormProps) {
 
       router.push(backHref);
       router.refresh();
-    } catch {
-      setSubmitError("Impossible d'enregistrer cet avis pour le moment.");
+    } catch (error) {
+      setSubmitError(
+        getTenderAvisErrorMessage(
+          error,
+          "Impossible d'enregistrer cet avis pour le moment.",
+        ),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -158,7 +204,7 @@ export default function AvisEditorForm({ locale, aoId }: AvisEditorFormProps) {
     <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-3">
         <h2 className="text-2xl font-bold text-slate-900">
-          Informations de l'avis
+          {isEditMode ? "Modifier l'avis" : "Informations de l'avis"}
         </h2>
         <p className="text-xs text-slate-500">
           AO #{aoId} - Renseignez les details de publication.
@@ -348,16 +394,18 @@ export default function AvisEditorForm({ locale, aoId }: AvisEditorFormProps) {
           >
             Retour
           </Link>
-          <button
-            type="button"
-            disabled={isSubmitting}
-            onClick={() => {
-              void submit("draft");
-            }}
-            className="inline-flex h-9 items-center justify-center rounded-md border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            Save draft
-          </button>
+          {/* {!isEditMode && (
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => {
+                  void submit("draft");
+                }}
+                className="inline-flex h-9 items-center justify-center rounded-md border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Enregistrer brouillon
+              </button>
+          )} */}
         </div>
 
         <button
@@ -368,7 +416,7 @@ export default function AvisEditorForm({ locale, aoId }: AvisEditorFormProps) {
           }}
           className="inline-flex h-9 items-center justify-center rounded-md bg-[#4CAF50] px-3 text-xs font-semibold text-white hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Publish
+          {isEditMode ? "Enregistrer et publier" : "Publier"}
         </button>
       </div>
     </section>

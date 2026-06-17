@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import AvisDetailActions from "@/components/dashboard/contractant/appels-offres/avis/AvisDetailActions";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
@@ -85,12 +85,13 @@ export default async function TenderAvisDetailPage({
               AO {id} - Avis {avisId}
             </p>
           </div>
-          <Link
-            href={backHref}
-            className="inline-flex h-9 items-center rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-          >
-            Retour a la liste des avis
-          </Link>
+          <AvisDetailActions
+            locale={locale}
+            aoId={id}
+            avisId={avisId}
+            backHref={backHref}
+            canEdit
+          />
         </header>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -105,7 +106,9 @@ export default async function TenderAvisDetailPage({
               Support
             </p>
             <p className="mt-1 font-semibold text-slate-800">
-              {getSupportLabel(avis.support)}
+              {avis.publieBomop && avis.publiePresse
+                ? "BOMOP + Presse"
+                : getSupportLabel(avis.support)}
             </p>
           </div>
 

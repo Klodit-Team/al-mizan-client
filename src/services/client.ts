@@ -25,10 +25,8 @@ function normalizeBaseUrl(rawBaseUrl: string): string {
 function buildUrl(path: string): string {
   const isServer = typeof window === 'undefined';
   
-  // If on server (SSR/Middleware), call the API Gateway directly inside Docker.
-  // If in browser (Client), use relative paths (automatically resolves to https://klodit.app).
   const baseUrl = isServer 
-    ? 'http://api-gateway:3000' 
+    ? (process.env.INTERNAL_API_URL ?? 'https://api.klodit.app')
     : '';
 
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
