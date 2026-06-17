@@ -4,13 +4,13 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { commissionTranslations } from "@/i18n/commission-translations";
 import {
-  useCommissionEvaluationQuery,
   useMembresEvaluationQuery,
 } from "@/services/commission-dashboard/queries";
 import {
   useCommissionEvaluationCriteriaQuery,
   useCommissionEvaluationSubmissionsQuery,
   useSaveCommissionScoresMutation,
+  useCommissionEvaluationsOverviewQuery,
 } from "@/services/commission/queries";
 
 interface Props {
@@ -198,11 +198,18 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
   const te = t.evaluation;
 
   // ── Données live ────────────────────────────────────────────────────────────
-  const { data: commission, isLoading } = useCommissionEvaluationQuery(aoId);
-  const { data: membres } = useMembresEvaluationQuery(aoId);
+  const { data: evaluations, isLoading: loadingEvaluations } = useCommissionEvaluationsOverviewQuery();
+  const evaluation = useMemo(
+    () => evaluations?.find((item) => item.aoId === aoId || item.id === aoId),
+    [evaluations, aoId]
+  );
+  const commissionId = evaluation?.commissionId ?? "";
+  const evaluationId = evaluation?.id ?? "";
+
+  const { data: membres } = useMembresEvaluationQuery(commissionId);
   const { data: submissionsData, isLoading: loadingSubmissions } = useCommissionEvaluationSubmissionsQuery(aoId);
   const { data: criteriaData, isLoading: loadingCriteria } = useCommissionEvaluationCriteriaQuery(aoId);
-  const saveScoresMutation = useSaveCommissionScoresMutation(commission?.id ?? aoId);
+  const saveScoresMutation = useSaveCommissionScoresMutation(evaluationId);
 
   const soumissions: Soumission[] = useMemo(
     () => (submissionsData ?? []).map((submission) => ({
@@ -289,7 +296,7 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
     }
   };
 
-  const isPageLoading = isLoading || loadingSubmissions || loadingCriteria;
+  const isPageLoading = loadingEvaluations || loadingSubmissions || loadingCriteria;
 
   // ── Loading ─────────────────────────────────────────────────────────────────
   if (isPageLoading) {
@@ -305,7 +312,7 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
   }
 
   // ── Pas de commission ────────────────────────────────────────────────────────
-  if (!commission) {
+  if (!evaluation) {
     return (
       <div style={{ direction: isAr ? "rtl" : "ltr" }}>
         <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 16, overflow: "hidden" }}>
@@ -323,10 +330,10 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <h1 style={{ fontSize: 20, fontWeight: 700, color: "#1B1C1C", margin: 0 }}>{te.titre}</h1>
           <span style={{ fontSize: 12, padding: "4px 12px", borderRadius: 999, background: "#F0EDED", color: "#364150", border: "1px solid #E5E7EB" }}>
-            {commission.reference}
+            {evaluation.reference}
           </span>
           <span style={{ fontSize: 12, padding: "4px 12px", borderRadius: 999, background: "rgba(76,175,80,0.1)", color: "#2e7d32", border: "1px solid #E5E7EB" }}>
-            {commission.statut}
+            {evaluation.statut}
           </span>
         </div>
         <Link
@@ -347,9 +354,9 @@ export default function CommissionEvaluationPage({ locale, aoId }: Props) {
           <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
         </svg>
         <span>
-          <strong>{commission.objet}</strong>
-          {commission.dateReunion && (
-            <> · {isAr ? "اجتماع" : "Réunion"} {new Date(commission.dateReunion).toLocaleDateString(isAr ? "ar-DZ" : "fr-DZ")}</>
+          <strong>{evaluation.objet}</strong>
+          {evaluation.dateReunion && (
+            <> · {isAr ? "اجتماع" : "Réunion"} {new Date(evaluation.dateReunion).toLocaleDateString(isAr ? "ar-DZ" : "fr-DZ")}</>
           )}
           {membres && membres.length > 0 && (
             <> · {membres.length} membre{membres.length > 1 ? "s" : ""}</>

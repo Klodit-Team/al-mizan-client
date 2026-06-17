@@ -3,11 +3,16 @@ import { apiClient } from "@/services/client";
 // ─── Evaluations Overview ────────────────────────────────────────────────────
 
 export interface CommissionEvaluationOverviewItem {
+  id: string;
+  commissionId: string;
   aoId: string;
   reference: string;
   objet: string;
   progressGlobal: number;
   phases: { phase: string; status: string }[];
+  statut?: string;
+  dateReunion?: string | null;
+  createdAt?: string;
 }
 
 export interface CommissionEvaluationSubmission {
@@ -98,7 +103,40 @@ export async function getCommissionEvaluationsOverview(): Promise<CommissionEval
     "/api/v1/evaluations?page=1&limit=100",
     { method: "GET" },
   );
-  return Array.isArray(raw) ? raw : [];
+  const data = unwrapEnvelope<unknown>(raw);
+  const items =
+    Array.isArray(data)
+      ? data
+      : (data && typeof data === "object" && Array.isArray((data as { data?: unknown }).data)
+        ? (data as { data: unknown[] }).data
+        : []);
+
+  return items
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const record = item as Record<string, unknown>;
+      const aoId = String(record.appelOffreId ?? record.aoId ?? "");
+      const commissionId = String(record.commissionId ?? "");
+      const reference = String(record.reference ?? "");
+      const objet = String(record.objet ?? "");
+      const statut = typeof record.statut === "string" ? record.statut : undefined;
+
+      if (!aoId && !commissionId && !reference && !objet) return null;
+
+      return {
+        id: String(record.id ?? ""),
+        commissionId,
+        aoId,
+        reference,
+        objet,
+        progressGlobal: typeof record.progressGlobal === "number" ? record.progressGlobal : 0,
+        phases: Array.isArray(record.phases) ? (record.phases as { phase: string; status: string }[]) : [],
+        statut,
+        dateReunion: typeof record.dateReunion === "string" ? record.dateReunion : null,
+        createdAt: typeof record.createdAt === "string" ? record.createdAt : undefined,
+      } as CommissionEvaluationOverviewItem;
+    })
+    .filter((item): item is CommissionEvaluationOverviewItem => Boolean(item));
 }
 
 export async function getCommissionEvaluationSubmissions(aoId: string): Promise<CommissionEvaluationSubmission[]> {

@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { commissionTranslations } from "@/i18n/commission-translations";
 import {
-  useCommissionEvaluationQuery,
   useMembresEvaluationQuery,
   useChangeStatutEvaluationMutation,
 } from "@/services/commission-dashboard/queries";
-import { useCommissionClassementQuery } from "@/services/commission/queries";
+import {
+  useCommissionClassementQuery,
+  useCommissionEvaluationsOverviewQuery,
+} from "@/services/commission/queries";
 import { exportCommissionEvaluationPdf } from "@/services/commission-dashboard/api";
 
 interface Props {
@@ -162,10 +164,16 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
   const t = commissionTranslations[isAr ? "ar" : "fr"];
   const tc = t.classement;
 
-  const { data: commission, isLoading } = useCommissionEvaluationQuery(aoId);
-  const { data: membres } = useMembresEvaluationQuery(aoId);
+  const { data: evaluations, isLoading: loadingEvaluations } = useCommissionEvaluationsOverviewQuery();
+  const evaluation = useMemo(
+    () => evaluations?.find((item) => item.aoId === aoId || item.id === aoId),
+    [evaluations, aoId]
+  );
+  const commissionId = evaluation?.commissionId ?? "";
+
+  const { data: membres } = useMembresEvaluationQuery(commissionId);
   const { data: backendClassement, isLoading: loadingClassement } = useCommissionClassementQuery(aoId);
-  const changeStatutMutation = useChangeStatutEvaluationMutation(aoId);
+  const changeStatutMutation = useChangeStatutEvaluationMutation(commissionId);
 
   // Les lignes de classement viendront du service évaluations
   // GET /api/v1/evaluations/:id/classement — pour l'instant vide jusqu'à branchement
@@ -209,7 +217,7 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
 
   const handleExportPdf = async () => {
     setIsExporting(true);
-    try { await exportCommissionEvaluationPdf(aoId); } finally { setIsExporting(false); }
+    try { await exportCommissionEvaluationPdf(commissionId || aoId); } finally { setIsExporting(false); }
   };
 
   const recLabel = (rec: RecType) =>
@@ -218,7 +226,7 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
   const totalSoumissions = lignes.length;
   const rejetees = lignes.filter((l) => l.elimine).length;
   const eligibles = totalSoumissions - rejetees;
-  const isPageLoading = isLoading || loadingClassement;
+  const isPageLoading = loadingEvaluations || loadingClassement;
 
   return (
     <div style={{ minHeight: "100%", direction: isAr ? "rtl" : "ltr" }}>
@@ -229,14 +237,14 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <h1 style={{ fontSize: 20, fontWeight: 700, color: "#1B1C1C", margin: 0 }}>{tc.titre}</h1>
           <span style={{ fontSize: 12, padding: "4px 12px", borderRadius: 999, background: "#F0EDED", color: "#364150", border: "1px solid #E5E7EB" }}>{t.commissionBadge}</span>
-          {commission && (
-            <span style={{ fontSize: 12, padding: "4px 12px", borderRadius: 999, background: commission.statut === "ACTIVE" ? "rgba(76,175,80,0.1)" : "#F0EDED", color: commission.statut === "ACTIVE" ? "#2e7d32" : "#364150", border: "1px solid #E5E7EB" }}>
-              {commission.statut}
+          {evaluation && (
+            <span style={{ fontSize: 12, padding: "4px 12px", borderRadius: 999, background: evaluation.statut === "ACTIVE" ? "rgba(76,175,80,0.1)" : "#F0EDED", color: evaluation.statut === "ACTIVE" ? "#2e7d32" : "#364150", border: "1px solid #E5E7EB" }}>
+              {evaluation.statut}
             </span>
           )}
         </div>
-        <button onClick={handleExportPdf} disabled={isExporting || isLoading}
-          style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 18px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "#fff", color: "#364150", border: "1px solid #E5E7EB", cursor: (isExporting || isLoading) ? "not-allowed" : "pointer", opacity: (isExporting || isLoading) ? 0.5 : 1 }}>
+        <button onClick={handleExportPdf} disabled={isExporting || loadingEvaluations}
+          style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 18px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "#fff", color: "#364150", border: "1px solid #E5E7EB", cursor: (isExporting || loadingEvaluations) ? "not-allowed" : "pointer", opacity: (isExporting || loadingEvaluations) ? 0.5 : 1 }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
             <path d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -246,7 +254,7 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
 
       {/* AO + stats */}
       <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 16, padding: "20px 24px", marginBottom: 20 }}>
-        {isLoading ? (
+        {loadingEvaluations ? (
           <>
             <div className="animate-pulse" style={{ height: 22, width: "40%", background: "#F1F5F9", borderRadius: 6, marginBottom: 8 }} />
             <div className="animate-pulse" style={{ height: 14, width: "60%", background: "#F1F5F9", borderRadius: 6, marginBottom: 18 }} />
@@ -254,10 +262,10 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
         ) : (
           <>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: "#1B1C1C", margin: "0 0 4px" }}>
-              {commission ? commission.objet : tc.sousTitre(aoId)}
+              {evaluation ? evaluation.objet : tc.sousTitre(aoId)}
             </h2>
             <p style={{ fontSize: 13, color: "#6F7A6B", marginBottom: 18 }}>
-              {commission?.reference ?? aoId}
+              {evaluation?.reference ?? aoId}
               {membres && membres.length > 0 && ` · ${membres.length} membre${membres.length > 1 ? "s" : ""}`}
               {" · "}{tc.etape}
             </p>
@@ -271,11 +279,11 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
           ].map((s) => (
             <div key={s.key} style={{ background: "#F8FAFC", border: "1px solid #E5E7EB", borderRadius: 12, padding: "12px 16px" }}>
               <p style={{ fontSize: 12, color: "#9CA3AF", margin: "0 0 4px" }}>{s.key}</p>
-              {isLoading ? (
-                <div className="animate-pulse" style={{ height: 30, width: 40, background: "#E5E7EB", borderRadius: 6 }} />
-              ) : (
-                <p style={{ fontSize: 30, fontWeight: 900, color: s.color, margin: 0 }}>
-                  {String(s.val).padStart(2, "0")}
+                {loadingEvaluations ? (
+                  <div className="animate-pulse" style={{ height: 30, width: 40, background: "#E5E7EB", borderRadius: 6 }} />
+                ) : (
+                  <p style={{ fontSize: 30, fontWeight: 900, color: s.color, margin: 0 }}>
+                    {String(s.val).padStart(2, "0")}
                 </p>
               )}
             </div>
@@ -290,7 +298,7 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
           <p style={{ fontSize: 12, color: "#9CA3AF", margin: 0 }}>{tc.table.sousTitre}</p>
         </div>
 
-        {!isLoading && lignes.length > 0 && (
+        {!loadingEvaluations && lignes.length > 0 && (
           <div style={{ display: "grid", gridTemplateColumns: COL_TEMPLATE, padding: "10px 24px", background: "#F8FAFC", borderBottom: "1px solid #F3F4F6", gap: 8 }}>
             {tc.table.cols.map((col: string) => (
               <span key={col} style={{ fontSize: 11, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.04em" }}>{col}</span>
@@ -347,8 +355,8 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
               <span style={{ color: "#4CAF50", fontWeight: 600 }}>· {membres.length} membre{membres.length > 1 ? "s" : ""}</span>
             )}
           </div>
-          {!validated ? (
-            <button onClick={() => setShowConfirm(true)} disabled={changeStatutMutation.isPending || lignes.length === 0}
+        {!validated ? (
+            <button onClick={() => setShowConfirm(true)} disabled={changeStatutMutation.isPending || lignes.length === 0 || !commissionId}
               style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", borderRadius: 999, fontSize: 13, fontWeight: 700, background: "#1E293B", color: "#fff", border: "none", cursor: (changeStatutMutation.isPending || lignes.length === 0) ? "not-allowed" : "pointer", opacity: (changeStatutMutation.isPending || lignes.length === 0) ? 0.5 : 1 }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2" /><path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
               {changeStatutMutation.isPending ? (isAr ? "جارٍ…" : "Validation…") : tc.validerBtn}

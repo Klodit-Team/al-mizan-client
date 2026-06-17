@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { commissionTranslations } from "@/i18n/commission-translations";
-import { useCommissionsEvaluationQuery } from "@/services/commission-dashboard/queries";
+import { useMesCommissionsQuery } from "@/services/commission-dashboard/queries";
 
 interface Props {
   locale: string;
@@ -65,10 +64,14 @@ export default function CommissionEvaluationsPage({ locale }: Props) {
   const t = commissionTranslations[isAr ? "ar" : "fr"];
   const td = t.dashboard;
 
-  const { data, isLoading } = useCommissionsEvaluationQuery({ page: 1, limit: 10 });
+  const { data, isLoading } = useMesCommissionsQuery();
 
-  const commissions = data?.data ?? [];
+  const commissions = data?.commissionsEvaluation ?? [];
+  const seances = data?.seancesOuverture ?? [];
   const activeCommission = commissions.find((c) => c.statut === "ACTIVE") ?? commissions[0];
+  const activeAoId = activeCommission
+    ? seances.find((s) => s.commissionId === activeCommission.id)?.appelOffreId ?? activeCommission.id
+    : "";
 
   // Loading skeleton
   if (isLoading) {
@@ -95,7 +98,7 @@ export default function CommissionEvaluationsPage({ locale }: Props) {
     );
   }
 
-  const AO_ID = activeCommission.id;
+  const AO_ID = activeAoId;
   const AO_REF = activeCommission.reference;
   const AO_OBJET = activeCommission.objet;
 
@@ -160,7 +163,7 @@ export default function CommissionEvaluationsPage({ locale }: Props) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
         {PHASES_DATA.map((phaseData, idx) => {
           const phaseInfo = td.phases[idx];
-          const { statut, progress, detailArgs, actionKey } = phaseData;
+          const { statut, progress, detailArgs } = phaseData;
           const isVerrouillee = statut === "verrouillee";
           const isEnCours = statut === "en_cours";
           const href = phaseData.actionHref ?? `/${locale}/dashboard/commission/evaluations/${AO_ID}`;

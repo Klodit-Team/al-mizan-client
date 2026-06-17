@@ -24,11 +24,11 @@ function mapRoleEval(role: string): string {
   }
 }
 
-function transformEvaluationToCommission(ce: CommissionEvaluation): MembreCommission {
+function transformEvaluationToCommission(ce: CommissionEvaluation, aoId?: string): MembreCommission {
   return {
     id: ce.id,
     designation: ce.objet,
-    appelOffre: { id: ce.id, reference: ce.reference, objet: ce.objet },
+    appelOffre: { id: aoId ?? ce.id, reference: ce.reference, objet: ce.objet },
     monRole: mapRoleEval(ce.membres?.[0]?.role ?? "MEMBRE") as MembreCommission["monRole"],
     dateConstitution: ce.dateCreation,
     statut: mapStatutEval(ce.statut),
@@ -52,9 +52,14 @@ export default function MesCommissionsPage({ locale, dict }: MesCommissionsPageP
   const [statusFilter, setStatusFilter] = useState<CommissionStatut | "ALL">("ALL");
 
   const { data, isLoading } = useMesCommissionsQuery();
+  const aoIdByCommissionId = new Map(
+    (data?.seancesOuverture ?? []).map((seance) => [seance.commissionId, seance.appelOffreId])
+  );
 
   const commissions: MembreCommission[] =
-    (data?.commissionsEvaluation ?? []).map(transformEvaluationToCommission);
+    (data?.commissionsEvaluation ?? []).map((commission) =>
+      transformEvaluationToCommission(commission, aoIdByCommissionId.get(commission.id))
+    );
 
   const filtered = commissions.filter((c) => {
     const matchSearch =
