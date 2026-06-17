@@ -178,7 +178,7 @@ function openFile(subId: string, docType?: string, url?: string) {
     return;
   }
 
-  const downloadUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/soumissions/${subId}/documents/${docType}/download`;
+  const downloadUrl = `/api/v1/soumissions/${subId}/documents/${docType}/download`;
   window.open(downloadUrl, "_blank", "noopener,noreferrer");
 }
 
