@@ -1731,12 +1731,12 @@
                   "label": "نتيجة التخصيص",
                   "desc": "سيتم الإعلان عن النتيجة بعد انتهاء التقييم."
                 }
+              },
+              "dates": {
+                "enAttente": "قيد الانتظار",
+                "resultPublished": "تم نشر النتيجة",
+                "toPlan": "للتخطيط"
               }
-            },
-            "dates": {
-              "enAttente": "قيد الانتظار",
-              "resultPublished": "تم نشر النتيجة",
-              "toPlan": "للتخطيط"
             }
           },
           "conformite": {

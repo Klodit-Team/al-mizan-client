@@ -1731,12 +1731,12 @@
                   "label": "Résultat d'attribution",
                   "desc": "Le résultat sera communiqué après clôture de l'évaluation."
                 }
+              },
+              "dates": {
+                "enAttente": "En attente",
+                "resultPublished": "Résultat publié",
+                "toPlan": "À planifier"
               }
-            },
-            "dates": {
-              "enAttente": "En attente",
-              "resultPublished": "Résultat publié",
-              "toPlan": "À planifier"
             }
           },
           "conformite": {
