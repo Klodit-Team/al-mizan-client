@@ -225,7 +225,7 @@ function mapAoRecord(
     wilaya: ao.wilaya || "N/A",
     sector: ao.secteurActivite || "N/A",
     estimatedAmount: formatAmount(ao.montantEstime),
-    hasSubmission: Boolean(submissionStatus),
+    hasSubmission: Boolean(submissionStatus), 
     submissionStatus,
     lots,
   };
