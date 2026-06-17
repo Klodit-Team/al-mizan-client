@@ -84,8 +84,10 @@ interface ListPayload<T> {
 }
 
 interface MePayload {
+  id?: string;
   user?: {
     userId?: string;
+    id?: string;
   };
 }
 
@@ -191,7 +193,6 @@ function normalizeString(value: unknown): string {
   if (typeof value !== "string") {
     return "";
   }
-
   return value.trim();
 }
 
@@ -220,7 +221,6 @@ function normalizeId(value?: string | null): string | null {
   if (!value) {
     return null;
   }
-
   return value.trim().toLowerCase();
 }
 
@@ -228,12 +228,10 @@ function normalizeDate(value?: string | null): string {
   if (!value) {
     return "";
   }
-
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
     return "";
   }
-
   return date.toISOString();
 }
 
@@ -241,12 +239,10 @@ function formatAmount(value?: string | number | null): string {
   if (value === undefined || value === null || value === "") {
     return "-";
   }
-
   const num = Number(value);
   if (Number.isNaN(num)) {
     return String(value);
   }
-
   return `${new Intl.NumberFormat("fr-DZ", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -268,13 +264,14 @@ async function getOperateurIdFromSession(): Promise<string | null> {
     return null;
   }
 
-  const me = unwrapEnvelope<MePayload>(meRaw);
-  const userId = me?.user?.userId;
+  const me = meRaw as any;
+  const userId = me?.user?.userId || me?.user?.id || me?.id || null;
   if (!userId) {
     return null;
   }
 
-  const operatorsRaw = await apiClient<unknown>("/api/v1/users/operateurs-economiques?page=1&limit=100", {
+  // FIX: Proper URL without /users/ prefix
+  const operatorsRaw = await apiClient<unknown>("/api/v1/operateurs-economiques?page=1&limit=100", {
     method: "GET",
   }).catch(() => null);
 
@@ -283,9 +280,10 @@ async function getOperateurIdFromSession(): Promise<string | null> {
   }
 
   const operators = extractList<OperateurRecord>(operatorsRaw);
+  const normalizedUserId = normalizeId(userId);
   const current = operators.find((item) => {
     const linkedUserId = normalizeId(item.userId ?? item.user_id ?? null);
-    return linkedUserId !== null && linkedUserId === normalizeId(userId);
+    return linkedUserId !== null && linkedUserId === normalizedUserId;
   });
 
   return current?.id || null;
@@ -327,11 +325,9 @@ function mapRecoursItem(raw: RecoursRecord): OperateurRecoursItem {
       if (typeof entry === "string") {
         return mapAttachmentFromUrl(entry, index);
       }
-
       if (entry && typeof entry === "object") {
         return mapAttachment(entry, index);
       }
-
       return null;
     })
     .filter((entry): entry is RecoursAttachment => Boolean(entry));
@@ -439,13 +435,28 @@ export async function updateOperateurRecours(input: UpdateOperateurRecoursInput)
 }
 
 export async function listRecoursCreationOptions(): Promise<RecoursCreationOptions> {
-  const [aosRaw, attributionsRaw] = await Promise.all([
+  // FIX: Fetch the user's submissions to ensure we only show AOs where they lost
+  const [aosRaw, attributionsRaw, mySubmissionsRaw] = await Promise.all([
     apiClient<unknown>("/api/v1/appels-offres?page=1&limit=500", { method: "GET" }).catch(() => []),
     apiClient<unknown>("/api/v1/appels-offres/attributions", { method: "GET" }).catch(() => []),
+    apiClient<unknown>("/api/v1/soumissions?page=1&limit=500", { method: "GET" }).catch(() => []),
   ]);
 
+  const mySubmissions = extractList<any>(mySubmissionsRaw);
+  
+  // Isolate IDs of AOs where the user's submission is REJETEE (meaning they lost)
+  const myLostAoIds = new Set(
+    mySubmissions
+      .filter(sub => {
+        const status = String(sub.statut || sub.status || "").trim().toUpperCase();
+        return status === "REJETEE" || status === "REJECTED";
+      })
+      .map(sub => normalizeId(sub.appelOffreId || sub.appel_offre_id || sub.appelOffre?.id || sub.appel_offre?.id))
+      .filter(Boolean)
+  );
+
   const aos = extractList<AppelOffreRecord>(aosRaw)
-    .filter((item) => Boolean(item?.id))
+    .filter((item) => Boolean(item?.id) && myLostAoIds.has(normalizeId(item.id)))
     .map((item) => ({
       id: normalizeString(item.id),
       reference: item.reference || item.id,
@@ -458,7 +469,9 @@ export async function listRecoursCreationOptions(): Promise<RecoursCreationOptio
   const attributions = extractList<AttributionRecord>(attributionsRaw)
     .filter((item) => {
       const rawType = getAttributionType(item);
-      return rawType === "PROVISOIRE";
+      const aoId = normalizeId(getAttributionAoId(item));
+      // Only keep PROVISOIRE attributions for AOs where the user lost
+      return rawType === "PROVISOIRE" && myLostAoIds.has(aoId);
     })
     .map((item) => {
       const aoId = getAttributionAoId(item);
@@ -497,12 +510,10 @@ function fmtDateForLabel(value?: string): string {
   if (!value) {
     return "date non renseignee";
   }
-
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
     return "date non renseignee";
   }
-
   return date.toLocaleDateString("fr-DZ", {
     day: "2-digit",
     month: "2-digit",
