@@ -75,8 +75,11 @@ interface PaginatedPayload<T> {
 }
 
 interface MePayload {
+  id?: string;
+  email?: string;
   user?: {
     userId?: string;
+    id?: string;
     email?: string;
   };
 }
@@ -291,8 +294,10 @@ async function getIdentityData(): Promise<IdentityData> {
   try {
     const meRaw = await apiClient<unknown>("/api/v1/auth/me", { method: "GET" });
     const me = unwrapEnvelope<MePayload>(meRaw);
-    userId = me?.user?.userId || null;
-    const email = me?.user?.email;
+    
+    // Robust extraction covering both nested and flat responses
+    userId = me?.user?.userId || me?.user?.id || me?.id || null;
+    const email = me?.user?.email || me?.email;
 
     if (email) {
       userName = email;
@@ -330,6 +335,13 @@ async function getIdentityData(): Promise<IdentityData> {
       const denomination = current?.organisation?.denomination;
       if (denomination) {
         companyName = denomination;
+      } else if (current?.organisationId) {
+        // Fetch organisation separately if not embedded
+        const orgRaw = await apiClient<unknown>(`/api/v1/organisations/${current.organisationId}`, { method: "GET" }).catch(() => null);
+        const org = orgRaw ? unwrapEnvelope<{ denomination?: string }>(orgRaw) : null;
+        if (org?.denomination) {
+          companyName = org.denomination;
+        }
       }
     }
   } catch {
@@ -362,37 +374,16 @@ export async function getOperateurDashboardData(): Promise<OeDashboardData> {
     aos
       .map((ao) => {
         const id = normalizeId(ao.id);
-        if (!id) {
-          return null;
-        }
+        if (!id) return null;
         return [id, ao] as const;
       })
       .filter((entry): entry is readonly [string, AppelOffreRecord] => Boolean(entry)),
   );
 
-  const linkedAoIds = new Set<string>();
-  submissions.forEach((item) => {
-    const id = getSubmissionAoId(item);
-    if (id) {
-      linkedAoIds.add(id);
-    }
-  });
-  recours.forEach((item) => {
-    const id = getRecoursAoId(item);
-    if (id) {
-      linkedAoIds.add(id);
-    }
-  });
-
-  const scopedAos = linkedAoIds.size > 0
-    ? aos.filter((ao) => {
-      const id = normalizeId(ao.id);
-      return id !== null && linkedAoIds.has(id);
-    })
-    : [];
-
   const activeStatuses = new Set(["PUBLIE", "EN_COURS", "OUVERTURE_PLIS", "EVALUATION"]);
-  const aoActifs = scopedAos.filter((item) => activeStatuses.has((item.statut || "").toUpperCase())).length;
+  
+  // FIX: AO Actifs calculated from ALL AOs, not just scoped AOs
+  const aoActifs = aos.filter((item) => activeStatuses.has((item.statut || "").toUpperCase())).length;
 
   const recentSubmissions = submissions
     .map((item) => {
@@ -425,16 +416,14 @@ export async function getOperateurDashboardData(): Promise<OeDashboardData> {
 
   const recoursOuverts = openRecours.filter((item) => item.status === "depose" || item.status === "en_examen").length;
 
-  const deadlines = scopedAos
+  // FIX: Deadlines sourced from ALL active AOs
+  const deadlines = aos
+    .filter(ao => activeStatuses.has((ao.statut || "").toUpperCase()))
     .map((ao) => {
-      if (!ao.dateLimiteSoumission) {
-        return null;
-      }
+      if (!ao.dateLimiteSoumission) return null;
 
       const deadlineDate = new Date(ao.dateLimiteSoumission);
-      if (Number.isNaN(deadlineDate.getTime())) {
-        return null;
-      }
+      if (Number.isNaN(deadlineDate.getTime())) return null;
 
       const relative = toRelativeDue(deadlineDate);
       return {
