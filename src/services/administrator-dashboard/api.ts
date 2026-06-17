@@ -394,8 +394,8 @@ export async function getAdministratorDashboardStats(): Promise<AdministratorDas
     fetchTotal("/api/v1/services-contractants?limit=1&page=1"),
     Promise.all(activeTenderStatuses.map((statut) => fetchTotal(`/api/v1/appels-offres?statut=${statut}&limit=1&page=1`))),
     apiClient<Record<string, number> | ApiEnvelope<Record<string, number>>>("/api/v1/recours/statistiques", { method: "GET" }),
-    fetchTotal("/api/v1/audit/incidents?gravite=ELEVEE&statut=OUVERT&limit=1&page=1"),
-    fetchTotal("/api/v1/audit/incidents?gravite=CRITIQUE&statut=OUVERT&limit=1&page=1"),
+    fetchTotal("/api/v1/incidents?gravite=ELEVEE&statut=OUVERT&limit=1&page=1"),
+    fetchTotal("/api/v1/incidents?gravite=CRITIQUE&statut=OUVERT&limit=1&page=1"),
   ]);
 
   const recoursData = unwrapData<Record<string, number>>(recoursStats);
@@ -434,8 +434,8 @@ export async function getAdministratorDashboardActivities(): Promise<Administrat
 export async function getAdministratorDashboardAiAlerts(): Promise<AdministratorAiAlert[]> {
   try {
     const [elevee, critique] = await Promise.all([
-      apiClient<RawIncident[] | ApiEnvelope<RawIncident[]>>(`/api/v1/audit/incidents?gravite=ELEVEE&statut=OUVERT&limit=5`, { method: "GET" }),
-      apiClient<RawIncident[] | ApiEnvelope<RawIncident[]>>(`/api/v1/audit/incidents?gravite=CRITIQUE&statut=OUVERT&limit=5`, { method: "GET" }),
+      apiClient<RawIncident[] | ApiEnvelope<RawIncident[]>>(`/api/v1/incidents?gravite=ELEVEE&statut=OUVERT&limit=5`, { method: "GET" }),
+      apiClient<RawIncident[] | ApiEnvelope<RawIncident[]>>(`/api/v1/incidents?gravite=CRITIQUE&statut=OUVERT&limit=5`, { method: "GET" }),
     ]);
     const eleveeData = unwrapData(elevee);
     const critiqueData = unwrapData(critique);
