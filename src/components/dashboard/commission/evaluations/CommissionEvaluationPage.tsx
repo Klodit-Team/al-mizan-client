@@ -1,55 +1,31 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { commissionTranslations } from "@/i18n/commission-translations";
 import {
-  useMesCommissionsQuery,
   useMembresEvaluationQuery,
+  useMesCommissionsQuery,
 } from "@/services/commission-dashboard/queries";
 import {
+  useCommissionAoAnomaliesQuery,
+  useCommissionAoCriteriaQuery,
   useCommissionAoSubmissionsQuery,
-  useCommissionEvaluationCriteriaQuery,
   useCommissionEvaluationContextQuery,
+  useCommissionEvaluationCriteriaQuery,
+  useCommissionEvaluationNotesQuery,
   useCommissionEvaluationSubmissionsQuery,
   useCommissionEvaluationsOverviewQuery,
   useSaveCommissionScoresMutation,
 } from "@/services/commission/queries";
+import type {
+  CommissionEvaluationCriterion,
+  CommissionEvaluationNote,
+  CommissionEvaluationSubmission,
+} from "@/services/commission/api";
 
 interface Props {
   locale: string;
   selectedCommissionId: string;
-}
-
-// ── Types critère (définis côté client — données d'évaluation saisies par le membre) ──
-interface CritereIA {
-  noteSuggeree: number;
-  justifFr: string;
-  justifAr: string;
-  confiance: number;
-  alerteFr?: string;
-  alerteAr?: string;
-}
-
-interface Critere {
-  id: string;
-  labelFr: string;
-  labelAr: string;
-  ponderation: number;
-  noteMax: number;
-  noteEliminatoire?: number;
-  descriptionFr: string;
-  descriptionAr: string;
-  note: number | null;
-  justification: string;
-  ia: CritereIA;
-}
-
-interface Soumission {
-  id: string;
-  reference: string;
-  operatorName: string;
-  status: string;
 }
 
 interface MembreEvaluation {
@@ -59,96 +35,132 @@ interface MembreEvaluation {
   role: string;
 }
 
-// ── État vide : pas de commission trouvée ─────────────────────────────────────
-function EmptyEvaluation({ isAr }: { isAr: boolean }) {
+type DraftScores = Record<string, Record<string, { note: string; justification: string }>>;
+
+function clampScore(value: string, max: number): string {
+  if (value.trim() === "") return "";
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return "";
+  return String(Math.min(max, Math.max(0, numeric)));
+}
+
+function formatDate(value?: string | null, locale = "fr") {
+  if (!value) return "Non planifiee";
+  return new Date(value).toLocaleDateString(locale === "ar" ? "ar-DZ" : "fr-DZ", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function statusTone(status?: string) {
+  switch (status) {
+    case "EN_COURS":
+    case "ACTIVE":
+    case "DEPOSEE":
+      return "border-emerald-200 bg-emerald-50 text-emerald-800";
+    case "TERMINEE":
+    case "VALIDEE":
+      return "border-sky-200 bg-sky-50 text-sky-800";
+    case "BROUILLON":
+    case "PRETE":
+      return "border-amber-200 bg-amber-50 text-amber-800";
+    default:
+      return "border-slate-200 bg-slate-50 text-slate-700";
+  }
+}
+
+function sourceLabel(source?: "evaluation" | "ao", isAr = false) {
+  if (source === "evaluation") return isAr ? "مرتبطة بالتقييم" : "Liee a l'evaluation";
+  return isAr ? "من العروض المودعة" : "Depuis les soumissions AO";
+}
+
+function buildAiInsights({
+  hasEvaluation,
+  hasCriteria,
+  canSaveNotes,
+  currentSubmission,
+  anomaliesCount,
+  completion,
+  score,
+}: {
+  hasEvaluation: boolean;
+  hasCriteria: boolean;
+  canSaveNotes: boolean;
+  currentSubmission?: CommissionEvaluationSubmission;
+  anomaliesCount: number;
+  completion: number;
+  score: number;
+}) {
+  const insights: { title: string; body: string; tone: "good" | "warn" | "info" }[] = [];
+
+  if (!hasEvaluation) {
+    insights.push({
+      title: "Evaluation non initialisee",
+      body: "La commission et les soumissions sont disponibles, mais le service evaluation n'a pas encore cree la session de notation.",
+      tone: "warn",
+    });
+  }
+
+  if (!hasCriteria) {
+    insights.push({
+      title: "Grille absente",
+      body: "Aucun critere n'est renvoye par le backend. La notation reste verrouillee pour eviter des scores non auditables.",
+      tone: "warn",
+    });
+  }
+
+  if (currentSubmission) {
+    insights.push({
+      title: "Soumission active",
+      body: `${currentSubmission.reference} est ${currentSubmission.status || "en attente"}. Source: ${sourceLabel(currentSubmission.source)}.`,
+      tone: "info",
+    });
+  }
+
+  if (anomaliesCount > 0) {
+    insights.push({
+      title: "Anomalies IA",
+      body: `${anomaliesCount} signalement(s) IA sont associes aux offres de cet AO. Verifiez les details avant notation.`,
+      tone: "warn",
+    });
+  } else {
+    insights.push({
+      title: "Controle IA",
+      body: "Aucune anomalie IA n'est remontee pour cet AO dans le service soumission.",
+      tone: "good",
+    });
+  }
+
+  if (hasCriteria && canSaveNotes) {
+    insights.push({
+      title: "Progression de notation",
+      body: `${completion}% de la grille est renseignee. Score pondere provisoire: ${Math.round(score)} / 100.`,
+      tone: completion === 100 ? "good" : "info",
+    });
+  }
+
+  return insights;
+}
+
+function EmptyState({
+  title,
+  body,
+}: {
+  title: string;
+  body: string;
+}) {
   return (
-    <div className="flex flex-col items-center justify-center py-24 gap-4">
-      <div className="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
+    <div className="rounded-[28px] border border-dashed border-slate-300 bg-white/80 p-10 text-center shadow-sm">
+      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.5L19 9.5V19a2 2 0 0 1-2 2Z" />
         </svg>
       </div>
-      <div className="text-center">
-        <p className="text-sm font-semibold text-gray-500">
-          {isAr ? "لا توجد بيانات تقييم" : "Aucune donnée d'évaluation"}
-        </p>
-        <p className="text-xs text-gray-400 mt-1">
-          {isAr
-            ? "لم يتم إنشاء لجنة تقييم لهذا الطلب بعد"
-            : "Aucune commission d'évaluation n'existe pour cet appel d'offre"}
-        </p>
-      </div>
+      <p className="text-base font-bold text-slate-900">{title}</p>
+      <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500">{body}</p>
     </div>
   );
-}
-
-// ── État vide : pas de soumissions ─────────────────────────────────────────────
-function EmptySoumissions({ isAr }: { isAr: boolean }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-16 gap-3">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-      <p className="text-sm text-gray-400">
-        {isAr ? "لا توجد عروض للتقييم" : "Aucune soumission à évaluer"}
-      </p>
-      <p className="text-xs text-gray-300">
-        {isAr ? "ستظهر هنا بعد جلسة فتح الأظرفة" : "Elles apparaîtront ici après la séance d'ouverture"}
-      </p>
-    </div>
-  );
-}
-
-function EmptyCriteria({ isAr }: { isAr: boolean }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-20 gap-3">
-      <div className="w-14 h-14 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      </div>
-      <div className="text-center">
-        <p className="text-sm font-semibold text-gray-500">
-          {isAr ? "لا توجد معايير للتقييم" : "Aucun critère d'évaluation"}
-        </p>
-        <p className="text-xs text-gray-400 mt-1">
-          {isAr
-            ? "لم يرسل الخادم معايير التقييم لهذه اللجنة بعد"
-            : "Le backend n'a pas encore renvoyé les critères de cette commission"}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function mapBackendCriterionToUi(criterion: {
-  id: string;
-  label: string;
-  weight: number;
-  type: string;
-  noteEliminatoire?: number;
-}, index: number): Critere {
-  const label = criterion.label?.trim() || `Critère ${index + 1}`;
-  const suggestedNote = Math.max(50, Math.min(95, Math.round(60 + criterion.weight / 2)));
-
-  return {
-    id: criterion.id,
-    labelFr: label,
-    labelAr: label,
-    ponderation: Number(criterion.weight ?? 0),
-    noteMax: 100,
-    noteEliminatoire: criterion.noteEliminatoire,
-    descriptionFr: "Critère chargé depuis le backend.",
-    descriptionAr: "تم تحميل المعيار من الخادم.",
-    note: null,
-    justification: "",
-    ia: {
-      noteSuggeree: suggestedNote,
-      confiance: 80,
-      justifFr: "Critère récupéré depuis le backend d'évaluation.",
-      justifAr: "تم جلب المعيار من خدمة التقييم.",
-    },
-  };
 }
 
 export default function CommissionEvaluationPage({
@@ -156,11 +168,11 @@ export default function CommissionEvaluationPage({
   selectedCommissionId,
 }: Props) {
   const isAr = locale === "ar";
-  const t = commissionTranslations[isAr ? "ar" : "fr"];
-  const te = t.evaluation;
+  const [activeSubmissionId, setActiveSubmissionId] = useState<string | null>(null);
+  const [draftScores, setDraftScores] = useState<DraftScores>({});
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
-  // ── Données live ────────────────────────────────────────────────────────────
-  const { data: mesCommissions, isLoading: loadingEvaluations } = useMesCommissionsQuery();
+  const { data: mesCommissions, isLoading: loadingCommissions } = useMesCommissionsQuery();
   const { data: evaluationOverview, isLoading: loadingOverview } =
     useCommissionEvaluationsOverviewQuery();
 
@@ -172,486 +184,632 @@ export default function CommissionEvaluationPage({
           item.aoId === selectedCommissionId ||
           item.appelOffreId === selectedCommissionId,
       ) ?? null,
-    [mesCommissions, selectedCommissionId]
+    [mesCommissions, selectedCommissionId],
   );
-  const evaluationRecord = useMemo(
+
+  const overviewEvaluation = useMemo(
     () =>
       evaluationOverview?.find(
         (item) =>
-          item.commissionId === selectedCommissionId ||
           item.id === selectedCommissionId ||
-          item.aoId === selectedCommissionId,
+          item.commissionId === selectedCommissionId ||
+          item.aoId === selectedCommissionId ||
+          item.commissionId === selectedCommission?.id ||
+          item.aoId === selectedCommission?.aoId ||
+          item.aoId === selectedCommission?.appelOffreId,
       ) ?? null,
-    [evaluationOverview, selectedCommissionId]
+    [evaluationOverview, selectedCommission, selectedCommissionId],
   );
+
   const seance = useMemo(
     () =>
       mesCommissions?.seancesOuverture.find(
         (item) =>
           item.id === selectedCommission?.seanceId ||
           item.commissionId === selectedCommission?.id ||
-          item.commissionId === evaluationRecord?.commissionId ||
+          item.commissionId === overviewEvaluation?.commissionId ||
           item.appelOffreId === selectedCommissionId,
       ) ?? null,
     [
       mesCommissions,
+      overviewEvaluation?.commissionId,
       selectedCommission?.id,
       selectedCommission?.seanceId,
-      evaluationRecord?.commissionId,
       selectedCommissionId,
-    ]
+    ],
   );
+
   const resolvedCommissionId =
-    selectedCommission?.id ?? evaluationRecord?.commissionId ?? "";
+    selectedCommission?.id ?? overviewEvaluation?.commissionId ?? "";
   const resolvedAoId =
     seance?.appelOffreId ??
     selectedCommission?.appelOffreId ??
     selectedCommission?.aoId ??
-    evaluationRecord?.aoId ??
+    overviewEvaluation?.aoId ??
     "";
 
   const { data: resolvedEvaluation, isLoading: loadingResolvedEvaluation } =
     useCommissionEvaluationContextQuery({
-      commissionId: evaluationRecord ? undefined : resolvedCommissionId,
-      aoId: evaluationRecord ? undefined : resolvedAoId,
+      commissionId: overviewEvaluation ? undefined : resolvedCommissionId,
+      aoId: overviewEvaluation ? undefined : resolvedAoId,
       evaluationId:
-        evaluationRecord || resolvedCommissionId || resolvedAoId
+        overviewEvaluation || resolvedCommissionId || resolvedAoId
           ? undefined
           : selectedCommissionId,
     });
 
-  const effectiveEvaluationRecord = evaluationRecord ?? resolvedEvaluation;
-  const evaluationId = effectiveEvaluationRecord?.id ?? "";
+  const evaluation = overviewEvaluation ?? resolvedEvaluation;
+  const evaluationId = evaluation?.id ?? "";
+  const evaluationStatus = evaluation?.statut ?? "";
 
-  const { data: membres } = useMembresEvaluationQuery(resolvedCommissionId);
-  const { data: evaluationSubmissionsData, isLoading: loadingEvaluationSubmissions } =
+  const { data: membres, isLoading: loadingMembers } =
+    useMembresEvaluationQuery(resolvedCommissionId);
+  const { data: evaluationSubmissions, isLoading: loadingEvaluationSubmissions } =
     useCommissionEvaluationSubmissionsQuery(evaluationId);
-  const { data: aoSubmissionsData, isLoading: loadingAoSubmissions } =
-    useCommissionAoSubmissionsQuery(resolvedAoId, !evaluationId);
-  const { data: criteriaData, isLoading: loadingCriteria } = useCommissionEvaluationCriteriaQuery(evaluationId);
+  const { data: aoSubmissions, isLoading: loadingAoSubmissions } =
+    useCommissionAoSubmissionsQuery(resolvedAoId);
+  const { data: evaluationCriteria, isLoading: loadingEvaluationCriteria } =
+    useCommissionEvaluationCriteriaQuery(evaluationId);
+  const { data: aoCriteria, isLoading: loadingAoCriteria } =
+    useCommissionAoCriteriaQuery(resolvedAoId, !evaluationCriteria?.length);
+  const { data: anomalies } = useCommissionAoAnomaliesQuery(resolvedAoId);
+
+  const submissions = useMemo(() => {
+    const evalItems = evaluationSubmissions ?? [];
+    const aoItems = aoSubmissions ?? [];
+    if (evalItems.length > 0) return evalItems;
+    return aoItems;
+  }, [aoSubmissions, evaluationSubmissions]);
+
+  const activeSubmission = useMemo(() => {
+    if (submissions.length === 0) return undefined;
+    return (
+      submissions.find((item) => item.id === activeSubmissionId) ??
+      submissions[0]
+    );
+  }, [activeSubmissionId, submissions]);
+
+  const criteria = useMemo(() => {
+    const evalCriteria = evaluationCriteria ?? [];
+    if (evalCriteria.length > 0) return evalCriteria;
+    return aoCriteria ?? [];
+  }, [aoCriteria, evaluationCriteria]);
+
+  const activeEvaluationSubmissionId =
+    activeSubmission?.source === "evaluation" ? activeSubmission.id : "";
+  const { data: activeNotes, isLoading: loadingNotes } =
+    useCommissionEvaluationNotesQuery(
+      evaluationId,
+      activeEvaluationSubmissionId,
+      Boolean(activeEvaluationSubmissionId),
+    );
   const saveScoresMutation = useSaveCommissionScoresMutation(evaluationId);
 
-  const membresList: MembreEvaluation[] = useMemo(
-    () => membres ?? [],
-    [membres]
+  const notesByCriterion = useMemo(() => {
+    const map = new Map<string, CommissionEvaluationNote>();
+    (activeNotes ?? [])
+      .filter((note) => note.source !== "IA")
+      .forEach((note) => map.set(note.criterionId, note));
+    return map;
+  }, [activeNotes]);
+
+  const rows = useMemo(
+    () =>
+      criteria.map((criterion) => {
+        const existing = notesByCriterion.get(criterion.id);
+        const draft = activeSubmission
+          ? draftScores[activeSubmission.id]?.[criterion.id]
+          : undefined;
+        const note =
+          draft?.note ??
+          (existing?.note !== undefined ? String(existing.note) : "");
+        const justification = draft?.justification ?? existing?.justification ?? "";
+        return { criterion, note, justification, existing };
+      }),
+    [activeSubmission, criteria, draftScores, notesByCriterion],
   );
 
-  const soumissions: Soumission[] = useMemo(
-    () => (evaluationSubmissionsData ?? aoSubmissionsData ?? []).map((submission) => ({
-      id: submission.id,
-      reference: submission.reference,
-      operatorName: submission.operatorName,
-      status: submission.status,
-    })),
-    [aoSubmissionsData, evaluationSubmissionsData]
-  );
-
-  const criteresTemplate: Critere[] = useMemo(
-    () => (criteriaData ?? []).map((criterion, index) => mapBackendCriterionToUi(criterion, index)),
-    [criteriaData]
-  );
-  const hasCriteria = criteresTemplate.length > 0;
-
-  const [activeSoumissionIdx, setActiveSoumissionIdx] = useState(0);
-  const [criteresByS, setCriteresByS] = useState<Record<string, Critere[]>>({});
-  const [saved, setSaved] = useState(false);
-  const [iaExpandedMap, setIaExpandedMap] = useState<Record<string, boolean>>({});
-
-  const effectiveActiveSoumissionIdx =
-    soumissions.length === 0
-      ? 0
-      : Math.min(activeSoumissionIdx, soumissions.length - 1);
-
-  const currentSoumission = soumissions[effectiveActiveSoumissionIdx];
-  const criteres: Critere[] = currentSoumission
-    ? (criteresByS[currentSoumission.id] ?? criteresTemplate.map((c) => ({ ...c })))
-    : [];
-
-  const scoreActuel = criteres.reduce((acc, c) => {
-    if (c.note === null) return acc;
-    return acc + (c.note * c.ponderation) / 100;
+  const scoredRows = rows.filter((row) => row.note.trim() !== "");
+  const scoreActuel = rows.reduce((acc, row) => {
+    const numeric = Number(row.note);
+    if (!Number.isFinite(numeric)) return acc;
+    return acc + (numeric * row.criterion.weight) / 100;
   }, 0);
+  const completion =
+    rows.length === 0 ? 0 : Math.round((scoredRows.length / rows.length) * 100);
 
-  const handleNote = (id: string, val: number | null) => {
-    if (!currentSoumission) return;
-    setCriteresByS((prev) => ({
+  const membresList: MembreEvaluation[] = membres ?? [];
+  const hasEvaluation = Boolean(evaluationId);
+  const hasCriteria = criteria.length > 0;
+  const hasEvaluationCriteria = Boolean(evaluationCriteria?.length);
+  const canSaveNotes =
+    Boolean(evaluationId) &&
+    activeSubmission?.source === "evaluation" &&
+    evaluationStatus === "EN_COURS" &&
+    hasEvaluationCriteria;
+  const saveDisabledReason = !hasEvaluation
+    ? "Le service evaluation n'a pas encore cree cette session."
+    : activeSubmission?.source !== "evaluation"
+      ? "Cette soumission vient de l'AO et n'est pas encore rattachee a l'evaluation."
+      : evaluationStatus !== "EN_COURS"
+        ? `La notation est verrouillee car le statut est ${evaluationStatus || "inconnu"}.`
+        : !hasEvaluationCriteria
+          ? "Aucun critere d'evaluation n'est disponible dans le service evaluation."
+          : "";
+
+  const aiInsights = buildAiInsights({
+    hasEvaluation,
+    hasCriteria,
+    canSaveNotes,
+    currentSubmission: activeSubmission,
+    anomaliesCount: anomalies?.totalAnomalies ?? 0,
+    completion,
+    score: scoreActuel,
+  });
+
+  const isPageLoading =
+    loadingCommissions ||
+    loadingOverview ||
+    loadingResolvedEvaluation ||
+    loadingMembers ||
+    loadingEvaluationSubmissions ||
+    loadingAoSubmissions ||
+    loadingEvaluationCriteria ||
+    loadingAoCriteria ||
+    loadingNotes;
+
+  const updateDraft = (
+    submissionId: string,
+    criterion: CommissionEvaluationCriterion,
+    field: "note" | "justification",
+    value: string,
+  ) => {
+    const nextValue =
+      field === "note" ? clampScore(value, criterion.noteMax) : value;
+    setDraftScores((prev) => ({
       ...prev,
-      [currentSoumission.id]: (prev[currentSoumission.id] ?? criteresTemplate.map((c) => ({ ...c }))).map(
-        (c) => (c.id === id ? { ...c, note: val } : c)
-      ),
+      [submissionId]: {
+        ...(prev[submissionId] ?? {}),
+        [criterion.id]: {
+          note:
+            field === "note"
+              ? nextValue
+              : (prev[submissionId]?.[criterion.id]?.note ??
+                (notesByCriterion.get(criterion.id)?.note !== undefined
+                  ? String(notesByCriterion.get(criterion.id)?.note)
+                  : "")),
+          justification:
+            field === "justification"
+              ? nextValue
+              : (prev[submissionId]?.[criterion.id]?.justification ??
+                notesByCriterion.get(criterion.id)?.justification ??
+                ""),
+        },
+      },
     }));
-    setSaved(false);
+    setSaveMessage(null);
   };
 
-  const handleJustif = (id: string, val: string) => {
-    if (!currentSoumission) return;
-    setCriteresByS((prev) => ({
-      ...prev,
-      [currentSoumission.id]: (prev[currentSoumission.id] ?? criteresTemplate.map((c) => ({ ...c }))).map(
-        (c) => (c.id === id ? { ...c, justification: val } : c)
-      ),
-    }));
-    setSaved(false);
-  };
+  const saveCurrentSubmission = async () => {
+    if (!activeSubmission || !canSaveNotes) return;
+    const scores = rows
+      .filter((row) => row.note.trim() !== "")
+      .map((row) => ({
+        submissionId: activeSubmission.id,
+        criterionId: row.criterion.id,
+        score: Number(row.note),
+        justification: row.justification.trim() || "Notation commission.",
+      }));
 
-  const goNext = async () => {
+    if (scores.length === 0) {
+      setSaveMessage("Renseignez au moins une note avant d'enregistrer.");
+      return;
+    }
+
     try {
-      if (currentSoumission) {
-        const scores = criteres
-          .filter((criterion) => criterion.note !== null)
-          .map((criterion) => ({
-            submissionId: currentSoumission.id,
-            criterionId: criterion.id,
-            score: criterion.note ?? 0,
-            justification: criterion.justification || undefined,
-          }));
-
-        if (scores.length > 0) {
-          await saveScoresMutation.mutateAsync({ scores });
-        }
-      }
-
-      setSaved(true);
-      if (effectiveActiveSoumissionIdx < soumissions.length - 1) {
-        setActiveSoumissionIdx((i) => i + 1);
-        setSaved(false);
-      }
+      await saveScoresMutation.mutateAsync({ scores });
+      setSaveMessage("Notes enregistrees pour la soumission active.");
     } catch (error) {
       console.error("Failed to save commission scores", error);
-      setSaved(false);
+      setSaveMessage("Enregistrement refuse par le backend. Verifiez le statut de l'evaluation.");
     }
   };
 
-  const isPageLoading =
-    loadingEvaluations ||
-    loadingOverview ||
-    loadingResolvedEvaluation ||
-    loadingEvaluationSubmissions ||
-    loadingAoSubmissions ||
-    loadingCriteria;
-
-  // ── Loading ─────────────────────────────────────────────────────────────────
   if (isPageLoading) {
     return (
-      <div style={{ direction: isAr ? "rtl" : "ltr", padding: "20px 0" }}>
-        <div style={{ height: 48, background: "#F1F5F9", borderRadius: 12, marginBottom: 20 }} className="animate-pulse" />
-        <div style={{ display: "flex", gap: 20 }}>
-          <div style={{ flex: 1, height: 400, background: "#F1F5F9", borderRadius: 16 }} className="animate-pulse" />
-          <div style={{ width: 270, height: 400, background: "#F1F5F9", borderRadius: 16 }} className="animate-pulse" />
+      <div className="space-y-6 p-2" style={{ direction: isAr ? "rtl" : "ltr" }}>
+        <div className="h-36 animate-pulse rounded-[32px] bg-slate-100" />
+        <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)_320px]">
+          <div className="h-96 animate-pulse rounded-[28px] bg-slate-100" />
+          <div className="h-96 animate-pulse rounded-[28px] bg-slate-100" />
+          <div className="h-96 animate-pulse rounded-[28px] bg-slate-100" />
         </div>
       </div>
     );
   }
 
-  // ── Pas de commission ────────────────────────────────────────────────────────
-  if (!selectedCommission && !effectiveEvaluationRecord) {
+  if (!selectedCommission && !evaluation) {
     return (
-      <div style={{ direction: isAr ? "rtl" : "ltr" }}>
-        <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 16, overflow: "hidden" }}>
-          <EmptyEvaluation isAr={isAr} />
-        </div>
+      <div className="p-4" style={{ direction: isAr ? "rtl" : "ltr" }}>
+        <EmptyState
+          title={isAr ? "لا توجد بيانات تقييم" : "Aucune donnee d'evaluation"}
+          body={
+            isAr
+              ? "لم يعثر النظام على لجنة أو تقييم مرتبط بهذا الرابط."
+              : "Le systeme ne trouve ni commission ni evaluation pour cet identifiant."
+          }
+        />
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: "100%", direction: isAr ? "rtl" : "ltr" }}>
-
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: "#1B1C1C", margin: 0 }}>{te.titre}</h1>
-          <span style={{ fontSize: 12, padding: "4px 12px", borderRadius: 999, background: "#F0EDED", color: "#364150", border: "1px solid #E5E7EB" }}>
-            {selectedCommission?.reference ?? effectiveEvaluationRecord?.reference ?? selectedCommissionId}
-          </span>
-          <span style={{ fontSize: 12, padding: "4px 12px", borderRadius: 999, background: "rgba(76,175,80,0.1)", color: "#2e7d32", border: "1px solid #E5E7EB" }}>
-            {selectedCommission?.statut ?? effectiveEvaluationRecord?.statut ?? "ACTIVE"}
-          </span>
-        </div>
-        {resolvedAoId ? (
-          <Link
-            href={`/${locale}/dashboard/commission/classement/${resolvedAoId}`}
-            style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "#1E293B", color: "#fff", textDecoration: "none" }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
-            {t.voirClassement}
-          </Link>
-        ) : (
-          <div
-            style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "#F8FAFC", color: "#94A3B8", border: "1px solid #E2E8F0" }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M12 8v4m0 4h.01M12 21a9 9 0 100-18 9 9 0 000 18z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
-            {isAr ? "التصنيف غير متاح بعد" : "Classement indisponible"}
-          </div>
-        )}
-      </div>
-
-      {/* Commission info strip */}
-      <div style={{ background: "rgba(76,175,80,0.06)", border: "1px solid rgba(76,175,80,0.2)", borderRadius: 12, padding: "10px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "#2e7d32" }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-          <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-        </svg>
-        <span>
-          <strong>{selectedCommission?.objet ?? effectiveEvaluationRecord?.objet ?? selectedCommissionId}</strong>
-          {selectedCommission?.dateReunion && (
-            <> · {isAr ? "اجتماع" : "Réunion"} {new Date(selectedCommission.dateReunion).toLocaleDateString(isAr ? "ar-DZ" : "fr-DZ")}</>
-          )}
-          {membresList.length > 0 && (
-            <> · {membresList.length} membre{membresList.length > 1 ? "s" : ""}</>
-          )}
-        </span>
-      </div>
-
-      {!resolvedAoId && (
-        <div
-          style={{
-            background: "#FFF7ED",
-            border: "1px solid #FED7AA",
-            borderRadius: 12,
-            padding: "12px 16px",
-            marginBottom: 16,
-            fontSize: 13,
-            color: "#9A3412",
-          }}
-        >
-          {isAr
-            ? "تم تحميل اللجنة وأعضائها، لكن الربط مع طلب العرض أو جلسة الفتح غير متوفر بعد من الخادم."
-            : "La commission et ses membres sont bien chargés, mais le backend n'a pas encore lié cette commission a un appel d'offres ou a une seance d'ouverture."}
-        </div>
-      )}
-
-      {membresList.length > 0 && (
-        <div
-          style={{
-            background: "#fff",
-            border: "1px solid #E5E7EB",
-            borderRadius: 16,
-            padding: "16px 18px",
-            marginBottom: 16,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: "#1B1C1C", margin: 0 }}>
-              {isAr ? "أعضاء اللجنة" : "Membres de la commission"}
-            </h2>
-            <span style={{ fontSize: 12, color: "#6B7280" }}>
-              {membresList.length} {isAr ? "أعضاء" : membresList.length > 1 ? "membres" : "membre"}
-            </span>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-            {membresList.map((membre) => (
-              <div
-                key={membre.id}
-                style={{
-                  border: "1px solid #E5E7EB",
-                  borderRadius: 12,
-                  padding: "12px 14px",
-                  background: "#F8FAFC",
-                }}
-              >
-                <p style={{ fontSize: 14, fontWeight: 700, color: "#1F2937", margin: 0 }}>
-                  {[membre.prenom, membre.nom].filter(Boolean).join(" ")}
-                </p>
-                <p style={{ fontSize: 12, color: "#6B7280", margin: "4px 0 0" }}>{membre.role}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Pas de soumissions */}
-      {soumissions.length === 0 ? (
-        <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
-          <div style={{ flex: 1, background: "#fff", border: "1px solid #E5E7EB", borderRadius: 16, overflow: "hidden" }}>
-            <EmptySoumissions isAr={isAr} />
-          </div>
-
-          {/* IA panel — affiché même sans soumissions pour montrer la grille */}
-          <div style={{ width: 270, flexShrink: 0 }}>
-            <div style={{ background: "#1E293B", borderRadius: 16, overflow: "hidden", position: "sticky", top: 16 }}>
-              <div style={{ padding: "16px 18px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontSize: 16 }}>✨</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{te.iaPanel.titre}</span>
-                </div>
-                <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.4 }}>{te.iaPanel.sousTitre}</p>
-              </div>
-              <div style={{ padding: "20px 18px", textAlign: "center" }}>
-                <p style={{ fontSize: 12, color: "#475569" }}>
-                  {isAr ? "في انتظار العروض…" : "En attente des soumissions…"}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        /* ── Layout principal : soumission barre + critères + IA ── */
-        <>
-          {/* Soumission bar */}
-          <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 14, padding: "14px 20px", marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+    <div
+      className="min-h-full space-y-6 bg-[radial-gradient(circle_at_top_left,#eef7ef_0,#f6f8fb_34%,#edf2f7_100%)] p-4 text-slate-950"
+      style={{ direction: isAr ? "rtl" : "ltr" }}
+    >
+      <section className="overflow-hidden rounded-[34px] border border-white/70 bg-white/85 shadow-[0_30px_90px_-45px_rgba(15,23,42,0.55)] backdrop-blur">
+        <div className="border-b border-slate-200/70 bg-[linear-gradient(135deg,#123524_0%,#1f4f37_48%,#d9b46f_100%)] p-6 text-white">
+          <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
             <div>
-              <p style={{ fontSize: 15, fontWeight: 700, color: "#1B1C1C", margin: 0 }}>
-                {te.soumissionLabel(currentSoumission.reference)}{" "}
-                <span style={{ fontWeight: 400, fontSize: 13, color: "#6F7A6B" }}>{te.anonymisee}</span>
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-100">
+                {isAr ? "فضاء التقييم التقني" : "Chambre de notation technique"}
               </p>
-              <p style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2 }}>
-                {currentSoumission.operatorName} · {currentSoumission.status} · {activeSoumissionIdx + 1}/{soumissions.length}
-              </p>
-            </div>
-            <span style={{ fontSize: 14, fontWeight: 700, color: "#4CAF50" }}>
-              {te.scoreActuel(Math.round(scoreActuel))}
-            </span>
-          </div>
-
-          {/* Two-column */}
-          <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              {!hasCriteria ? (
-                <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 16 }}>
-                  <EmptyCriteria isAr={isAr} />
-                </div>
-              ) : criteres.map((c) => {
-                const label = isAr ? c.labelAr : c.labelFr;
-                const desc = isAr ? c.descriptionAr : c.descriptionFr;
-                const iaJustif = isAr ? c.ia.justifAr : c.ia.justifFr;
-                const iaAlerte = isAr ? c.ia.alerteAr : c.ia.alerteFr;
-                const iaExpanded = iaExpandedMap[c.id] ?? false;
-
-                return (
-                  <div key={c.id} style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 16, padding: "20px 24px", marginBottom: 16 }}>
-                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
-                      <h3 style={{ fontSize: 15, fontWeight: 700, color: "#1B1C1C", margin: 0 }}>{label}</h3>
-                      <span style={{ fontSize: 12, fontWeight: 600, padding: "3px 10px", borderRadius: 999, background: "rgba(76,175,80,0.1)", color: "#2e7d32", whiteSpace: "nowrap", marginInlineStart: 12, flexShrink: 0 }}>
-                        {te.ponderation(c.ponderation)}
-                      </span>
-                    </div>
-                    <p style={{ fontSize: 13, color: "#6F7A6B", marginBottom: 12, lineHeight: 1.5 }}>{desc}</p>
-
-                    {c.noteEliminatoire && (
-                      <div style={{ display: "inline-flex", alignItems: "center", fontSize: 12, padding: "3px 10px", borderRadius: 999, background: "rgba(239,68,68,0.07)", color: "#dc2626", border: "1px solid rgba(239,68,68,0.2)", marginBottom: 14 }}>
-                        {te.noteEliminatoire(c.noteEliminatoire, c.noteMax)}
-                      </div>
-                    )}
-
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                      <label style={{ fontSize: 13, fontWeight: 500, color: "#364150" }}>{te.noteLabel}</label>
-                      <input
-                        type="number" min={0} max={c.noteMax}
-                        value={c.note ?? ""}
-                        onChange={(e) => handleNote(c.id, e.target.value === "" ? null : Math.min(c.noteMax, Math.max(0, parseFloat(e.target.value))))}
-                        placeholder="—"
-                        style={{ width: 70, textAlign: "center", borderRadius: 8, fontSize: 13, fontWeight: 700, outline: "none", background: "#F5F7FA", border: "1px solid #D1D5DB", color: "#364150", padding: "7px 8px" }}
-                      />
-                    </div>
-
-                    <label style={{ fontSize: 13, fontWeight: 500, color: "#364150", display: "block", marginBottom: 6 }}>{te.justifLabel}</label>
-                    <textarea
-                      rows={3} value={c.justification}
-                      onChange={(e) => handleJustif(c.id, e.target.value)}
-                      placeholder={te.justifPlaceholder}
-                      style={{ width: "100%", padding: "10px 14px", borderRadius: 10, fontSize: 13, outline: "none", resize: "none", background: "#F5F7FA", border: "1px solid #D1D5DB", color: "#364150", boxSizing: "border-box", lineHeight: 1.5 }}
-                    />
-
-                    {/* IA accordion */}
-                    <div style={{ border: "1px solid rgba(234,179,8,0.35)", background: "rgba(255,251,235,0.6)", borderRadius: 12, marginTop: 12, overflow: "hidden" }}>
-                      <button
-                        onClick={() => setIaExpandedMap((prev) => ({ ...prev, [c.id]: !prev[c.id] }))}
-                        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", background: "transparent", border: "none", cursor: "pointer" }}
-                      >
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 13, fontWeight: 600, color: "#92400e" }}>{te.iaPanel.suggestion(c.ia.noteSuggeree)}</span>
-                          <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "rgba(234,179,8,0.15)", color: "#92400e" }}>{te.iaPanel.confiance(c.ia.confiance)}</span>
-                        </div>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ transform: iaExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", flexShrink: 0 }}>
-                          <path d="M6 9l6 6 6-6" stroke="#92400e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </button>
-                      {iaExpanded && (
-                        <div style={{ padding: "0 16px 14px", borderTop: "1px solid rgba(234,179,8,0.2)" }}>
-                          <p style={{ fontSize: 12, color: "#78350f", marginTop: 10, marginBottom: 8, lineHeight: 1.55 }}>{iaJustif}</p>
-                          {iaAlerte && (
-                            <div style={{ display: "flex", alignItems: "flex-start", gap: 6, padding: "8px 10px", borderRadius: 8, background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.2)", color: "#991b1b", fontSize: 12 }}>
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ marginTop: 1, flexShrink: 0 }}>
-                                <path d="M12 8v4M12 16h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-                              </svg>
-                              {isAr ? "تنبيه الذكاء الاصطناعي: " : "Alerte IA : "}{iaAlerte}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* Nav footer */}
-              <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 14, padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4 }}>
-                <button
-                  onClick={() => { if (activeSoumissionIdx > 0) { setActiveSoumissionIdx((i) => i - 1); setSaved(false); } }}
-                  disabled={activeSoumissionIdx === 0}
-                  style={{ padding: "9px 20px", borderRadius: 999, fontSize: 13, fontWeight: 600, background: "#F5F7FA", color: "#6B7280", border: "1px solid #D1D5DB", cursor: activeSoumissionIdx === 0 ? "not-allowed" : "pointer", opacity: activeSoumissionIdx === 0 ? 0.45 : 1 }}
-                >
-                  {t.soumissionPrecedente}
-                </button>
-                <button
-                  onClick={goNext}
-                  disabled={saveScoresMutation.isPending || !hasCriteria}
-                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 28px", borderRadius: 999, fontSize: 13, fontWeight: 600, background: "#4CAF50", color: "#fff", border: "none", cursor: saveScoresMutation.isPending || !hasCriteria ? "not-allowed" : "pointer", opacity: saveScoresMutation.isPending || !hasCriteria ? 0.7 : 1 }}
-                >
-                  {saveScoresMutation.isPending ? (
-                    "…"
-                  ) : saved && activeSoumissionIdx === soumissions.length - 1 ? (
-                    <><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>{t.enregistre}</>
-                  ) : t.enregistrerSuivant}
-                </button>
+              <h1 className="mt-3 text-3xl font-black tracking-tight">
+                {selectedCommission?.objet ?? evaluation?.objet ?? "Evaluation commission"}
+              </h1>
+              <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
+                <span className="rounded-full border border-white/25 bg-white/15 px-3 py-1">
+                  {selectedCommission?.reference ?? evaluation?.reference ?? selectedCommissionId}
+                </span>
+                <span className="rounded-full border border-white/25 bg-white/15 px-3 py-1">
+                  {evaluationStatus || selectedCommission?.statut || "ACTIVE"}
+                </span>
+                <span className="rounded-full border border-white/25 bg-white/15 px-3 py-1">
+                  AO {resolvedAoId ? resolvedAoId.slice(0, 8) : "non lie"}
+                </span>
               </div>
             </div>
+            <div className="flex flex-wrap gap-3">
+              {resolvedAoId ? (
+                <Link
+                  href={`/${locale}/dashboard/commission/classement/${resolvedAoId}`}
+                  className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-[#123524] shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
+                >
+                  {isAr ? "عرض الترتيب" : "Voir classement"}
+                </Link>
+              ) : null}
+            </div>
+          </div>
+        </div>
 
-            {/* IA sticky panel */}
-            <div style={{ width: 270, flexShrink: 0 }}>
-              <div style={{ background: "#1E293B", borderRadius: 16, overflow: "hidden", position: "sticky", top: 16 }}>
-                <div style={{ padding: "16px 18px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 16 }}>✨</span>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{te.iaPanel.titre}</span>
-                  </div>
-                  <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.4 }}>{te.iaPanel.sousTitre}</p>
-                </div>
-                <div style={{ padding: "14px", display: "flex", flexDirection: "column", gap: 10 }}>
-                  {!hasCriteria ? (
-                    <div style={{ border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "14px", textAlign: "center" }}>
-                      <p style={{ fontSize: 12, color: "#94A3B8", margin: 0 }}>
-                        {isAr ? "لا توجد معايير متاحة من الخادم" : "Aucun critère disponible depuis le backend"}
-                      </p>
-                    </div>
-                  ) : criteres.map((c, idx) => {
-                    const label = isAr ? c.labelAr : c.labelFr;
-                    const justif = isAr ? c.ia.justifAr : c.ia.justifFr;
-                    return (
-                      <div key={c.id} style={{ background: "rgba(255,255,255,0.04)", border: c.ia.alerteFr ? "1px solid rgba(234,179,8,0.4)" : "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "12px 14px" }}>
-                        <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: c.ia.alerteFr ? "#EAB308" : "#64748B", marginBottom: 6 }}>
-                          {te.iaPanel.critereLabel(idx + 1, label.split(" ").slice(0, 2).join(" "))}
-                        </p>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: c.ia.alerteFr ? "#EAB308" : "#4CAF50", marginBottom: 6 }}>
-                          {te.iaPanel.noteSuggeree(c.ia.noteSuggeree)}
-                        </p>
-                        <p style={{ fontSize: 11, color: "#CBD5E1", marginBottom: 6, lineHeight: 1.45 }}>{justif}</p>
-                        <p style={{ fontSize: 11, color: "#475569" }}>{te.iaPanel.confianceLabel(c.ia.confiance)}</p>
+        <div className="grid gap-4 p-5 md:grid-cols-4">
+          {[
+            { label: "Soumissions", value: submissions.length, detail: "offres chargees" },
+            { label: "Criteres", value: criteria.length, detail: hasEvaluationCriteria ? "service evaluation" : "source AO/fallback" },
+            { label: "Membres", value: membresList.length, detail: "commission active" },
+            { label: "Session", value: hasEvaluation ? "EV" : "AO", detail: hasEvaluation ? "evaluation trouvee" : "pre-evaluation" },
+          ].map((item) => (
+            <div key={item.label} className="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{item.label}</p>
+              <p className="mt-2 text-2xl font-black text-slate-950">{item.value}</p>
+              <p className="text-xs text-slate-500">{item.detail}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)_340px]">
+        <aside className="space-y-4">
+          <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm font-black text-slate-950">
+                {isAr ? "العروض" : "Soumissions"}
+              </h2>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
+                {submissions.length}
+              </span>
+            </div>
+            {submissions.length === 0 ? (
+              <p className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">
+                Aucune soumission n&apos;est renvoyee pour cet appel d&apos;offres.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {submissions.map((submission, index) => {
+                  const active = activeSubmission?.id === submission.id;
+                  return (
+                    <button
+                      key={submission.id}
+                      onClick={() => {
+                        setActiveSubmissionId(submission.id);
+                        setSaveMessage(null);
+                      }}
+                      className={`w-full rounded-2xl border p-4 text-left transition ${
+                        active
+                          ? "border-emerald-300 bg-emerald-50 shadow-sm"
+                          : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
+                            Soumission {index + 1}
+                          </p>
+                          <p className="mt-1 text-sm font-black text-slate-900">
+                            {submission.reference}
+                          </p>
+                        </div>
+                        <span className={`rounded-full border px-2.5 py-1 text-[11px] font-bold ${statusTone(submission.status)}`}>
+                          {submission.status || "N/A"}
+                        </span>
                       </div>
+                      <p className="mt-3 text-xs text-slate-500">
+                        {sourceLabel(submission.source, isAr)}
+                      </p>
+                      {submission.scoreGlobal !== null && submission.scoreGlobal !== undefined ? (
+                        <p className="mt-2 text-xs font-bold text-emerald-700">
+                          Score global {submission.scoreGlobal} / 100
+                        </p>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm font-black text-slate-950">
+                {isAr ? "أعضاء اللجنة" : "Membres"}
+              </h2>
+              <span className="text-xs font-bold text-slate-400">{membresList.length}</span>
+            </div>
+            <div className="space-y-2">
+              {membresList.map((membre) => (
+                <div key={membre.id} className="rounded-2xl bg-slate-50 p-3">
+                  <p className="text-sm font-bold text-slate-900">
+                    {[membre.prenom, membre.nom].filter(Boolean).join(" ")}
+                  </p>
+                  <p className="text-xs font-semibold text-slate-500">{membre.role}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
+
+        <main className="min-w-0 space-y-4">
+          {!activeSubmission ? (
+            <EmptyState
+              title="Aucune soumission active"
+              body="Les soumissions apparaitront ici des que le service soumission les renvoie pour l'appel d'offres."
+            />
+          ) : (
+            <>
+              <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">
+                      {sourceLabel(activeSubmission.source, isAr)}
+                    </p>
+                    <h2 className="mt-2 text-2xl font-black text-slate-950">
+                      {activeSubmission.reference}
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {activeSubmission.operatorName} · lot {activeSubmission.lotId ?? "non precise"}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-3">
+                    <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                      <p className="text-xs font-bold text-slate-400">Score</p>
+                      <p className="text-xl font-black text-emerald-700">{Math.round(scoreActuel)}</p>
+                    </div>
+                    <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                      <p className="text-xs font-bold text-slate-400">Grille</p>
+                      <p className="text-xl font-black text-slate-950">{completion}%</p>
+                    </div>
+                    <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                      <p className="text-xs font-bold text-slate-400">Criteres</p>
+                      <p className="text-xl font-black text-slate-950">{criteria.length}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {!hasEvaluation || !hasEvaluationCriteria ? (
+                <div className="rounded-[28px] border border-amber-200 bg-amber-50 p-5 text-amber-950">
+                  <p className="font-black">
+                    {hasEvaluation
+                      ? "Evaluation creee, mais grille absente"
+                      : "Session de notation non initialisee"}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-amber-800">
+                    Les soumissions sont bien chargees depuis le service soumission.
+                    La notation reste verrouillee tant que le service evaluation ne renvoie
+                    pas une evaluation EN_COURS avec des criteres et des soumissions rattachees.
+                  </p>
+                </div>
+              ) : null}
+
+              {criteria.length === 0 ? (
+                <EmptyState
+                  title="Aucun critere d'evaluation"
+                  body="Le service evaluation et le service appel d'offres renvoient une grille vide pour cet AO. Les notes ne peuvent pas etre saisies sans criteres auditables."
+                />
+              ) : (
+                <div className="space-y-3">
+                  {rows.map(({ criterion, note, justification, existing }, index) => {
+                    const max = criterion.noteMax || 100;
+                    const numeric = Number(note);
+                    const percent = Number.isFinite(numeric)
+                      ? Math.min(100, Math.max(0, (numeric / max) * 100))
+                      : 0;
+                    return (
+                      <article
+                        key={criterion.id}
+                        className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm"
+                      >
+                        <div className="border-b border-slate-100 p-5">
+                          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div>
+                              <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
+                                Critere {index + 1} {criterion.code ? `· ${criterion.code}` : ""}
+                              </p>
+                              <h3 className="mt-2 text-lg font-black text-slate-950">
+                                {criterion.label}
+                              </h3>
+                              <p className="mt-1 text-sm leading-6 text-slate-500">
+                                {criterion.description || "Critere de notation charge depuis le backend."}
+                              </p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800">
+                                Poids {criterion.weight}%
+                              </span>
+                              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-600">
+                                / {max}
+                              </span>
+                              {criterion.noteEliminatoire !== undefined ? (
+                                <span className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700">
+                                  Min {criterion.noteEliminatoire}
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="grid gap-5 p-5 lg:grid-cols-[180px_minmax(0,1fr)]">
+                          <div>
+                            <label className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
+                              Note
+                            </label>
+                            <input
+                              type="number"
+                              min={0}
+                              max={max}
+                              value={note}
+                              disabled={!canSaveNotes}
+                              onChange={(event) =>
+                                updateDraft(activeSubmission.id, criterion, "note", event.target.value)
+                              }
+                              className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-xl font-black text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white disabled:cursor-not-allowed disabled:text-slate-400"
+                              placeholder="-"
+                            />
+                            <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+                              <div
+                                className="h-full rounded-full bg-emerald-500"
+                                style={{ width: `${percent}%` }}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
+                              Justification
+                            </label>
+                            <textarea
+                              rows={4}
+                              value={justification}
+                              disabled={!canSaveNotes}
+                              onChange={(event) =>
+                                updateDraft(activeSubmission.id, criterion, "justification", event.target.value)
+                              }
+                              className="mt-2 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-800 outline-none transition focus:border-emerald-400 focus:bg-white disabled:cursor-not-allowed disabled:text-slate-400"
+                              placeholder="Motiver la note attribuee..."
+                            />
+                            {existing ? (
+                              <p className="mt-2 text-xs font-semibold text-slate-400">
+                                Derniere note enregistree: {existing.note} / {max}
+                              </p>
+                            ) : null}
+                          </div>
+                        </div>
+                      </article>
                     );
                   })}
                 </div>
+              )}
+
+              <div className="sticky bottom-4 z-10 rounded-[26px] border border-slate-200 bg-white/95 p-4 shadow-[0_20px_70px_-35px_rgba(15,23,42,0.55)] backdrop-blur">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <p className="text-sm font-black text-slate-950">
+                      {canSaveNotes ? "Pret a enregistrer" : "Notation verrouillee"}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {canSaveNotes
+                        ? `${scoredRows.length}/${rows.length} criteres renseignes pour cette soumission.`
+                        : saveDisabledReason}
+                    </p>
+                    {saveMessage ? (
+                      <p className="mt-2 text-xs font-bold text-emerald-700">{saveMessage}</p>
+                    ) : null}
+                  </div>
+                  <button
+                    onClick={saveCurrentSubmission}
+                    disabled={!canSaveNotes || saveScoresMutation.isPending}
+                    className="rounded-2xl bg-[#123524] px-6 py-3 text-sm font-black text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#1f4f37] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
+                  >
+                    {saveScoresMutation.isPending ? "Enregistrement..." : "Enregistrer les notes"}
+                  </button>
+                </div>
               </div>
+            </>
+          )}
+        </main>
+
+        <aside className="space-y-4">
+          <div className="sticky top-4 overflow-hidden rounded-[30px] border border-[#123524]/20 bg-[#101f1a] text-white shadow-[0_30px_90px_-45px_rgba(16,31,26,0.8)]">
+            <div className="border-b border-white/10 bg-white/5 p-5">
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#d9b46f]">
+                Assistant IA Al-Mizan
+              </p>
+              <h2 className="mt-2 text-xl font-black">Lecture de readiness</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-300">
+                Analyse basee sur les reponses des services commission, evaluation et soumission.
+              </p>
+            </div>
+            <div className="space-y-3 p-4">
+              {aiInsights.map((insight) => (
+                <div
+                  key={insight.title}
+                  className={`rounded-2xl border p-4 ${
+                    insight.tone === "good"
+                      ? "border-emerald-400/20 bg-emerald-400/10"
+                      : insight.tone === "warn"
+                        ? "border-amber-300/25 bg-amber-300/10"
+                        : "border-white/10 bg-white/5"
+                  }`}
+                >
+                  <p className="text-sm font-black">{insight.title}</p>
+                  <p className="mt-2 text-xs leading-5 text-slate-300">{insight.body}</p>
+                </div>
+              ))}
             </div>
           </div>
-        </>
-      )}
+
+          <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
+            <h2 className="text-sm font-black text-slate-950">Etat backend</h2>
+            <dl className="mt-4 space-y-3 text-sm">
+              {[
+                ["Commission", resolvedCommissionId ? "OK" : "Manquante"],
+                ["AO", resolvedAoId ? "OK" : "Non lie"],
+                ["Evaluation", hasEvaluation ? evaluationStatus || "OK" : "Absente"],
+                ["Criteres evaluation", hasEvaluationCriteria ? `${evaluationCriteria?.length}` : "0"],
+                ["Criteres AO", `${aoCriteria?.length ?? 0}`],
+                ["Anomalies IA", `${anomalies?.totalAnomalies ?? 0}`],
+              ].map(([label, value]) => (
+                <div key={label} className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-3 py-2">
+                  <dt className="text-slate-500">{label}</dt>
+                  <dd className="font-black text-slate-900">{value}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-4 text-xs leading-5 text-slate-400">
+              Reunion: {formatDate(selectedCommission?.dateReunion, locale)}
+            </p>
+          </div>
+        </aside>
+      </section>
     </div>
   );
 }

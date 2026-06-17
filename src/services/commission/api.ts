@@ -17,17 +17,55 @@ export interface CommissionEvaluationOverviewItem {
 
 export interface CommissionEvaluationSubmission {
   id: string;
+  externalSubmissionId: string;
   reference: string;
   operatorName: string;
   status: string;
+  lotId?: string | null;
+  scoreTechnique?: number | null;
+  scoreGlobal?: number | null;
+  rang?: number | null;
+  recommandation?: string | null;
+  source: "evaluation" | "ao";
 }
 
 export interface CommissionEvaluationCriterion {
   id: string;
+  code?: string;
   label: string;
   weight: number;
   type: string;
+  noteMax: number;
+  description?: string | null;
   noteEliminatoire?: number;
+  eliminatoire?: boolean;
+  source: "evaluation" | "ao";
+}
+
+export interface CommissionEvaluationNote {
+  id: string;
+  criterionId: string;
+  criterionCode?: string;
+  criterionLabel?: string;
+  evaluatorId: string;
+  evaluatorName?: string | null;
+  source: "HUMAIN" | "IA" | string;
+  note: number;
+  justification: string;
+  scoreConfiance?: number | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CommissionAoAnomalies {
+  totalAnomalies: number;
+  breakdown: Record<string, number>;
+  flaggedBids: {
+    soumissionId?: string;
+    anomalyType?: string;
+    detail?: string;
+    confidence?: number;
+  }[];
 }
 
 export interface CommissionDocumentItem {
@@ -189,7 +227,7 @@ export async function getCommissionEvaluationSubmissions(evaluationId: string): 
     `/api/v1/evaluations/${evaluationId}/soumissions`,
     { method: "GET" },
   );
-  return mapCommissionEvaluationSubmissions(raw);
+  return mapCommissionEvaluationSubmissions(raw, "evaluation");
 }
 
 export async function getCommissionAoSubmissions(aoId: string): Promise<CommissionEvaluationSubmission[]> {
@@ -197,25 +235,41 @@ export async function getCommissionAoSubmissions(aoId: string): Promise<Commissi
     `/api/v1/soumissions/appel-offre/${aoId}`,
     { method: "GET" },
   );
-  return mapCommissionEvaluationSubmissions(raw);
+  return mapCommissionEvaluationSubmissions(raw, "ao");
 }
 
-function mapCommissionEvaluationSubmissions(payload: unknown): CommissionEvaluationSubmission[] {
+function mapCommissionEvaluationSubmissions(
+  payload: unknown,
+  source: "evaluation" | "ao",
+): CommissionEvaluationSubmission[] {
   return extractArrayPayload(payload)
     .map((item) => {
       if (!item || typeof item !== "object") return null;
       const record = item as Record<string, unknown>;
+      const id = String(record.id ?? "");
+      const externalSubmissionId = String(record.externalSubmissionId ?? record.soumissionId ?? id);
+      const alias = String(record.aliasAnonyme ?? "");
+      const reference = String(record.reference ?? alias) || externalSubmissionId;
+      const operatorRaw =
+        record.operatorName ??
+        record.operateurNom ??
+        record.operatorOrganizationName ??
+        record.operateurId ??
+        alias;
 
       return {
-        id: String(record.id ?? ""),
-        reference: String(record.reference ?? record.aliasAnonyme ?? ""),
-        operatorName: String(
-          record.operatorName ??
-          record.operateurNom ??
-          record.aliasAnonyme ??
-          "Soumission",
-        ),
+        id,
+        externalSubmissionId,
+        reference,
+        operatorName: operatorRaw ? String(operatorRaw) : "Soumission",
         status: String(record.status ?? record.statut ?? ""),
+        lotId: typeof record.lotId === "string" ? record.lotId : null,
+        scoreTechnique: toNullableNumber(record.scoreTechnique),
+        scoreGlobal: toNullableNumber(record.scoreGlobal),
+        rang: toNullableNumber(record.rang),
+        recommandation:
+          typeof record.recommandation === "string" ? record.recommandation : null,
+        source,
       } as CommissionEvaluationSubmission;
     })
     .filter(
@@ -224,39 +278,132 @@ function mapCommissionEvaluationSubmissions(payload: unknown): CommissionEvaluat
     );
 }
 
+function toNullableNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
 export async function getCommissionEvaluationCriteria(evaluationId: string): Promise<CommissionEvaluationCriterion[]> {
   const raw = await apiClient<unknown>(
     `/api/v1/evaluations/${evaluationId}/criteres`,
     { method: "GET" },
   );
-  const items = extractArrayPayload(raw);
+  return mapCommissionEvaluationCriteria(raw, "evaluation");
+}
 
-  return items
+export async function getCommissionAoCriteria(aoId: string): Promise<CommissionEvaluationCriterion[]> {
+  const raw = await apiClient<unknown>(
+    `/api/v1/appels-offres/${aoId}/criteres-evaluation`,
+    { method: "GET" },
+  ).catch(() => []);
+  return mapCommissionEvaluationCriteria(raw, "ao");
+}
+
+function mapCommissionEvaluationCriteria(
+  payload: unknown,
+  source: "evaluation" | "ao",
+): CommissionEvaluationCriterion[] {
+  return extractArrayPayload(payload)
     .map((item) => {
       if (!item || typeof item !== "object") return null;
       const criterion = item as Record<string, unknown>;
+      const code =
+        typeof criterion.code === "string"
+          ? criterion.code
+          : typeof criterion.categorie === "string"
+            ? criterion.categorie
+            : undefined;
+      const label = String(criterion.libelle ?? criterion.label ?? "");
+      const noteMax = Number(criterion.noteMax ?? 100);
 
       return {
-        id: criterion.id,
-        label: String(criterion.libelle ?? criterion.label ?? ""),
+        id: String(criterion.id ?? ""),
+        code,
+        label,
         weight: Number(criterion.poids ?? criterion.weight ?? 0),
         type:
           String(criterion.categorie ?? criterion.type ?? "TECHNIQUE").toUpperCase() ===
           "FINANCIER"
             ? "financier"
             : "technique",
+        noteMax: Number.isFinite(noteMax) && noteMax > 0 ? noteMax : 100,
+        description:
+          typeof criterion.description === "string" ? criterion.description : null,
         noteEliminatoire:
-          typeof criterion.noteMinimale === "number"
-            ? criterion.noteMinimale
-            : typeof criterion.noteEliminatoire === "number"
-              ? criterion.noteEliminatoire
-              : undefined,
+          toNullableNumber(criterion.noteMinimale) ??
+          toNullableNumber(criterion.noteEliminatoire) ??
+          undefined,
+        eliminatoire:
+          typeof criterion.eliminatoire === "boolean"
+            ? criterion.eliminatoire
+            : Boolean(criterion.noteEliminatoire ?? criterion.noteMinimale),
+        source,
       } as CommissionEvaluationCriterion;
     })
     .filter(
       (item): item is CommissionEvaluationCriterion =>
         Boolean(item?.id) && Boolean(item?.label),
     );
+}
+
+export async function getCommissionEvaluationNotes(
+  evaluationId: string,
+  submissionId: string,
+): Promise<CommissionEvaluationNote[]> {
+  const raw = await apiClient<unknown>(
+    `/api/v1/evaluations/${evaluationId}/soumissions/${submissionId}/notes`,
+    { method: "GET" },
+  );
+  return extractArrayPayload(raw)
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const record = item as Record<string, unknown>;
+      const note = Number(record.note ?? 0);
+      return {
+        id: String(record.id ?? ""),
+        criterionId: String(record.criterionId ?? ""),
+        criterionCode:
+          typeof record.criterionCode === "string" ? record.criterionCode : undefined,
+        criterionLabel:
+          typeof record.criterionLabel === "string" ? record.criterionLabel : undefined,
+        evaluatorId: String(record.evaluatorId ?? ""),
+        evaluatorName:
+          typeof record.evaluatorName === "string" ? record.evaluatorName : null,
+        source: String(record.source ?? "HUMAIN"),
+        note: Number.isFinite(note) ? note : 0,
+        justification: String(record.justification ?? ""),
+        scoreConfiance: toNullableNumber(record.scoreConfiance),
+        createdAt: typeof record.createdAt === "string" ? record.createdAt : undefined,
+        updatedAt: typeof record.updatedAt === "string" ? record.updatedAt : undefined,
+      } as CommissionEvaluationNote;
+    })
+    .filter(
+      (item): item is CommissionEvaluationNote =>
+        Boolean(item?.id) && Boolean(item?.criterionId),
+    );
+}
+
+export async function getCommissionAoAnomalies(aoId: string): Promise<CommissionAoAnomalies> {
+  const raw = await apiClient<unknown>(
+    `/api/v1/soumissions/appel-offre/${aoId}/anomalies`,
+    { method: "GET" },
+  ).catch(() => null);
+  const data = unwrapEnvelope<unknown>(raw);
+  if (!data || typeof data !== "object") {
+    return { totalAnomalies: 0, breakdown: {}, flaggedBids: [] };
+  }
+  const record = data as Record<string, unknown>;
+  return {
+    totalAnomalies: Number(record.totalAnomalies ?? 0),
+    breakdown:
+      record.breakdown && typeof record.breakdown === "object"
+        ? (record.breakdown as Record<string, number>)
+        : {},
+    flaggedBids: Array.isArray(record.flaggedBids)
+      ? (record.flaggedBids as CommissionAoAnomalies["flaggedBids"])
+      : [],
+  };
 }
 
 export async function saveCommissionEvaluationScores(

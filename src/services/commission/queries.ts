@@ -5,6 +5,9 @@ import {
   getCommissionEvaluationSubmissions,
   getCommissionAoSubmissions,
   getCommissionEvaluationCriteria,
+  getCommissionAoCriteria,
+  getCommissionEvaluationNotes,
+  getCommissionAoAnomalies,
   saveCommissionEvaluationScores,
   getCommissionDocuments,
   setCommissionDocumentDecision,
@@ -16,6 +19,8 @@ import {
   type CommissionEvaluationOverviewItem,
   type CommissionEvaluationSubmission,
   type CommissionEvaluationCriterion,
+  type CommissionEvaluationNote,
+  type CommissionAoAnomalies,
   type CommissionDocumentItem,
   type CommissionDocumentDecisionPayload,
   type CommissionClassementRow,
@@ -70,6 +75,34 @@ export function useCommissionEvaluationCriteriaQuery(evaluationId: string) {
     queryKey: commissionKeys.evaluationCriteria(evaluationId),
     queryFn: () => getCommissionEvaluationCriteria(evaluationId),
     enabled: Boolean(evaluationId),
+  });
+}
+
+export function useCommissionAoCriteriaQuery(aoId: string, enabled = true) {
+  return useQuery<CommissionEvaluationCriterion[], Error>({
+    queryKey: commissionKeys.aoCriteria(aoId),
+    queryFn: () => getCommissionAoCriteria(aoId),
+    enabled: Boolean(aoId) && enabled,
+  });
+}
+
+export function useCommissionEvaluationNotesQuery(
+  evaluationId: string,
+  submissionId: string,
+  enabled = true,
+) {
+  return useQuery<CommissionEvaluationNote[], Error>({
+    queryKey: commissionKeys.evaluationNotes(evaluationId, submissionId),
+    queryFn: () => getCommissionEvaluationNotes(evaluationId, submissionId),
+    enabled: Boolean(evaluationId && submissionId) && enabled,
+  });
+}
+
+export function useCommissionAoAnomaliesQuery(aoId: string, enabled = true) {
+  return useQuery<CommissionAoAnomalies, Error>({
+    queryKey: commissionKeys.aoAnomalies(aoId),
+    queryFn: () => getCommissionAoAnomalies(aoId),
+    enabled: Boolean(aoId) && enabled,
   });
 }
 
