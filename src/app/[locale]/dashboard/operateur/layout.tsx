@@ -23,10 +23,14 @@ async function getNavbarUserInfo(): Promise<{ userName: string; userInitial: str
       headers: { Cookie: `access_token=${accessToken}` },
       cache: "no-store",
     });
+    
     if (!meRes.ok) return fallback;
     const meData = await meRes.json();
-    const userId = meData?.user?.userId;
-    const email = meData?.user?.email || "";
+    
+    // FIX: Safely parse userId
+    const userId = meData?.user?.userId || meData?.user?.id || meData?.id;
+    const email = meData?.user?.email || meData?.email || "";
+    
     if (!userId) return { ...fallback, userName: email };
 
     let userName = email;
@@ -54,11 +58,26 @@ async function getNavbarUserInfo(): Promise<{ userName: string; userInitial: str
       const oeData = await oeRes.json();
       const list = Array.isArray(oeData) ? oeData : oeData?.data || [];
       const normalizedUserId = userId.trim().toLowerCase();
-      const current = list.find((item: { userId?: string; user_id?: string }) =>
+      const current = list.find((item: { userId?: string; user_id?: string; organisationId?: string; organisation?: any }) =>
         (item.userId || item.user_id || "").trim().toLowerCase() === normalizedUserId
       );
+      
       if (current?.organisation?.denomination) {
         userCompany = current.organisation.denomination;
+      } else if (current?.organisationId) {
+        // Fallback: Fetch missing organisation data
+        const orgRes = await fetch(`${baseUrl}/api/v1/organisations/${current.organisationId}`, {
+          method: "GET",
+          headers: { Cookie: `access_token=${accessToken}` },
+          cache: "no-store",
+        }).catch(() => null);
+        
+        if (orgRes?.ok) {
+          const orgData = await orgRes.json();
+          if (orgData?.denomination) {
+            userCompany = orgData.denomination;
+          }
+        }
       }
     }
 
