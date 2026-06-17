@@ -2,11 +2,12 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useCommissionsEvaluationQuery } from "@/services/commission-dashboard/queries";
+import { useMesCommissionsQuery } from "@/services/commission-dashboard/queries";
 import type { CommissionEvaluation } from "@/services/commission-dashboard/api";
 
 interface Props {
   locale: string;
+  userId?: string;
 }
 
 type StatutView = "ACTIVE" | "BROUILLON" | "CLOTUREE" | "ANNULEE";
@@ -125,14 +126,14 @@ function CommissionCard({
   );
 }
 
-export default function CommissionEvaluationsPage({ locale }: Props) {
+export default function CommissionEvaluationsPage({ locale, userId }: Props) {
   const isAr = locale === "ar";
 
-  const { data, isLoading } = useCommissionsEvaluationQuery({ page: 1, limit: 100 });
+  const { data, isLoading } = useMesCommissionsQuery(userId);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatutView | "ALL">("ALL");
 
-  const commissions = useMemo(() => data?.data ?? [], [data]);
+  const commissions = useMemo(() => data?.commissionsEvaluation ?? [], [data]);
   const sortedCommissions = useMemo(
     () =>
       [...commissions].sort((a, b) => {
