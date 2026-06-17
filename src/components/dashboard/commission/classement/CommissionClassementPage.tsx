@@ -10,6 +10,7 @@ import {
 } from "@/services/commission-dashboard/queries";
 import {
   useCommissionClassementQuery,
+  useCommissionEvaluationsOverviewQuery,
 } from "@/services/commission/queries";
 import { exportCommissionEvaluationPdf } from "@/services/commission-dashboard/api";
 
@@ -171,26 +172,42 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
   const tc = t.classement;
 
   const { data: mesCommissions, isLoading: loadingEvaluations } = useMesCommissionsQuery();
-  const evaluation = useMemo(
+  const { data: evaluationOverview, isLoading: loadingOverview } =
+    useCommissionEvaluationsOverviewQuery();
+  const selectedCommission = useMemo(
     () =>
       (mesCommissions?.commissionsEvaluation as CommissionEvaluationWithAo[] | undefined)?.find(
         (item) => item.id === aoId,
       ) ?? null,
     [mesCommissions, aoId]
   );
-  const seance = useMemo(
-    () => mesCommissions?.seancesOuverture.find((item) => item.commissionId === evaluation?.id) ?? null,
-    [mesCommissions, evaluation?.id]
+  const evaluationRecord = useMemo(
+    () =>
+      evaluationOverview?.find(
+        (item) => item.commissionId === aoId || item.id === aoId,
+      ) ?? null,
+    [evaluationOverview, aoId]
   );
-  const commissionId = evaluation?.id ?? "";
+  const seance = useMemo(
+    () =>
+      mesCommissions?.seancesOuverture.find(
+        (item) =>
+          item.commissionId === selectedCommission?.id ||
+          item.commissionId === evaluationRecord?.commissionId,
+      ) ?? null,
+    [mesCommissions, selectedCommission?.id, evaluationRecord?.commissionId]
+  );
+  const commissionId = selectedCommission?.id ?? evaluationRecord?.commissionId ?? "";
   const resolvedAoId =
     seance?.appelOffreId ??
-    evaluation?.appelOffreId ??
-    evaluation?.aoId ??
+    selectedCommission?.appelOffreId ??
+    selectedCommission?.aoId ??
+    evaluationRecord?.aoId ??
     "";
 
   const { data: membres } = useMembresEvaluationQuery(commissionId);
-  const { data: backendClassement, isLoading: loadingClassement } = useCommissionClassementQuery(resolvedAoId);
+  const { data: backendClassement, isLoading: loadingClassement } =
+    useCommissionClassementQuery(resolvedAoId);
   const changeStatutMutation = useChangeStatutEvaluationMutation(commissionId);
 
   // Les lignes de classement viendront du service évaluations
@@ -244,7 +261,7 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
   const totalSoumissions = lignes.length;
   const rejetees = lignes.filter((l) => l.elimine).length;
   const eligibles = totalSoumissions - rejetees;
-  const isPageLoading = loadingEvaluations || loadingClassement;
+  const isPageLoading = loadingEvaluations || loadingOverview || loadingClassement;
 
   return (
     <div style={{ minHeight: "100%", direction: isAr ? "rtl" : "ltr" }}>
@@ -280,10 +297,10 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
         ) : (
           <>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: "#1B1C1C", margin: "0 0 4px" }}>
-              {evaluation ? evaluation.objet : tc.sousTitre(aoId)}
+              {selectedCommission?.objet ?? evaluationRecord?.objet ?? tc.sousTitre(aoId)}
             </h2>
             <p style={{ fontSize: 13, color: "#6F7A6B", marginBottom: 18 }}>
-              {evaluation?.reference ?? aoId}
+              {selectedCommission?.reference ?? evaluationRecord?.reference ?? aoId}
               {membres && membres.length > 0 && ` · ${membres.length} membre${membres.length > 1 ? "s" : ""}`}
               {" · "}{tc.etape}
             </p>

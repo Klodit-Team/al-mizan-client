@@ -10,6 +10,7 @@ import {
 import {
   useCommissionEvaluationCriteriaQuery,
   useCommissionEvaluationSubmissionsQuery,
+  useCommissionEvaluationsOverviewQuery,
   useSaveCommissionScoresMutation,
 } from "@/services/commission/queries";
 
@@ -151,23 +152,42 @@ export default function CommissionEvaluationPage({
 
   // ── Données live ────────────────────────────────────────────────────────────
   const { data: mesCommissions, isLoading: loadingEvaluations } = useMesCommissionsQuery();
-  const evaluation = useMemo(
+  const { data: evaluationOverview, isLoading: loadingOverview } =
+    useCommissionEvaluationsOverviewQuery();
+
+  const selectedCommission = useMemo(
     () =>
       mesCommissions?.commissionsEvaluation.find(
         (item) => item.id === selectedCommissionId,
       ) ?? null,
     [mesCommissions, selectedCommissionId]
   );
-  const seance = useMemo(
-    () => mesCommissions?.seancesOuverture.find((item) => item.commissionId === evaluation?.id) ?? null,
-    [mesCommissions, evaluation?.id]
+  const evaluationRecord = useMemo(
+    () =>
+      evaluationOverview?.find(
+        (item) =>
+          item.commissionId === selectedCommissionId ||
+          item.id === selectedCommissionId,
+      ) ?? null,
+    [evaluationOverview, selectedCommissionId]
   );
-  const resolvedCommissionId = evaluation?.id ?? "";
-  const evaluationId = evaluation?.id ?? "";
+  const seance = useMemo(
+    () =>
+      mesCommissions?.seancesOuverture.find(
+        (item) =>
+          item.commissionId === selectedCommission?.id ||
+          item.commissionId === evaluationRecord?.commissionId,
+      ) ?? null,
+    [mesCommissions, selectedCommission?.id, evaluationRecord?.commissionId]
+  );
+  const resolvedCommissionId =
+    selectedCommission?.id ?? evaluationRecord?.commissionId ?? "";
+  const evaluationId = evaluationRecord?.id ?? "";
   const resolvedAoId =
     seance?.appelOffreId ??
-    evaluation?.appelOffreId ??
-    evaluation?.aoId ??
+    selectedCommission?.appelOffreId ??
+    selectedCommission?.aoId ??
+    evaluationRecord?.aoId ??
     "";
 
   const { data: membres } = useMembresEvaluationQuery(resolvedCommissionId);
@@ -261,7 +281,8 @@ export default function CommissionEvaluationPage({
     }
   };
 
-  const isPageLoading = loadingEvaluations || loadingSubmissions || loadingCriteria;
+  const isPageLoading =
+    loadingEvaluations || loadingOverview || loadingSubmissions || loadingCriteria;
 
   // ── Loading ─────────────────────────────────────────────────────────────────
   if (isPageLoading) {
@@ -277,7 +298,7 @@ export default function CommissionEvaluationPage({
   }
 
   // ── Pas de commission ────────────────────────────────────────────────────────
-  if (!evaluation || !resolvedAoId) {
+  if ((!selectedCommission && !evaluationRecord) || !resolvedAoId) {
     return (
       <div style={{ direction: isAr ? "rtl" : "ltr" }}>
         <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 16, overflow: "hidden" }}>
@@ -295,10 +316,10 @@ export default function CommissionEvaluationPage({
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <h1 style={{ fontSize: 20, fontWeight: 700, color: "#1B1C1C", margin: 0 }}>{te.titre}</h1>
           <span style={{ fontSize: 12, padding: "4px 12px", borderRadius: 999, background: "#F0EDED", color: "#364150", border: "1px solid #E5E7EB" }}>
-            {evaluation.reference}
+            {selectedCommission?.reference ?? evaluationRecord?.reference ?? selectedCommissionId}
           </span>
           <span style={{ fontSize: 12, padding: "4px 12px", borderRadius: 999, background: "rgba(76,175,80,0.1)", color: "#2e7d32", border: "1px solid #E5E7EB" }}>
-            {evaluation.statut}
+            {selectedCommission?.statut ?? evaluationRecord?.statut ?? "ACTIVE"}
           </span>
         </div>
         <Link
@@ -319,9 +340,9 @@ export default function CommissionEvaluationPage({
           <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
         </svg>
         <span>
-          <strong>{evaluation.objet}</strong>
-          {evaluation.dateReunion && (
-            <> · {isAr ? "اجتماع" : "Réunion"} {new Date(evaluation.dateReunion).toLocaleDateString(isAr ? "ar-DZ" : "fr-DZ")}</>
+          <strong>{selectedCommission?.objet ?? evaluationRecord?.objet ?? selectedCommissionId}</strong>
+          {selectedCommission?.dateReunion && (
+            <> · {isAr ? "اجتماع" : "Réunion"} {new Date(selectedCommission.dateReunion).toLocaleDateString(isAr ? "ar-DZ" : "fr-DZ")}</>
           )}
           {membres && membres.length > 0 && (
             <> · {membres.length} membre{membres.length > 1 ? "s" : ""}</>
