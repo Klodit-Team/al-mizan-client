@@ -219,7 +219,7 @@ export default function Navbar({
       <div className="flex items-center gap-3">
         {languageSelector}
         <Link
-          href={`/${locale}/auth/login/commission`}
+          href={`/${locale}/auth/login`}
           className="text-sm font-semibold text-white px-4 py-2 rounded-lg transition-colors"
           style={{ backgroundColor: "#4CAF50" }}
         >
