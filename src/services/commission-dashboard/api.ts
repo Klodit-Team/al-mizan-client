@@ -647,24 +647,120 @@ export interface MesCommissionsData {
   seancesOuverture: SeanceOuverture[];
 }
 
+interface CurrentUserPayload {
+  user?: {
+    userId?: string;
+  };
+}
+
+function normalizeUserId(value?: string | null): string {
+  return (value ?? "").trim().toLowerCase();
+}
+
+async function resolveCommissionMemberUserId(userId?: string): Promise<string | null> {
+  const directUserId = normalizeUserId(userId);
+  if (directUserId) return directUserId;
+
+  const meRaw = await apiClient<unknown>("/api/v1/auth/me", { method: "GET" }).catch(() => null);
+  const me = unwrap<CurrentUserPayload>(meRaw);
+  const resolvedUserId = normalizeUserId(me?.user?.userId);
+  return resolvedUserId || null;
+}
+
+async function commissionEvaluationBelongsToUser(
+  commission: CommissionEvaluation,
+  userId: string,
+): Promise<boolean> {
+  const members =
+    Array.isArray(commission.membres) && commission.membres.length > 0
+      ? commission.membres
+      : await listMembresEvaluation(commission.id).catch(() => []);
+
+  return members.some((member) => normalizeUserId(member.userId) === userId && member.actif !== false);
+}
+
+async function commissionMarcheBelongsToUser(
+  commission: CommissionMarche,
+  userId: string,
+): Promise<boolean> {
+  const members =
+    Array.isArray(commission.membres) && commission.membres.length > 0
+      ? commission.membres
+      : await listMembresMarche(commission.id).catch(() => []);
+
+  return members.some((member) => normalizeUserId(member.userId) === userId && member.actif !== false);
+}
+
 /**
  * Agrège en parallèle les trois ressources commission.
  * Utilise Promise.allSettled pour qu'une ressource défaillante
  * ne bloque pas les autres (resilient aggregation pattern).
  */
-export async function getMesCommissionsData(): Promise<MesCommissionsData> {
+export async function getMesCommissionsData(userId?: string): Promise<MesCommissionsData> {
+  const memberUserId = await resolveCommissionMemberUserId(userId);
+
   const [evalResult, marcheResult, seanceResult] = await Promise.allSettled([
     listCommissionsEvaluation({ page: 1, limit: 100 }),
     listCommissionsMarche({ page: 1, limit: 100 }),
     listSeancesOuverture(),
   ]);
 
+  const commissionsEvaluation =
+    evalResult.status === "fulfilled" ? evalResult.value.data : [];
+  const commissionsMarche =
+    marcheResult.status === "fulfilled" ? marcheResult.value.data : [];
+  const seancesOuverture =
+    seanceResult.status === "fulfilled" ? seanceResult.value : [];
+
+  if (!memberUserId) {
+    return {
+      commissionsEvaluation: [],
+      commissionsMarche: [],
+      seancesOuverture: [],
+    };
+  }
+
+  const [visibleEvaluation, visibleMarche] = await Promise.all([
+    Promise.all(
+      commissionsEvaluation.map(async (commission) => ({
+        commission,
+        visible: await commissionEvaluationBelongsToUser(commission, memberUserId),
+      })),
+    ),
+    Promise.all(
+      commissionsMarche.map(async (commission) => ({
+        commission,
+        visible: await commissionMarcheBelongsToUser(commission, memberUserId),
+      })),
+    ),
+  ]);
+
+  const filteredEvaluation = visibleEvaluation
+    .filter((item) => item.visible)
+    .map((item) => item.commission);
+  const filteredMarche = visibleMarche
+    .filter((item) => item.visible)
+    .map((item) => item.commission);
+
+  const allowedCommissionIds = new Set([
+    ...filteredEvaluation.map((commission) => commission.id),
+    ...filteredMarche.map((commission) => commission.id),
+  ]);
+  const allowedAoIds = new Set([
+    ...filteredEvaluation
+      .flatMap((commission) => [commission.aoId, commission.appelOffreId])
+      .filter((value): value is string => Boolean(value)),
+    ...filteredMarche.map((commission) => commission.id),
+  ]);
+
   return {
-    commissionsEvaluation:
-      evalResult.status === "fulfilled" ? evalResult.value.data : [],
-    commissionsMarche:
-      marcheResult.status === "fulfilled" ? marcheResult.value.data : [],
-    seancesOuverture:
-      seanceResult.status === "fulfilled" ? seanceResult.value : [],
+    commissionsEvaluation: filteredEvaluation,
+    commissionsMarche: filteredMarche,
+    seancesOuverture: seancesOuverture.filter((seance) => {
+      if (seance.commissionId && allowedCommissionIds.has(seance.commissionId)) {
+        return true;
+      }
+      return allowedAoIds.has(seance.appelOffreId);
+    }),
   };
 }

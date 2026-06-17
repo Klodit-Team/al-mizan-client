@@ -102,7 +102,7 @@ export default function CommissionTableauDeBord({ locale, userId }: Props) {
   const isAr = locale === "ar";
   const [activeTab, setActiveTab] = useState<"evaluation" | "seance">("evaluation");
 
-  const { data, isLoading } = useMesCommissionsQuery();
+  const { data, isLoading } = useMesCommissionsQuery(userId);
   const { data: seances, isLoading: loadingSeances } = useSeancesOuvertureQuery();
 
   const commissions = data?.commissionsEvaluation ?? [];

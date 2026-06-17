@@ -80,7 +80,7 @@ import {
 export function useMesCommissionsQuery(userId?: string): UseQueryResult<MesCommissionsData, Error> {
   return useQuery<MesCommissionsData, Error>({
     queryKey: commissionDashboardKeys.mesCommissions(userId),
-    queryFn: () => getMesCommissionsData(),
+    queryFn: () => getMesCommissionsData(userId),
   });
 }
 

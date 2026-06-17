@@ -88,13 +88,14 @@ const STATUTS: { label: string; value: CommissionStatut | "ALL" }[] = [
 interface MesCommissionsPageProps {
   locale: string;
   dict: CommissionDict;
+  userId?: string;
 }
 
-export default function MesCommissionsPage({ locale, dict }: MesCommissionsPageProps) {
+export default function MesCommissionsPage({ locale, dict, userId }: MesCommissionsPageProps) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<CommissionStatut | "ALL">("ALL");
 
-  const { data, isLoading } = useMesCommissionsQuery();
+  const { data, isLoading } = useMesCommissionsQuery(userId);
   const aoIdByCommissionId = new Map(
     (data?.seancesOuverture ?? []).map((seance) => [seance.commissionId, seance.appelOffreId])
   );
