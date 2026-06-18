@@ -87,14 +87,19 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 
   const json = await response.json();
 
-  // Unwrap paginated responses
+  let data = json;
   if (json && typeof json === "object") {
-    if ("data" in json && Array.isArray(json.data)) return json.data as T;
-    if ("items" in json && Array.isArray(json.items)) return json.items as T;
-    if ("content" in json && Array.isArray(json.content)) return json.content as T;
+    if ("success" in json && "data" in json) {
+      data = (json as any).data;
+    }
+    if (data && typeof data === "object") {
+      if ("data" in data && Array.isArray((data as any).data)) data = (data as any).data;
+      else if ("items" in data && Array.isArray((data as any).items)) data = (data as any).items;
+      else if ("content" in data && Array.isArray((data as any).content)) data = (data as any).content;
+    }
   }
 
-  return json as T;
+  return data as T;
 }
 
 function cloneNotifications(): ServiceContractantNotificationItem[] {
