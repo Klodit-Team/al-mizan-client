@@ -93,6 +93,7 @@ interface OperateurRecord {
   id: string;
   userId?: string;
   user_id?: string;
+  organisationId?: string;
   organisation?: {
     denomination?: string;
   };
@@ -200,11 +201,9 @@ function toRelativeDue(date: Date): { dueAt: string; urgency: "high" | "medium" 
   if (days <= 1) {
     return { dueAt: days <= 0 ? "Aujourd'hui" : "Demain", urgency: "high" };
   }
-
   if (days <= 5) {
     return { dueAt: `Dans ${days} jours`, urgency: "medium" };
   }
-
   return { dueAt: `Dans ${days} jours`, urgency: "low" };
 }
 
@@ -228,10 +227,6 @@ function getSubmissionAoId(item: SubmissionRecord): string | null {
       || item.appel_offre?.id
       || null,
   );
-}
-
-function getRecoursAoId(item: RecoursRecord): string | null {
-  return normalizeId(item.appelOffreId || item.appel_offre_id || item.appelOffre?.id || item.appel_offre?.id || null);
 }
 
 function normalizeRecoursStatus(value: unknown): OeRecoursStatus {
@@ -287,17 +282,12 @@ async function getIdentityData(): Promise<IdentityData> {
     const meRaw = await apiClient<unknown>("/api/v1/auth/me", { method: "GET" });
     const me = unwrapEnvelope<MePayload>(meRaw);
     
-    // Robust extraction covering both nested and flat responses
     userId = me?.user?.userId || me?.user?.id || me?.id || null;
     const email = me?.user?.email || me?.email;
 
-    if (email) {
-      userName = email;
-    }
+    if (email) userName = email;
 
-    if (!userId) {
-      return { userId, userName, companyName, operateurId };
-    }
+    if (!userId) return { userId, userName, companyName, operateurId };
 
     const [profileRaw, oeRaw] = await Promise.all([
       apiClient<unknown>(`/api/v1/profiles/user/${userId}`, { method: "GET" }).catch(() => null),
@@ -307,9 +297,7 @@ async function getIdentityData(): Promise<IdentityData> {
     if (profileRaw) {
       const profile = unwrapEnvelope<UserProfile>(profileRaw);
       const fullName = [profile?.prenom, profile?.nom].filter(Boolean).join(" ").trim();
-      if (fullName) {
-        userName = fullName;
-      }
+      if (fullName) userName = fullName;
     }
 
     if (oeRaw) {
@@ -320,20 +308,15 @@ async function getIdentityData(): Promise<IdentityData> {
         return normalizedUserId !== null && linkedUserId === normalizedUserId;
       });
 
-      if (current?.id) {
-        operateurId = current.id;
-      }
+      if (current?.id) operateurId = current.id;
 
       const denomination = current?.organisation?.denomination;
       if (denomination) {
         companyName = denomination;
       } else if (current?.organisationId) {
-        // Fetch organisation separately if not embedded
         const orgRaw = await apiClient<unknown>(`/api/v1/organisations/${current.organisationId}`, { method: "GET" }).catch(() => null);
         const org = orgRaw ? unwrapEnvelope<{ denomination?: string }>(orgRaw) : null;
-        if (org?.denomination) {
-          companyName = org.denomination;
-        }
+        if (org?.denomination) companyName = org.denomination;
       }
     }
   } catch {
@@ -343,16 +326,11 @@ async function getIdentityData(): Promise<IdentityData> {
   return { userId, userName, companyName, operateurId };
 }
 
-/**
- * Operateur dashboard aggregation from live gateway endpoints.
- * Activity logs are intentionally mocked, matching contractant dashboard behavior.
- */
 export async function getOperateurDashboardData(): Promise<OeDashboardData> {
   const identity = await getIdentityData();
 
   const [aosRaw, submissionsRaw, recoursRaw] = await Promise.all([
     apiClient<unknown>("/api/v1/appels-offres?page=1&limit=200", { method: "GET" }).catch(() => []),
-    // Safely inject operateurId in case the backend requires it
     apiClient<unknown>(`/api/v1/soumissions?page=1&limit=200${identity.operateurId ? `&operateurId=${identity.operateurId}` : ''}`, { method: "GET" }).catch(() => []),
     identity.operateurId
       ? apiClient<unknown>(`/api/v1/recours/operateur/${identity.operateurId}`, { method: "GET" }).catch(() => [])
@@ -374,8 +352,6 @@ export async function getOperateurDashboardData(): Promise<OeDashboardData> {
   );
 
   const activeStatuses = new Set(["PUBLIE", "EN_COURS", "OUVERTURE_PLIS", "EVALUATION"]);
-  
-  // FIX: AO Actifs calculated from ALL AOs, not just scoped AOs
   const aoActifs = aos.filter((item) => activeStatuses.has((item.statut || "").toUpperCase())).length;
 
   const recentSubmissions = submissions
@@ -397,19 +373,24 @@ export async function getOperateurDashboardData(): Promise<OeDashboardData> {
   const marchesRemportes = recentSubmissions.filter((item) => item.status === "retenue").length;
 
   const openRecours = recours
-    .map((item) => ({
-      id: item.id,
-      aoReference: item.appelOffre?.reference || item.appel_offre?.reference || item.appelOffreId || item.appel_offre_id || "N/A",
-      aoObject: item.appelOffre?.objet || item.appel_offre?.objet || "Objet non renseigne",
-      depositedAt: item.dateDepot || item.date_depot || new Date().toISOString(),
-      status: normalizeRecoursStatus(item.statut),
-      motif: item.motif || "Motif non renseigne",
-    }))
+    .map((item) => {
+      // FIX: Use aoById to extract Reference and Object properly!
+      const aoId = normalizeId(item.appelOffreId || item.appel_offre_id || item.appelOffre?.id || item.appel_offre?.id);
+      const linkedAo = aoById.get(aoId || "");
+      
+      return {
+        id: item.id,
+        aoReference: linkedAo?.reference || item.appelOffre?.reference || item.appel_offre?.reference || item.appelOffreId || item.appel_offre_id || "N/A",
+        aoObject: linkedAo?.objet || item.appelOffre?.objet || item.appel_offre?.objet || "Objet non renseigne",
+        depositedAt: item.dateDepot || item.date_depot || new Date().toISOString(),
+        status: normalizeRecoursStatus(item.statut),
+        motif: item.motif || "Motif non renseigne",
+      };
+    })
     .sort((a, b) => new Date(b.depositedAt).getTime() - new Date(a.depositedAt).getTime());
 
   const recoursOuverts = openRecours.filter((item) => item.status === "depose" || item.status === "en_examen").length;
 
-  // FIX: Deadlines sourced from ALL active AOs
   const deadlines = aos
     .filter(ao => activeStatuses.has((ao.statut || "").toUpperCase()))
     .map((ao) => {
@@ -448,10 +429,6 @@ export async function getOperateurDashboardData(): Promise<OeDashboardData> {
   };
 }
 
-/**
- * Fetch activity feed from the audit service for the operateur.
- * Falls back to empty array if the audit service is unavailable.
- */
 export async function getOperateurActivityFeed(): Promise<OeActivityItem[]> {
   try {
     const raw = await apiClient<unknown>("/api/v1/audit/activities?limit=10", { method: "GET" });
@@ -468,7 +445,6 @@ export async function getOperateurActivityFeed(): Promise<OeActivityItem[]> {
         }));
       }
     }
-
     return [];
   } catch {
     return [];

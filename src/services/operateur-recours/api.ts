@@ -73,16 +73,6 @@ interface ApiEnvelope<T> {
   statusCode?: number;
 }
 
-interface PaginatedPayload<T> {
-  data: T[];
-}
-
-interface ListPayload<T> {
-  items?: T[];
-  results?: T[];
-  rows?: T[];
-}
-
 interface MePayload {
   id?: string;
   user?: {
@@ -126,6 +116,8 @@ interface RecoursRecord {
   reference?: string;
   appelOffreId?: string;
   appel_offre_id?: string;
+  attributionProvisoireId?: string;
+  attribution_provisoire_id?: string;
   statut?: string;
   status?: string;
   motif?: string;
@@ -177,7 +169,7 @@ function unwrapEnvelope<T>(payload: unknown): T {
 function extractList<T>(payload: unknown): T[] {
   const unwrapped = unwrapEnvelope<unknown>(payload);
   if (Array.isArray(unwrapped)) return unwrapped as T[];
-  
+
   if (unwrapped && typeof unwrapped === "object") {
     const rec = unwrapped as Record<string, unknown>;
     if (Array.isArray(rec.data)) return rec.data as T[];
@@ -202,14 +194,7 @@ function idsEqual(a: string, b: string): boolean {
 
 function getAttributionAoId(item: AttributionRecord): string {
   return normalizeString(
-    item.aoId ||
-      item.ao_id ||
-      item.appelOffreId ||
-      item.appel_offre_id ||
-      item.appelOffres?.id ||
-      item.appelOffre?.id ||
-      item.appel_offres?.id ||
-      "",
+    item.aoId || item.ao_id || item.appelOffreId || item.appel_offre_id || item.appelOffres?.id || item.appelOffre?.id || item.appel_offres?.id || ""
   );
 }
 
@@ -218,31 +203,21 @@ function getAttributionType(item: AttributionRecord): string {
 }
 
 function normalizeId(value?: string | null): string | null {
-  if (!value) {
-    return null;
-  }
+  if (!value) return null;
   return value.trim().toLowerCase();
 }
 
 function normalizeDate(value?: string | null): string {
-  if (!value) {
-    return "";
-  }
+  if (!value) return "";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
+  if (Number.isNaN(date.getTime())) return "";
   return date.toISOString();
 }
 
 function formatAmount(value?: string | number | null): string {
-  if (value === undefined || value === null || value === "") {
-    return "-";
-  }
+  if (value === undefined || value === null || value === "") return "-";
   const num = Number(value);
-  if (Number.isNaN(num)) {
-    return String(value);
-  }
+  if (Number.isNaN(num)) return String(value);
   return `${new Intl.NumberFormat("fr-DZ", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -251,7 +226,6 @@ function formatAmount(value?: string | number | null): string {
 
 function normalizeStatus(value: unknown): RecoursStatus {
   const raw = String(value ?? "").trim().toUpperCase();
-
   if (raw === "DEPOSE" || raw === "DEPOSEE" || raw === "SUBMITTED") return "depose";
   if (raw === "EN_EXAMEN" || raw === "IN_REVIEW") return "en_examen";
   if (raw === "ACCEPTE" || raw === "ACCEPTEE") return "accepte";
@@ -260,24 +234,17 @@ function normalizeStatus(value: unknown): RecoursStatus {
 
 async function getOperateurIdFromSession(): Promise<string | null> {
   const meRaw = await apiClient<unknown>("/api/v1/auth/me", { method: "GET" }).catch(() => null);
-  if (!meRaw) {
-    return null;
-  }
+  if (!meRaw) return null;
 
   const me = meRaw as any;
   const userId = me?.user?.userId || me?.user?.id || me?.id || null;
-  if (!userId) {
-    return null;
-  }
+  if (!userId) return null;
 
-  // FIX: Proper URL without /users/ prefix
   const operatorsRaw = await apiClient<unknown>("/api/v1/operateurs-economiques?page=1&limit=100", {
     method: "GET",
   }).catch(() => null);
 
-  if (!operatorsRaw) {
-    return null;
-  }
+  if (!operatorsRaw) return null;
 
   const operators = extractList<OperateurRecord>(operatorsRaw);
   const normalizedUserId = normalizeId(userId);
@@ -289,29 +256,26 @@ async function getOperateurIdFromSession(): Promise<string | null> {
   return current?.id || null;
 }
 
-function mapAttachment(raw: Record<string, unknown>, index: number): RecoursAttachment {
-  const name = String(raw.nom ?? raw.fileName ?? raw.name ?? `Piece jointe ${index + 1}`);
-  return {
-    id: String(raw.id ?? `pj-${index + 1}`),
-    nom: name,
-    taille: String(raw.taille ?? raw.size ?? "-"),
-    type: String(raw.type ?? raw.mimeType ?? "fichier"),
-    url: typeof raw.url === "string" ? raw.url : typeof raw.fileUrl === "string" ? raw.fileUrl : undefined,
-  };
-}
-
 function mapAttachmentFromUrl(url: string, index: number): RecoursAttachment {
   const clean = url.split("?")[0];
   const parts = clean.split("/").filter(Boolean);
   const fallbackName = `Piece jointe ${index + 1}`;
-  const name = parts[parts.length - 1] || fallbackName;
-
   return {
     id: `pj-url-${index + 1}`,
-    nom: name,
+    nom: parts[parts.length - 1] || fallbackName,
     taille: "-",
     type: "fichier",
     url,
+  };
+}
+
+function mapAttachment(raw: Record<string, unknown>, index: number): RecoursAttachment {
+  return {
+    id: String(raw.id ?? `pj-${index + 1}`),
+    nom: String(raw.nom ?? raw.fileName ?? raw.name ?? `Piece jointe ${index + 1}`),
+    taille: String(raw.taille ?? raw.size ?? "-"),
+    type: String(raw.type ?? raw.mimeType ?? "fichier"),
+    url: typeof raw.url === "string" ? raw.url : typeof raw.fileUrl === "string" ? raw.fileUrl : undefined,
   };
 }
 
@@ -322,18 +286,11 @@ function mapRecoursItem(raw: RecoursRecord): OperateurRecoursItem {
   const attachmentsRaw = raw.piecesJointes || raw.pieces_jointes || raw.attachments || [];
   const piecesJointes = attachmentsRaw
     .map((entry, index) => {
-      if (typeof entry === "string") {
-        return mapAttachmentFromUrl(entry, index);
-      }
-      if (entry && typeof entry === "object") {
-        return mapAttachment(entry, index);
-      }
+      if (typeof entry === "string") return mapAttachmentFromUrl(entry, index);
+      if (entry && typeof entry === "object") return mapAttachment(entry, index);
       return null;
     })
     .filter((entry): entry is RecoursAttachment => Boolean(entry));
-
-  const dateDepot = normalizeDate(raw.dateDepot || raw.date_depot);
-  const dateDecision = normalizeDate(raw.dateDecision || raw.date_decision || raw.decision?.date);
 
   return {
     id: raw.id,
@@ -341,9 +298,9 @@ function mapRecoursItem(raw: RecoursRecord): OperateurRecoursItem {
     aoId,
     aoReference: ao?.reference || aoId || "AO",
     aoObject: ao?.objet || "Objet non renseigne",
-    dateDepot,
+    dateDepot: normalizeDate(raw.dateDepot || raw.date_depot),
     dateLimiteReponse: normalizeDate(raw.dateLimiteReponse || raw.date_limite_reponse),
-    dateDecision: dateDecision || undefined,
+    dateDecision: normalizeDate(raw.dateDecision || raw.date_decision || raw.decision?.date) || undefined,
     statut: normalizeStatus(raw.statut || raw.status),
     motif: raw.motif || "Motif non renseigne",
     piecesJointes,
@@ -362,17 +319,65 @@ function mapRecoursItem(raw: RecoursRecord): OperateurRecoursItem {
   };
 }
 
+// ============================================================================
+// NEW: Hydrate function to cross-reference AO and Attribution details
+// ============================================================================
+async function hydrateRecoursList(recoursList: RecoursRecord[]): Promise<RecoursRecord[]> {
+  if (!recoursList.length) return [];
+
+  const [aosRaw, attributionsRaw, soumissionsRaw] = await Promise.all([
+    apiClient<unknown>("/api/v1/appels-offres?page=1&limit=500", { method: "GET" }).catch(() => []),
+    apiClient<unknown>("/api/v1/appels-offres/attributions", { method: "GET" }).catch(() => []),
+    apiClient<unknown>("/api/v1/soumissions?page=1&limit=500", { method: "GET" }).catch(() => []),
+  ]);
+
+  const aos = extractList<AppelOffreRecord>(aosRaw);
+  const attributions = extractList<AttributionRecord>(attributionsRaw);
+  const soumissions = extractList<any>(soumissionsRaw);
+
+  const aoById = new Map(aos.map((ao) => [normalizeId(ao.id), ao]));
+  const attrById = new Map(attributions.map((attr) => [normalizeId(attr.id), attr]));
+  const soumById = new Map(soumissions.map((s) => [normalizeId(s.id), s]));
+
+  return recoursList.map((rec) => {
+    const aoId = normalizeId(rec.appelOffreId || rec.appel_offre_id);
+    const attrId = normalizeId(rec.attributionProvisoireId || (rec as any).attribution_provisoire_id);
+
+    const ao = aoId ? aoById.get(aoId) : null;
+    const attr = attrId ? attrById.get(attrId) : null;
+
+    if (ao && (!rec.appelOffre && !rec.appel_offre)) {
+      rec.appelOffre = { id: ao.id, reference: ao.reference, objet: ao.objet };
+    }
+
+    if (attr && !rec.attribution?.winner) {
+      const soumId = normalizeId((attr as any).soumissionId || (attr as any).soumission_id);
+      const soum = soumId ? soumById.get(soumId) : null;
+      const winnerName = soum?.operateurNom || soum?.operateur_nom || "Soumissionnaire retenu";
+
+      rec.attribution = {
+        winner: winnerName,
+        montantAttribue: attr.montantAttribue || attr.montant_attribue,
+        dateAttribution: attr.dateAttribution || attr.date_attribution
+      };
+    }
+
+    return rec;
+  });
+}
+
 export async function listOperateurRecours(): Promise<OperateurRecoursItem[]> {
   const operateurId = await getOperateurIdFromSession();
-  if (!operateurId) {
-    return [];
-  }
+  if (!operateurId) return [];
 
   const payload = await apiClient<unknown>(`/api/v1/recours/operateur/${operateurId}`, {
     method: "GET",
   }).catch(() => []);
 
-  return extractList<RecoursRecord>(payload)
+  const rawList = extractList<RecoursRecord>(payload);
+  const hydratedList = await hydrateRecoursList(rawList);
+
+  return hydratedList
     .map((item) => mapRecoursItem(item))
     .sort((a, b) => {
       const aTime = new Date(a.dateDepot || 0).getTime() || 0;
@@ -383,23 +388,18 @@ export async function listOperateurRecours(): Promise<OperateurRecoursItem[]> {
 
 export async function getOperateurRecoursById(id: string): Promise<OperateurRecoursItem | null> {
   const payload = await apiClient<unknown>(`/api/v1/recours/${id}`, { method: "GET" }).catch(() => null);
-  if (!payload) {
-    return null;
-  }
+  if (!payload) return null;
 
   const unwrapped = unwrapEnvelope<RecoursRecord>(payload);
-  if (!unwrapped?.id) {
-    return null;
-  }
+  if (!unwrapped?.id) return null;
 
-  return mapRecoursItem(unwrapped);
+  const hydratedList = await hydrateRecoursList([unwrapped]);
+  return mapRecoursItem(hydratedList[0]);
 }
 
 export async function createOperateurRecours(input: CreateOperateurRecoursInput): Promise<OperateurRecoursItem> {
   const operateurId = await getOperateurIdFromSession();
-  if (!operateurId) {
-    throw new Error("Operateur introuvable pour la session courante");
-  }
+  if (!operateurId) throw new Error("Operateur introuvable pour la session courante");
 
   const payload = await apiClient<unknown>("/api/v1/recours", {
     method: "POST",
@@ -413,10 +413,7 @@ export async function createOperateurRecours(input: CreateOperateurRecoursInput)
   });
 
   const created = unwrapEnvelope<RecoursRecord>(payload);
-  if (!created?.id) {
-    throw new Error("Creation du recours invalide");
-  }
-
+  if (!created?.id) throw new Error("Creation du recours invalide");
   return mapRecoursItem(created);
 }
 
@@ -427,15 +424,11 @@ export async function updateOperateurRecours(input: UpdateOperateurRecoursInput)
   });
 
   const updated = unwrapEnvelope<RecoursRecord>(payload);
-  if (!updated?.id) {
-    throw new Error("Mise a jour du recours invalide");
-  }
-
+  if (!updated?.id) throw new Error("Mise a jour du recours invalide");
   return mapRecoursItem(updated);
 }
 
 export async function listRecoursCreationOptions(): Promise<RecoursCreationOptions> {
-  // FIX: Fetch the user's submissions to ensure we only show AOs where they lost
   const [aosRaw, attributionsRaw, mySubmissionsRaw] = await Promise.all([
     apiClient<unknown>("/api/v1/appels-offres?page=1&limit=500", { method: "GET" }).catch(() => []),
     apiClient<unknown>("/api/v1/appels-offres/attributions", { method: "GET" }).catch(() => []),
@@ -443,8 +436,7 @@ export async function listRecoursCreationOptions(): Promise<RecoursCreationOptio
   ]);
 
   const mySubmissions = extractList<any>(mySubmissionsRaw);
-  
-  // Isolate IDs of AOs where the user's submission is REJETEE (meaning they lost)
+
   const myLostAoIds = new Set(
     mySubmissions
       .filter(sub => {
@@ -470,7 +462,6 @@ export async function listRecoursCreationOptions(): Promise<RecoursCreationOptio
     .filter((item) => {
       const rawType = getAttributionType(item);
       const aoId = normalizeId(getAttributionAoId(item));
-      // Only keep PROVISOIRE attributions for AOs where the user lost
       return rawType === "PROVISOIRE" && myLostAoIds.has(aoId);
     })
     .map((item) => {
@@ -507,13 +498,9 @@ export async function listRecoursCreationOptions(): Promise<RecoursCreationOptio
 }
 
 function fmtDateForLabel(value?: string): string {
-  if (!value) {
-    return "date non renseignee";
-  }
+  if (!value) return "date non renseignee";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "date non renseignee";
-  }
+  if (Number.isNaN(date.getTime())) return "date non renseignee";
   return date.toLocaleDateString("fr-DZ", {
     day: "2-digit",
     month: "2-digit",
