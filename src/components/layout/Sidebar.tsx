@@ -48,10 +48,10 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
   const idFromParams = params?.id as string | undefined;
 
   useEffect(() => {
-    if (idFromParams && idFromParams !== commissionUserId) {
+    if (idFromParams && pathname.endsWith("/tableau-de-bord") && idFromParams !== commissionUserId) {
       setCommissionUserId(idFromParams);
     }
-  }, [idFromParams, commissionUserId, setCommissionUserId]);
+  }, [idFromParams, pathname, commissionUserId, setCommissionUserId]);
 
   // ── Nav items by role ────────────────────────────────────────────────────────
   const navItems = (() => {
