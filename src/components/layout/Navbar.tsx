@@ -226,15 +226,14 @@ export default function Navbar({
 
       <div className="hidden md:flex items-center gap-6">
         {navLinks.map((link) => (
-          <Link
-            key={link.label}
-            href="#"
-            onClick={(e) => e.preventDefault()}
-            className="text-sm text-gray-300 hover:text-white transition-colors"
-          >
-            {link.label}
-          </Link>
-        ))}
+    <Link
+      key={link.label}
+      href={`/${locale}/tenders`} 
+      className="text-sm text-gray-300 hover:text-white transition-colors"
+    >
+      {link.label}
+    </Link>
+  ))}
       </div>
 
       <div className="flex items-center gap-3">
