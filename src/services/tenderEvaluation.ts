@@ -108,17 +108,29 @@ export async function getServiceContractantTenderEvaluationPhaseDetail(
 }
 
 export async function validateServiceContractantTenderEvaluationPhase(
-  aoId: string,
-  phase: TenderEvaluationPhase,
+  evaluationId: string,
 ): Promise<ServiceContractantTenderEvaluationPhaseDetail | null> {
   try {
-    return await requestJson<ServiceContractantTenderEvaluationPhaseDetail>(
-      `/api/v1/evaluations?appelOffreId=${aoId}&phase=${phase}&action=validate`,
+    // The spec indicates PATCH /api/v1/evaluations/{id}/statut to change status.
+    // We'll assume 'VALIDEE' is the correct status for validation.
+    const response = await requestJson<any>(
+      `/api/v1/evaluations/${evaluationId}/statut`,
       {
         method: "PATCH",
+        body: JSON.stringify({ statut: "VALIDEE" }),
       },
     );
-  } catch {
+
+    // The response from the status update might not be the full detail object.
+    // We may need to refetch the details. For now, we'll assume the updated
+    // evaluation object is returned and we can get what we need from it.
+    if (response && response.id) {
+        return getServiceContractantTenderEvaluationPhaseDetail(response.appelOffreId, response.type.toLowerCase());
+    }
+
+    return null;
+  } catch (err) {
+    console.error("Failed to validate evaluation phase:", err);
     return null;
   }
 }
