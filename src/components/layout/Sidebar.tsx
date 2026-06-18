@@ -97,16 +97,6 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
             icon: <Icon d={ICONS.doc} />,
           },
           {
-            label: dict.mySubmissions ?? "Mes Soumissions",
-            href: `/${locale}/dashboard/contractant/soumissions`,
-            icon: <Icon d={ICONS.doc} />,
-          },
-          {
-            label: dict.recoursClaims ?? "Mes Recours",
-            href: `/${locale}/dashboard/contractant/recours`,
-            icon: <Icon d={ICONS.scale} />,
-          },
-          {
             label: dict.marchesRecords ?? "Marchés",
             href: `/${locale}/dashboard/contractant/marches`,
             icon: <Icon d={ICONS.rows} />,
@@ -154,7 +144,7 @@ export default function Sidebar({ locale, role, dict }: SidebarProps) {
     switch (role) {
       case "admin":       return `/${locale}/dashboard/admin/tableau-de-bord`;
       case "contractant": return `/${locale}/dashboard/contractant/tableau-de-bord`;
-      case "commission":  return commissionUserId  // ← utiliser commissionUserId
+      case "commission":  return commissionUserId
         ? `/${locale}/dashboard/commission/${commissionUserId}/tableau-de-bord`
         : `/${locale}/dashboard/commission`;
       default:            return `/${locale}/dashboard/operateur/tableau-de-bord`;
