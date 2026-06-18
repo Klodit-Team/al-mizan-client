@@ -32,7 +32,7 @@ async function getNavbarUserInfo(): Promise<{ userName: string; userInitial: str
     let userName = email;
     let userCompany = "";
 
-    const profileRes = await fetch(`${baseUrl}/api/v1/users/profiles/user/${userId}`, {
+    const profileRes = await fetch(`${baseUrl}/api/v1/profiles/user/${userId}`, {
       method: "GET",
       headers: { Cookie: `access_token=${accessToken}` },
       cache: "no-store",
@@ -43,7 +43,7 @@ async function getNavbarUserInfo(): Promise<{ userName: string; userInitial: str
       if (fullName) userName = fullName;
     }
 
-    const scRes = await fetch(`${baseUrl}/api/v1/users/services-contractants?page=1&limit=100`, {
+    const scRes = await fetch(`${baseUrl}/api/v1/services-contractants?page=1&limit=100`, {
       method: "GET",
       headers: { Cookie: `access_token=${accessToken}` },
       cache: "no-store",

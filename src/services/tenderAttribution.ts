@@ -1,8 +1,6 @@
-export type TenderAttributionStatus =
-  | "publiee"
-  | "en_recours"
-  | "confirmee"
-  | "annulee";
+import { apiClient } from "@/services/client";
+
+export type TenderAttributionStatus = "publiee" | "en_recours" | "confirmee" | "annulee";
 
 export interface TenderEligibleSubmission {
   submissionId: string;
@@ -69,298 +67,198 @@ export interface ConfirmDefinitiveAttributionPayload {
   executionDelayDays: string;
 }
 
-interface AttributionStoreItem {
-  aoId: string;
-  eligibleSubmissions: TenderEligibleSubmission[];
-  provisionalAttribution: TenderProvisionalAttribution | null;
-  definitiveAttribution: TenderDefinitiveAttribution | null;
-  hasBlockingRecours: boolean;
-}
-
-const API_BASE_URL = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "");
-const USE_REAL_API = typeof window !== "undefined" || Boolean(process.env.NEXT_PUBLIC_API_BASE_URL);
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const attributionStore = new Map<string, AttributionStoreItem>();
-
-function toDateOnlyIso(input: string): string {
-  return input.slice(0, 10);
-}
-
-function addDays(dateIso: string, days: number): string {
-  const date = new Date(`${toDateOnlyIso(dateIso)}T00:00:00.000Z`);
-  if (Number.isNaN(date.getTime())) {
-    return toDateOnlyIso(dateIso);
-  }
-
-  date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString().slice(0, 10);
-}
-
-function diffDaysFromNow(targetDateIso: string): number {
-  const now = new Date();
-  const target = new Date(`${toDateOnlyIso(targetDateIso)}T23:59:59.999Z`);
-  if (Number.isNaN(target.getTime())) {
-    return 0;
-  }
-
-  const msDiff = target.getTime() - now.getTime();
-  return Math.ceil(msDiff / (24 * 60 * 60 * 1000));
-}
-
-function cloneOverview(
-  item: AttributionStoreItem,
-): ServiceContractantTenderAttributionOverview {
-  const provisional = item.provisionalAttribution
-    ? { ...item.provisionalAttribution }
-    : null;
-  const definitive = item.definitiveAttribution
-    ? {
-        ...item.definitiveAttribution,
-        marche: { ...item.definitiveAttribution.marche },
-      }
-    : null;
-
-  let status: TenderAttributionStatus | null = null;
-  let countdownDaysToRecoursEnd: number | null = null;
-  let canConfirmDefinitive = false;
-  let definitiveConditionMessage =
-    "Attribution definitive indisponible: attribution provisoire non prononcee.";
-
-  if (provisional) {
-    if (provisional.cancelledAt) {
-      status = "annulee";
-      definitiveConditionMessage =
-        "Attribution definitive indisponible: attribution provisoire annulee.";
-    } else if (definitive) {
-      status = "confirmee";
-      definitiveConditionMessage = "Attribution definitive deja confirmee.";
-    } else {
-      const daysRemaining = diffDaysFromNow(provisional.recoursEndDate);
-      if (daysRemaining > 0) {
-        status = "en_recours";
-        countdownDaysToRecoursEnd = daysRemaining;
-        definitiveConditionMessage =
-          "Attribution definitive disponible apres expiration du delai de recours.";
-      } else {
-        status = "publiee";
-        if (item.hasBlockingRecours) {
-          definitiveConditionMessage =
-            "Attribution definitive bloquee: recours bloquant en cours.";
-        } else {
-          canConfirmDefinitive = true;
-          definitiveConditionMessage =
-            "Conditions remplies: vous pouvez confirmer l'attribution definitive.";
-        }
-      }
-    }
-  }
-
-  return {
-    aoId: item.aoId,
-    eligibleSubmissions: item.eligibleSubmissions.map((entry) => ({
-      ...entry,
-    })),
-    provisionalAttribution: provisional,
-    definitiveAttribution: definitive,
-    hasBlockingRecours: item.hasBlockingRecours,
-    status,
-    countdownDaysToRecoursEnd,
-    canConfirmDefinitive,
-    definitiveConditionMessage,
-  };
-}
-
-function ensureAttribution(aoId: string): AttributionStoreItem {
-  const existing = attributionStore.get(aoId);
-  if (existing) {
-    return existing;
-  }
-
-  const seeded: AttributionStoreItem = {
-    aoId,
-    eligibleSubmissions: [
-      {
-        submissionId: `${aoId}-SOUM-001`,
-        reference: "SOUM-2026-001",
-        operatorOrganizationName: "Sari TechSolutions",
-        scoreGlobal: 87.2,
-        offeredAmount: "45 220 000",
-      },
-      {
-        submissionId: `${aoId}-SOUM-002`,
-        reference: "SOUM-2026-002",
-        operatorOrganizationName: "Global Network SA",
-        scoreGlobal: 83.2,
-        offeredAmount: "46 648 000",
-      },
-      {
-        submissionId: `${aoId}-SOUM-004`,
-        reference: "SOUM-2026-004",
-        operatorOrganizationName: "EURL Data Protect",
-        scoreGlobal: 79.5,
-        offeredAmount: "47 100 000",
-      },
-    ],
-    provisionalAttribution: null,
-    definitiveAttribution: null,
-    hasBlockingRecours: false,
-  };
-
-  attributionStore.set(aoId, seeded);
-  return seeded;
-}
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const url = API_BASE_URL ? `${API_BASE_URL}${path}` : path;
-
-  const response = await fetch(url, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `Request failed with status ${response.status}`);
+  const response = await apiClient<unknown>(path, init).catch(() => null);
+  if (!response) throw new Error("Request failed");
+  if (response && typeof response === "object" && "data" in response && Array.isArray((response as any).data)) {
+    return (response as any).data as T;
   }
-
-  const json = await response.json();
-
-  // Unwrap paginated responses { data: [...] }
-  if (json && typeof json === "object" && "data" in json && Array.isArray(json.data)) {
-    return json.data as T;
-  }
-
-  return json as T;
+  return response as T;
 }
+
+// ─── API Functions ───────────────────────────────────────────────────────────
 
 export async function getServiceContractantTenderAttributionOverview(
   aoId: string,
 ): Promise<ServiceContractantTenderAttributionOverview> {
-  if (USE_REAL_API) {
-    return requestJson<ServiceContractantTenderAttributionOverview>(
-      `/api/v1/appels-offres/attributions?appelOffreId=${aoId}`,
-      {
-        method: "GET",
-      },
-    );
-  }
+  try {
+    // 1. Fetch eligible submissions from evaluations
+    const evals = await requestJson<any[]>(`/api/v1/evaluations?appelOffreId=${aoId}`, { method: "GET" }).catch(() => []);
+    let eligibleSubmissions: TenderEligibleSubmission[] = [];
+    
+    const sortedEvals = evals.sort((a: any,b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    if (sortedEvals.length > 0) {
+        const finalEval = sortedEvals[0];
+        eligibleSubmissions = (finalEval.resultats || [])
+            .filter((r: any) => r.recommandation === "RETENIR")
+            .map((r: any) => ({
+                submissionId: r.evaluationSubmission?.externalSubmissionId || r.evaluationSubmissionId,
+                reference: r.evaluationSubmission?.externalSubmissionId || r.evaluationSubmissionId,
+                operatorOrganizationName: r.evaluationSubmission?.operateurNom || "Opérateur",
+                scoreGlobal: r.scoreGlobal || 0,
+                offeredAmount: String(r.evaluationSubmission?.montantOffre || "0")
+            })).sort((a: any, b: any) => b.scoreGlobal - a.scoreGlobal);
+    }
 
-  await sleep(180);
-  return cloneOverview(ensureAttribution(aoId));
+    // 2. Fetch attributions
+    const attrs = await requestJson<any[]>(`/api/v1/attributions`, { method: "GET" }).catch(() => []);
+    const aoAttrs = attrs.filter((a: any) => a.aoId === aoId);
+    const prov = aoAttrs.find((a: any) => a.type === "PROVISOIRE");
+    const def = aoAttrs.find((a: any) => a.type === "DEFINITIVE");
+
+    // 3. Fetch recours
+    const recours = await requestJson<any[]>(`/api/v1/recours/appel-offre/${aoId}`, { method: "GET" }).catch(()=>[]);
+    const hasBlockingRecours = recours.some((r: any) => r.statut === "DEPOSE" || r.statut === "EN_EXAMEN");
+
+    let provisionalAttribution = null;
+    if (prov) {
+        const submission = eligibleSubmissions.find(s => s.submissionId === prov.soumissionId) || { reference: prov.soumissionId, operatorOrganizationName: "Opérateur" };
+        provisionalAttribution = {
+            id: prov.id,
+            selectedSubmissionId: prov.soumissionId,
+            selectedSubmissionReference: submission.reference,
+            selectedOperatorName: submission.operatorOrganizationName,
+            attributedAmount: String(prov.montantAttribue),
+            reason: "Attribution basée sur le classement final",
+            attributionDate: prov.dateAttribution,
+            recoursEndDate: prov.dateFinRecours,
+            notificationsTriggeredAt: prov.dateAttribution,
+            notificationsRecipients: eligibleSubmissions.length,
+            cancelledAt: null
+        };
+    }
+
+    let definitiveAttribution = null;
+    if (def) {
+        const submission = eligibleSubmissions.find(s => s.submissionId === def.soumissionId) || { reference: def.soumissionId, operatorOrganizationName: "Opérateur" };
+        const marches = await requestJson<any[]>(`/api/v1/marches`, { method: "GET" }).catch(()=>[]);
+        const marche = marches.find((m: any) => m.attributionId === def.id);
+
+        definitiveAttribution = {
+            id: def.id,
+            linkedProvisionalAttributionId: prov?.id || "",
+            selectedSubmissionId: def.soumissionId,
+            selectedSubmissionReference: submission.reference,
+            selectedOperatorName: submission.operatorOrganizationName,
+            attributedAmount: String(def.montantAttribue),
+            confirmedAt: def.dateAttribution,
+            marche: {
+                reference: marche?.referenceMarche || "N/A",
+                globalAmount: String(marche?.montantSigne || def.montantAttribue),
+                signatureDate: marche?.dateSignature || def.dateAttribution,
+                executionDelayDays: String(marche?.delaiExecution || "0"),
+                expectedEndDate: marche?.dateSignature || def.dateAttribution
+            }
+        };
+    }
+
+    let status: TenderAttributionStatus | null = null;
+    let countdownDaysToRecoursEnd: number | null = null;
+    let canConfirmDefinitive = false;
+    let definitiveConditionMessage = "Attribution definitive indisponible: attribution provisoire non prononcee.";
+
+    if (provisionalAttribution) {
+        if (definitiveAttribution) {
+            status = "confirmee";
+            definitiveConditionMessage = "Attribution definitive deja confirmee.";
+        } else {
+            const target = new Date(`${provisionalAttribution.recoursEndDate.slice(0,10)}T23:59:59.999Z`);
+            const daysRemaining = Math.ceil((target.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+            
+            if (daysRemaining > 0) {
+                status = "en_recours";
+                countdownDaysToRecoursEnd = daysRemaining;
+                definitiveConditionMessage = "Attribution definitive disponible apres expiration du delai de recours.";
+            } else {
+                status = "publiee";
+                if (hasBlockingRecours) {
+                    definitiveConditionMessage = "Attribution definitive bloquee: recours bloquant en cours.";
+                } else {
+                    canConfirmDefinitive = true;
+                    definitiveConditionMessage = "Conditions remplies: vous pouvez confirmer l'attribution definitive.";
+                }
+            }
+        }
+    }
+
+    return {
+        aoId,
+        eligibleSubmissions,
+        provisionalAttribution,
+        definitiveAttribution,
+        hasBlockingRecours,
+        status,
+        countdownDaysToRecoursEnd,
+        canConfirmDefinitive,
+        definitiveConditionMessage
+    };
+  } catch (err) {
+      throw new Error("Impossible de charger les informations d'attribution.");
+  }
 }
 
 export async function pronounceServiceContractantProvisionalAttribution(
   aoId: string,
   payload: PronounceProvisionalAttributionPayload,
 ): Promise<ServiceContractantTenderAttributionOverview> {
-  if (USE_REAL_API) {
-    return requestJson<ServiceContractantTenderAttributionOverview>(
-      `/api/v1/appels-offres/attributions`,
-      {
-        method: "POST",
-        body: JSON.stringify(payload),
-      },
-    );
-  }
+  const dateAttribution = new Date(payload.attributionDate);
+  dateAttribution.setDate(dateAttribution.getDate() + 10);
 
-  await sleep(260);
-
-  const store = ensureAttribution(aoId);
-  const selected = store.eligibleSubmissions.find(
-    (entry) => entry.submissionId === payload.selectedSubmissionId,
-  );
-
-  if (!selected) {
-    throw new Error("Soumission selectionnee introuvable");
-  }
-
-  const attributionDate = toDateOnlyIso(payload.attributionDate);
-  const recoursEndDate = addDays(attributionDate, 10);
-
-  store.provisionalAttribution = {
-    id: `ATTR-PROV-${Date.now()}`,
-    selectedSubmissionId: selected.submissionId,
-    selectedSubmissionReference: selected.reference,
-    selectedOperatorName: selected.operatorOrganizationName,
-    attributedAmount: payload.attributedAmount,
-    reason: payload.reason,
-    attributionDate,
-    recoursEndDate,
-    notificationsTriggeredAt: new Date().toISOString(),
-    notificationsRecipients: store.eligibleSubmissions.length,
-    cancelledAt: null,
-  };
-
-  store.definitiveAttribution = null;
-
-  return cloneOverview(store);
+  await apiClient<unknown>("/api/v1/attributions", {
+    method: "POST",
+    body: JSON.stringify({ 
+        aoId, 
+        soumissionId: payload.selectedSubmissionId, 
+        type: "PROVISOIRE",
+        dateAttribution: new Date(payload.attributionDate).toISOString(),
+        dateFinRecours: dateAttribution.toISOString(),
+        montantAttribue: Number(payload.attributedAmount.replace(/\s/g, '').replace(',', '.'))
+    }),
+  });
+  return getServiceContractantTenderAttributionOverview(aoId);
 }
 
 export async function confirmServiceContractantDefinitiveAttribution(
   aoId: string,
   payload: ConfirmDefinitiveAttributionPayload,
 ): Promise<ServiceContractantTenderAttributionOverview> {
-  if (USE_REAL_API) {
-    return requestJson<ServiceContractantTenderAttributionOverview>(
-      `/api/v1/appels-offres/attributions`,
-      {
-        method: "POST",
-        body: JSON.stringify(payload),
-      },
-    );
-  }
+  const overview = await getServiceContractantTenderAttributionOverview(aoId);
+  const prov = overview.provisionalAttribution;
+  if(!prov) throw new Error("Attribution provisoire manquante");
 
-  await sleep(300);
+  const defAttrRaw = await apiClient<any>("/api/v1/attributions", {
+    method: "POST",
+    body: JSON.stringify({ 
+        aoId, 
+        soumissionId: prov.selectedSubmissionId, 
+        type: "DEFINITIVE", 
+        dateAttribution: new Date().toISOString(), 
+        dateFinRecours: new Date().toISOString(), 
+        montantAttribue: Number(prov.attributedAmount) 
+    }),
+  });
+  const defAttr = defAttrRaw.data || defAttrRaw;
 
-  const store = ensureAttribution(aoId);
-  const overview = cloneOverview(store);
+  await apiClient<unknown>("/api/v1/marches", {
+    method: "POST",
+    body: JSON.stringify({ 
+        aoId, 
+        attributionId: defAttr.id, 
+        referenceMarche: `M-${Date.now()}`, 
+        montantSigne: Number(prov.attributedAmount), 
+        dateSignature: new Date(payload.signatureDate).toISOString(), 
+        delaiExecution: Number(payload.executionDelayDays) 
+    }),
+  });
 
-  if (!overview.provisionalAttribution) {
-    throw new Error("Attribution provisoire inexistante");
-  }
-
-  if (!overview.canConfirmDefinitive) {
-    throw new Error(overview.definitiveConditionMessage);
-  }
-
-  const provisional = overview.provisionalAttribution;
-  const year = new Date().getFullYear();
-  const serial = String(Math.floor(100 + Math.random() * 900));
-  const signatureDate = toDateOnlyIso(payload.signatureDate);
-  const executionDelayDays = payload.executionDelayDays;
-  const expectedEndDate = addDays(
-    signatureDate,
-    Number.parseInt(executionDelayDays || "0", 10) || 0,
-  );
-
-  store.definitiveAttribution = {
-    id: `ATTR-DEF-${Date.now()}`,
-    linkedProvisionalAttributionId: provisional.id,
-    selectedSubmissionId: provisional.selectedSubmissionId,
-    selectedSubmissionReference: provisional.selectedSubmissionReference,
-    selectedOperatorName: provisional.selectedOperatorName,
-    attributedAmount: provisional.attributedAmount,
-    confirmedAt: new Date().toISOString(),
-    marche: {
-      reference: `M-${year}-${serial}`,
-      globalAmount: provisional.attributedAmount,
-      signatureDate,
-      executionDelayDays,
-      expectedEndDate,
-    },
-  };
-
-  return cloneOverview(store);
+  return getServiceContractantTenderAttributionOverview(aoId);
 }
 
-export function computeRecoursEndDateFromAttributionDate(
-  attributionDate: string,
-): string {
-  return addDays(attributionDate, 10);
+export function computeRecoursEndDateFromAttributionDate(attributionDate: string): string {
+  const date = new Date(attributionDate);
+  if (Number.isNaN(date.getTime())) return attributionDate;
+  date.setDate(date.getDate() + 10);
+  return date.toISOString().slice(0, 10);
 }

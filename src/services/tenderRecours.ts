@@ -1,3 +1,5 @@
+import { apiClient } from "@/services/client";
+
 export type TenderRecoursStatus = "depose" | "en_examen" | "accepte" | "rejete";
 
 export type TenderRecoursDecision = "accepte" | "rejete";
@@ -25,189 +27,113 @@ export interface ServiceContractantTenderRecoursDetail extends ServiceContractan
   decisionDate: string | null;
 }
 
-const API_BASE_URL = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "");
-const USE_REAL_API = typeof window !== "undefined" || Boolean(process.env.NEXT_PUBLIC_API_BASE_URL);
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const recoursStore = new Map<string, ServiceContractantTenderRecoursDetail[]>();
-
-const DEFAULT_RECOURS: ServiceContractantTenderRecoursDetail[] = [
-  {
-    id: "REC-001",
-    reference: "REC-2026-001",
-    operatorName: "Global Network SA",
-    submittedAt: "2026-03-21",
-    responseDeadlineAt: "2026-03-31",
-    status: "en_examen",
-    reason:
-      "Contestations sur la notation technique de l'offre, avec demande de relecture des criteres d'experience.",
-    attachments: [
-      {
-        id: "PJ-1",
-        fileName: "memoire-recours-global.pdf",
-        fileUrl: "/documents/recours/memoire-recours-global.pdf",
-      },
-      {
-        id: "PJ-2",
-        fileName: "annexe-notation.xlsx",
-        fileUrl: "/documents/recours/annexe-notation.xlsx",
-      },
-    ],
-    decision: null,
-    decisionReason: null,
-    decisionDate: null,
-  },
-  {
-    id: "REC-002",
-    reference: "REC-2026-002",
-    operatorName: "EURL Data Protect",
-    submittedAt: "2026-03-18",
-    responseDeadlineAt: "2026-03-28",
-    status: "accepte",
-    reason:
-      "Recours sur l'interpretation d'un critere eliminatoire portant sur la conformite documentaire.",
-    attachments: [
-      {
-        id: "PJ-1",
-        fileName: "recours-data-protect.pdf",
-        fileUrl: "/documents/recours/recours-data-protect.pdf",
-      },
-    ],
-    decision: "accepte",
-    decisionReason:
-      "La commission a constate une erreur materielle dans le calcul du seuil eliminatoire.",
-    decisionDate: "2026-03-25",
-  },
-  {
-    id: "REC-003",
-    reference: "REC-2026-003",
-    operatorName: "Micro Systems",
-    submittedAt: "2026-03-10",
-    responseDeadlineAt: "2026-03-20",
-    status: "rejete",
-    reason:
-      "Demande d'annulation du classement final pour non-prise en compte d'une attestation complementaire.",
-    attachments: [],
-    decision: "rejete",
-    decisionReason:
-      "Le document complementaire a ete fourni hors delai de recevabilite.",
-    decisionDate: "2026-03-19",
-  },
-  {
-    id: "REC-004",
-    reference: "REC-2026-004",
-    operatorName: "Sari TechSolutions",
-    submittedAt: "2026-03-26",
-    responseDeadlineAt: "2026-04-05",
-    status: "depose",
-    reason:
-      "Demande de precision sur les motifs de retenue d'un coefficient correctif financier.",
-    attachments: [
-      {
-        id: "PJ-1",
-        fileName: "demande-precision-sari.pdf",
-        fileUrl: "/documents/recours/demande-precision-sari.pdf",
-      },
-    ],
-    decision: null,
-    decisionReason: null,
-    decisionDate: null,
-  },
-];
-
-function cloneRecours(
-  item: ServiceContractantTenderRecoursDetail,
-): ServiceContractantTenderRecoursDetail {
-  return {
-    ...item,
-    attachments: item.attachments.map((file) => ({ ...file })),
-  };
-}
-
-function ensureRecours(aoId: string): ServiceContractantTenderRecoursDetail[] {
-  const existing = recoursStore.get(aoId);
-  if (existing) {
-    return existing;
+function unwrapEnvelope<T>(payload: unknown): T {
+  if (payload && typeof payload === "object") {
+    const rec = payload as Record<string, unknown>;
+    if (("success" in rec || "statusCode" in rec) && "data" in rec) {
+      return rec.data as T;
+    }
   }
-
-  const seeded = DEFAULT_RECOURS.map((item) => ({
-    ...cloneRecours(item),
-    id: `${aoId}-${item.id}`,
-  }));
-  recoursStore.set(aoId, seeded);
-
-  return seeded;
+  return payload as T;
 }
 
-async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const url = API_BASE_URL ? `${API_BASE_URL}${path}` : path;
+function extractList<T>(payload: unknown): T[] {
+  const unwrapped = unwrapEnvelope<unknown>(payload);
+  if (Array.isArray(unwrapped)) return unwrapped as T[];
+  if (unwrapped && typeof unwrapped === "object") {
+    const rec = unwrapped as Record<string, unknown>;
+    if (Array.isArray(rec.data)) return rec.data as T[];
+    if (Array.isArray(rec.content)) return rec.content as T[];
+    if (Array.isArray(rec.items)) return rec.items as T[];
+    if (Array.isArray(rec.results)) return rec.results as T[];
+    if (Array.isArray(rec.rows)) return rec.rows as T[];
+  }
+  return [];
+}
 
-  const response = await fetch(url, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
-    credentials: "include",
+async function getOperateursMap() {
+  const raw = await apiClient<unknown>("/api/v1/operateurs-economiques?page=1&limit=500", { method: "GET" }).catch(() => null);
+  const list = extractList<any>(raw);
+  const map = new Map<string, string>();
+  list.forEach(op => {
+    map.set(op.id, op.organisation?.denomination || op.organisationId || "Opérateur Économique");
   });
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `Request failed with status ${response.status}`);
-  }
-
-  const json = await response.json();
-
-  // Unwrap paginated responses { data: [...] }
-  if (json && typeof json === "object" && "data" in json && Array.isArray(json.data)) {
-    return json.data as T;
-  }
-
-  return json as T;
+  return map;
 }
+
+function mapStatus(statut: string): TenderRecoursStatus {
+  const raw = (statut || "").toUpperCase();
+  if (raw === "EN_EXAMEN") return "en_examen";
+  if (raw === "ACCEPTE") return "accepte";
+  if (raw === "REJETE") return "rejete";
+  return "depose";
+}
+
+// ─── API Functions ───────────────────────────────────────────────────────────
 
 export async function listServiceContractantTenderRecours(
   aoId: string,
 ): Promise<ServiceContractantTenderRecoursListItem[]> {
-  if (USE_REAL_API) {
-    return requestJson<ServiceContractantTenderRecoursListItem[]>(
-      `/api/v1/recours/appel-offre/${aoId}`,
-      {
-        method: "GET",
-      },
-    );
-  }
+  try {
+    const raw = await apiClient<unknown>(`/api/v1/recours/appel-offre/${aoId}`, { method: "GET" });
+    const records = extractList<any>(raw);
+    const opMap = await getOperateursMap();
 
-  await sleep(180);
-  return ensureRecours(aoId).map((item) => ({
-    id: item.id,
-    reference: item.reference,
-    operatorName: item.operatorName,
-    submittedAt: item.submittedAt,
-    responseDeadlineAt: item.responseDeadlineAt,
-    status: item.status,
-  }));
+    return records.map((record) => ({
+      id: record.id,
+      reference: record.reference || record.id,
+      operatorName: opMap.get(record.operateurId || record.operateur_id || "") || record.operateurId || "Opérateur inconnu",
+      submittedAt: record.dateDepot || record.date_depot || new Date().toISOString(),
+      responseDeadlineAt: record.dateLimiteReponse || record.date_limite_reponse || new Date().toISOString(),
+      status: mapStatus(record.statut || ""),
+    }));
+  } catch (error) {
+    return [];
+  }
 }
 
 export async function getServiceContractantTenderRecoursById(
   aoId: string,
   recoursId: string,
 ): Promise<ServiceContractantTenderRecoursDetail | null> {
-  if (USE_REAL_API) {
-    try {
-      return await requestJson<ServiceContractantTenderRecoursDetail>(
-        `/api/v1/recours/${recoursId}`,
-        {
-          method: "GET",
-        },
-      );
-    } catch {
-      return null;
-    }
-  }
+  try {
+    const raw = await apiClient<unknown>(`/api/v1/recours/${recoursId}`, { method: "GET" });
+    const record = unwrapEnvelope<any>(raw);
+    if (!record || !record.id) return null;
 
-  await sleep(150);
-  const entry = ensureRecours(aoId).find((item) => item.id === recoursId);
-  return entry ? cloneRecours(entry) : null;
+    const opMap = await getOperateursMap();
+
+    const attachmentsRaw = record.piecesJointesUrls || record.pieces_jointes_urls || [];
+    const attachments = attachmentsRaw.map((url: string, idx: number) => {
+      const parts = url.split("/");
+      return {
+        id: `pj-${idx}`,
+        fileName: parts[parts.length - 1] || `PieceJointe-${idx + 1}`,
+        fileUrl: url,
+      };
+    });
+
+    let decisionStatus: TenderRecoursDecision | null = null;
+    if (record.decision) {
+      decisionStatus = record.decision.toUpperCase() === "ACCEPTE" ? "accepte" : "rejete";
+    }
+
+    return {
+      id: record.id,
+      reference: record.reference || record.id,
+      operatorName: opMap.get(record.operateurId || record.operateur_id || "") || record.operateurId || "Opérateur inconnu",
+      submittedAt: record.dateDepot || record.date_depot || new Date().toISOString(),
+      responseDeadlineAt: record.dateLimiteReponse || record.date_limite_reponse || new Date().toISOString(),
+      status: mapStatus(record.statut || ""),
+      reason: record.motif || "Aucun motif renseigné",
+      attachments,
+      decision: decisionStatus,
+      decisionReason: record.motifDecision || null,
+      decisionDate: record.dateDecision || null,
+    };
+  } catch (error) {
+    return null;
+  }
 }
