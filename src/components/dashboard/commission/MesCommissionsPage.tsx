@@ -294,7 +294,11 @@ export default function MesCommissionsPage({ locale, dict, userId }: MesCommissi
 
                       <td className="px-5 py-4">
                         <Link
-                          href={`/${locale}/dashboard/commission/details/${commission.id}`}
+                          href={
+                            commission.kind === "evaluation"
+                              ? `/${locale}/dashboard/commission/${commission.id}`
+                              : `/${locale}/dashboard/commission/details/${commission.id}`
+                          }
                           title={dict.actions}
                           className="inline-flex items-center gap-2 rounded-full bg-[#4CAF50] px-4 py-2 text-white text-sm font-semibold shadow-sm shadow-emerald-200 hover:bg-[#43A047] transition-all"
                         >

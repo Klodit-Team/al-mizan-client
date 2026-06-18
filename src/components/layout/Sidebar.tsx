@@ -1,4 +1,5 @@
 "use client";
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
 import { type Locale } from "@/i18n/config";
@@ -41,7 +42,16 @@ const ICONS = {
 
 export default function Sidebar({ locale, role, dict }: SidebarProps) {
   const pathname = usePathname();
-  const { commissionUserId } = useCommissionUserId();
+  const params = useParams();
+  const { commissionUserId, setCommissionUserId } = useCommissionUserId();
+
+  const idFromParams = params?.id as string | undefined;
+
+  useEffect(() => {
+    if (idFromParams && idFromParams !== commissionUserId) {
+      setCommissionUserId(idFromParams);
+    }
+  }, [idFromParams, commissionUserId, setCommissionUserId]);
 
   // ── Nav items by role ────────────────────────────────────────────────────────
   const navItems = (() => {

@@ -188,11 +188,12 @@ export default function OffreDechiffrementPage({
   const dechiffrerMutation = useDechiffrerOffresMutation(offreId);
 
   const presentFragments = useMemo(() => {
-    if (!allFragments || !seanceActive?.membresPresentsIds) return [];
+    if (!allFragments || !seanceActive || !seanceActive.membresPresentsIds) return [];
+    const ids = seanceActive.membresPresentsIds;
     return allFragments.filter((f) =>
-      seanceActive.membresPresentsIds.includes(f.membreId)
+      ids.includes(f.membreId)
     );
-  }, [allFragments, seanceActive?.membresPresentsIds]);
+  }, [allFragments, seanceActive]);
 
   // Soumissions extraites des résultats live (quand la séance existe)
   const soumissionsLive: SoumissionRetenue[] = (resultats ?? []).map((r) => ({
@@ -209,6 +210,7 @@ export default function OffreDechiffrementPage({
 
   // ── UI state ────────────────────────────────────────────────────────────────
   const [isUnlocking, setIsUnlocking] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const keysUnlocked = backendKeysUnlocked;
   const isFullyUnlocked = keysUnlocked >= 3;
@@ -217,6 +219,7 @@ export default function OffreDechiffrementPage({
   const canUnlock = canStart || canFinish;
 
   const handleUnlockClick = async () => {
+    setError(null);
     setIsUnlocking(true);
     try {
       if (canStart) {
@@ -225,13 +228,24 @@ export default function OffreDechiffrementPage({
         // Trigger actual cryptographic decryption with the Shamir fragments of present members
         if (presentFragments.length > 0) {
           await dechiffrerMutation.mutateAsync(presentFragments);
+          await terminerMutation.mutateAsync();
         } else {
-          console.warn("No fragments found for present members. Decryption might fail.");
+          const msg = isAr 
+            ? "لم يتم العثور على أي مفاتيح للأعضاء الحاضرين. لا يمكن فك التشفير."
+            : "Aucun fragment trouvé pour les membres présents. Le déchiffrement ne peut pas être effectué.";
+          setError(msg);
+          console.warn("No fragments found for present members. Decryption aborted.");
         }
-        await terminerMutation.mutateAsync();
       }
-    } catch (error) {
-      console.error("Error during unlock / decryption:", error);
+    } catch (err) {
+      console.error("Error during unlock / decryption:", err);
+      const errMsg = err && typeof err === "object" && "message" in err && typeof (err as { message: unknown }).message === "string" 
+        ? (err as { message: string }).message 
+        : "";
+      setError(
+        errMsg || 
+        (isAr ? "حدث خطأ أثناء فك التشفير." : "Une erreur est survenue lors du déchiffrement.")
+      );
     } finally {
       setIsUnlocking(false);
     }
@@ -371,6 +385,11 @@ export default function OffreDechiffrementPage({
                       ? "Démarrer la séance"
                       : "Terminer la séance"}
               </button>
+              {error && (
+                <p className="text-xs text-red-400 mt-3 font-semibold bg-red-500/10 border border-red-500/20 rounded-lg p-2.5 max-w-md mx-auto">
+                  ⚠️ {error}
+                </p>
+              )}
               {!canUnlock && !isFullyUnlocked && (
                 <p className="text-xs text-red-400 mt-3 font-medium">
                   {isAr ? "Cette séance n'est pas encore disponible." : "Cette séance n'est pas encore disponible."}
