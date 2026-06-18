@@ -7,6 +7,7 @@ import {
   useMesCommissionsQuery,
   useMembresEvaluationQuery,
   useChangeStatutEvaluationMutation,
+  useCommissionEvaluationQuery,
 } from "@/services/commission-dashboard/queries";
 import {
   useCommissionClassementQuery,
@@ -198,6 +199,7 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
     [mesCommissions, selectedCommission?.id, evaluationRecord?.commissionId]
   );
   const commissionId = selectedCommission?.id ?? evaluationRecord?.commissionId ?? "";
+  const { data: evaluation } = useCommissionEvaluationQuery(commissionId);
   const resolvedAoId =
     seance?.appelOffreId ??
     selectedCommission?.appelOffreId ??
