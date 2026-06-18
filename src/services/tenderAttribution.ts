@@ -69,20 +69,18 @@ export interface ConfirmDefinitiveAttributionPayload {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+function unwrapEnvelope<T>(payload: unknown): T {
+  if (payload && typeof payload === "object") {
+    const rec = payload as Record<string, unknown>;
+    if ("data" in rec) return rec.data as T;
+  }
+  return payload as T;
+}
+
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await apiClient<unknown>(path, init).catch(() => null);
   if (!response) throw new Error("Request failed");
-  
-  const rec = response as Record<string, any>;
-  if (rec && typeof rec === "object") {
-    if (("success" in rec || "statusCode" in rec) && "data" in rec) {
-      return rec.data as T;
-    }
-    if ("data" in rec && Array.isArray(rec.data)) {
-      return rec.data as T;
-    }
-  }
-  return response as T;
+  return unwrapEnvelope<T>(response);
 }
 
 // ─── API Functions ───────────────────────────────────────────────────────────

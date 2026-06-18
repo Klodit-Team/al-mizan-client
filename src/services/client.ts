@@ -16,34 +16,19 @@ export class ApiClientError extends Error {
   }
 }
 
-const FALLBACK_BASE_URL = 'http://localhost:3001';
-
-function normalizeBaseUrl(rawBaseUrl: string): string {
-  return rawBaseUrl.endsWith('/') ? rawBaseUrl.slice(0, -1) : rawBaseUrl;
-}
-
 function buildUrl(path: string): string {
   const isServer = typeof window === 'undefined';
-  
   const baseUrl = isServer 
     ? (process.env.INTERNAL_API_URL ?? 'https://api.klodit.app')
     : '';
-
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   return `${baseUrl}${normalizedPath}`;
 }
 
 async function parseJson(response: Response): Promise<unknown> {
   const contentType = response.headers.get('content-type') || '';
-  if (!contentType.includes('application/json')) {
-    return null;
-  }
-
-  try {
-    return await response.json();
-  } catch {
-    return null;
-  }
+  if (!contentType.includes('application/json')) return null;
+  try { return await response.json(); } catch { return null; }
 }
 
 export async function apiClient<TResponse>(
@@ -51,18 +36,23 @@ export async function apiClient<TResponse>(
   init?: RequestInit,
 ): Promise<TResponse> {
   const isServer = typeof window === 'undefined';
-  
   let cookieHeader = '';
+  
   if (isServer) {
     try {
-      const { cookies } = await import('next/headers');
-      const cookieStore = await cookies();
-      const token = cookieStore.get('access_token')?.value;
-      if (token) {
-        cookieHeader = `access_token=${token}`;
+      // Import conditionnel pour éviter de casser les Web components du navigateur
+      const nextHeaders = require('next/headers');
+      if (nextHeaders && nextHeaders.cookies) {
+        const cookieStore = typeof nextHeaders.cookies === 'function' ? nextHeaders.cookies() : null;
+        if (cookieStore) {
+          // Supporte Next.js 14 (synchrone) et Next.js 15 (asynchrone)
+          const resolvedCookies = await Promise.resolve(cookieStore);
+          const token = resolvedCookies.get('access_token')?.value;
+          if (token) cookieHeader = `access_token=${token}`;
+        }
       }
     } catch (e) {
-      // Ignorer si exécuté hors du contexte Next.js
+      // Ignorer l'erreur silencieusement si exécuté en dehors du contexte Next
     }
   }
 
