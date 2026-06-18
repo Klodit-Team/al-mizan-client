@@ -78,6 +78,15 @@ function deadlineClass(urgency: ReturnType<typeof formatDeadline>["urgency"]) {
   }
 }
 
+function getPaginationRange(current: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  if (current <= 4)
+    return [1, 2, 3, 4, 5, "…", total];
+  if (current >= total - 3)
+    return [1, "…", total - 4, total - 3, total - 2, total - 1, total];
+  return [1, "…", current - 1, current, current + 1, "…", total];
+}
+
 const ALL_STATUSES: Array<{ value: OeAoStatus | "all"; label: string }> = [
   { value: "all", label: "Tous les statuts" },
   { value: "publie", label: "Publié" },
@@ -406,7 +415,7 @@ export default function OeAoListPage({ dict, locale }: { dict: any; locale: Loca
             {dict.pagination.displaying} {(page - 1) * ITEMS_PER_PAGE + 1}–
             {Math.min(page * ITEMS_PER_PAGE, filtered.length)} {dict.pagination.of} {filtered.length}
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <button
               type="button"
               disabled={page === 1}
@@ -415,20 +424,31 @@ export default function OeAoListPage({ dict, locale }: { dict: any; locale: Loca
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </button>
-            {[...Array(totalPages)].map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setPage(i + 1)}
-                className={`flex h-7 w-7 items-center justify-center rounded border text-[11px] font-semibold transition-colors ${
-                  page === i + 1
-                    ? "border-[#4CAF50] bg-[#4CAF50] text-white"
-                    : "border-slate-200 text-slate-600 hover:bg-slate-50"
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
+
+            {getPaginationRange(page, totalPages).map((item, i) =>
+              item === "…" ? (
+                <span
+                  key={`ellipsis-${i}`}
+                  className="flex h-7 w-7 items-center justify-center text-slate-400 text-xs select-none"
+                >
+                  …
+                </span>
+              ) : (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => setPage(item as number)}
+                  className={`flex h-7 w-7 items-center justify-center rounded border text-[11px] font-semibold transition-colors ${
+                    page === item
+                      ? "border-[#4CAF50] bg-[#4CAF50] text-white"
+                      : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  {item}
+                </button>
+              )
+            )}
+
             <button
               type="button"
               disabled={page >= totalPages}
