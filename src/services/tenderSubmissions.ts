@@ -55,7 +55,7 @@ export interface ServiceContractantTenderSubmissionDetail extends ServiceContrac
   administrativeDocuments: TenderSubmissionAdministrativeDocument[];
 }
 
-const USE_REAL_API = true; // Forcing real API usage
+const USE_REAL_API = true; 
 
 // ─── Helpers ───────────────────────────────────────────────────────────
 
@@ -63,8 +63,15 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await apiClient<unknown>(path, init).catch(() => null);
   if (!response) throw new Error("Request failed");
   
-  if (response && typeof response === "object" && "data" in response && Array.isArray((response as any).data)) {
-    return (response as any).data as T;
+  const rec = response as Record<string, any>;
+  if (rec && typeof rec === "object") {
+    // FIX: Extract objects safely from the { success: true, data: {...} } wrapper
+    if (("success" in rec || "statusCode" in rec) && "data" in rec) {
+      return rec.data as T;
+    }
+    if ("data" in rec && Array.isArray(rec.data)) {
+      return rec.data as T;
+    }
   }
   return response as T;
 }

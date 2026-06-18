@@ -50,8 +50,15 @@ export interface ServiceContractantTenderEvaluationPhaseDetail {
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await apiClient<unknown>(path, init).catch(() => null);
   if (!response) throw new Error("Request failed");
-  if (response && typeof response === "object" && "data" in response && Array.isArray((response as any).data)) {
-    return (response as any).data as T;
+  
+  const rec = response as Record<string, any>;
+  if (rec && typeof rec === "object") {
+    if (("success" in rec || "statusCode" in rec) && "data" in rec) {
+      return rec.data as T;
+    }
+    if ("data" in rec && Array.isArray(rec.data)) {
+      return rec.data as T;
+    }
   }
   return response as T;
 }
@@ -89,9 +96,22 @@ export async function getServiceContractantTenderEvaluationPhaseDetail(
   try {
     const typeEnum = phase === "eligibilite" ? "ELIGIBILITE" : phase === "technique" ? "TECHNIQUE" : "FINANCIERE";
     const list = await requestJson<any[]>(`/api/v1/evaluations?appelOffreId=${aoId}&type=${typeEnum}`, { method: "GET" });
-    const evaluation = list[0];
+    const evaluation = list?.[0];
 
-    if (!evaluation) return null;
+    // FIX: If evaluation doesn't exist yet, return a safe empty state to avoid the 404 crash
+    if (!evaluation) {
+      return {
+        aoId,
+        phase,
+        label: phase === "eligibilite" ? "Éligibilité" : phase === "technique" ? "Technique" : "Financière",
+        status: "en_cours",
+        scores: [],
+        iaComparisons: [],
+        report: { generated: false, fileName: null, fileUrl: null },
+        canValidate: false,
+        validatedAt: null
+      };
+    }
 
     return {
       aoId,

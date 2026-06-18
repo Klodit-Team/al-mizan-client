@@ -72,8 +72,15 @@ export interface ConfirmDefinitiveAttributionPayload {
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await apiClient<unknown>(path, init).catch(() => null);
   if (!response) throw new Error("Request failed");
-  if (response && typeof response === "object" && "data" in response && Array.isArray((response as any).data)) {
-    return (response as any).data as T;
+  
+  const rec = response as Record<string, any>;
+  if (rec && typeof rec === "object") {
+    if (("success" in rec || "statusCode" in rec) && "data" in rec) {
+      return rec.data as T;
+    }
+    if ("data" in rec && Array.isArray(rec.data)) {
+      return rec.data as T;
+    }
   }
   return response as T;
 }
