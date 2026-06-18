@@ -51,6 +51,7 @@ export interface CommissionEvaluation {
   aoId?: string | null;
   appelOffreId?: string | null;
   seanceId?: string | null;
+  nombreMinMembres?: number;
   membres?: MembreEvaluation[];
   createdAt: string;
   updatedAt: string;

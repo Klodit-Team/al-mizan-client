@@ -6,6 +6,7 @@ import {
   useMesCommissionsQuery,
   useSeancesOuvertureQuery,
 } from "@/services/commission-dashboard/queries";
+import type { SeanceOuverture, CommissionEvaluation } from "@/services/commission-dashboard/api";
 
 interface Props {
   locale: string;
@@ -106,6 +107,10 @@ export default function CommissionTableauDeBord({ locale, userId }: Props) {
   const { data: seances, isLoading: loadingSeances } = useSeancesOuvertureQuery();
 
   const commissions = data?.commissionsEvaluation ?? [];
+
+  const getCommissionIdForSeance = (seance: SeanceOuverture) => {
+    return seance.commissionId || commissions.find((c: CommissionEvaluation) => c.aoId === seance.appelOffreId || c.appelOffreId === seance.appelOffreId)?.id || userId;
+  };
   const actives   = commissions.filter(c => c.statut === "ACTIVE");
   const cloturees = commissions.filter(c => c.statut === "CLOTUREE");
 
@@ -372,7 +377,7 @@ export default function CommissionTableauDeBord({ locale, userId }: Props) {
                           <td className="px-5 py-4">
                             {s.statut !== "TERMINEE" && (
                               <Link
-                                href={`/${locale}/dashboard/commission/${userId}/mes-commissions/${s.appelOffreId}/pre-dechiffrement`}
+                                href={`/${locale}/dashboard/commission/${getCommissionIdForSeance(s)}/mes-commissions/${s.appelOffreId}/pre-dechiffrement`}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#4CAF50] text-white text-xs font-semibold hover:bg-[#43A047] transition-colors"
                               >
                                 {isAr ? "الدخول" : "Accéder"}
@@ -486,7 +491,7 @@ export default function CommissionTableauDeBord({ locale, userId }: Props) {
                   </div>
                 </div>
                 <Link
-                  href={`/${locale}/dashboard/commission/${userId}/mes-commissions/${prochaineSeance.appelOffreId}/pre-dechiffrement`}
+                  href={`/${locale}/dashboard/commission/${getCommissionIdForSeance(prochaineSeance)}/mes-commissions/${prochaineSeance.appelOffreId}/pre-dechiffrement`}
                   className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[#364150] text-white text-xs font-bold hover:bg-slate-700 transition-colors"
                 >
                   {isAr ? "الدخول إلى الجلسة" : "Accéder à la séance"}
