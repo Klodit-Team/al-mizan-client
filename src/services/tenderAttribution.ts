@@ -91,7 +91,6 @@ export async function getServiceContractantTenderAttributionOverview(
   aoId: string,
 ): Promise<ServiceContractantTenderAttributionOverview> {
   try {
-    // 1. Fetch eligible submissions from evaluations
     const evals = await requestJson<any[]>(`/api/v1/evaluations?appelOffreId=${aoId}`, { method: "GET" }).catch(() => []);
     let eligibleSubmissions: TenderEligibleSubmission[] = [];
     
@@ -109,13 +108,12 @@ export async function getServiceContractantTenderAttributionOverview(
             })).sort((a: any, b: any) => b.scoreGlobal - a.scoreGlobal);
     }
 
-    // 2. Fetch attributions
-    const attrs = await requestJson<any[]>(`/api/v1/attributions`, { method: "GET" }).catch(() => []);
+    // FIX: URL corrected to match API Gateway mapping
+    const attrs = await requestJson<any[]>(`/api/v1/appels-offres/attributions`, { method: "GET" }).catch(() => []);
     const aoAttrs = attrs.filter((a: any) => a.aoId === aoId);
     const prov = aoAttrs.find((a: any) => a.type === "PROVISOIRE");
     const def = aoAttrs.find((a: any) => a.type === "DEFINITIVE");
 
-    // 3. Fetch recours
     const recours = await requestJson<any[]>(`/api/v1/recours/appel-offre/${aoId}`, { method: "GET" }).catch(()=>[]);
     const hasBlockingRecours = recours.some((r: any) => r.statut === "DEPOSE" || r.statut === "EN_EXAMEN");
 
@@ -140,7 +138,8 @@ export async function getServiceContractantTenderAttributionOverview(
     let definitiveAttribution = null;
     if (def) {
         const submission = eligibleSubmissions.find(s => s.submissionId === def.soumissionId) || { reference: def.soumissionId, operatorOrganizationName: "Opérateur" };
-        const marches = await requestJson<any[]>(`/api/v1/marches`, { method: "GET" }).catch(()=>[]);
+        // FIX: URL corrected
+        const marches = await requestJson<any[]>(`/api/v1/appels-offres/marches`, { method: "GET" }).catch(()=>[]);
         const marche = marches.find((m: any) => m.attributionId === def.id);
 
         definitiveAttribution = {
@@ -213,7 +212,8 @@ export async function pronounceServiceContractantProvisionalAttribution(
   const dateAttribution = new Date(payload.attributionDate);
   dateAttribution.setDate(dateAttribution.getDate() + 10);
 
-  await apiClient<unknown>("/api/v1/attributions", {
+  // FIX: URL corrected
+  await apiClient<unknown>("/api/v1/appels-offres/attributions", {
     method: "POST",
     body: JSON.stringify({ 
         aoId, 
@@ -235,7 +235,8 @@ export async function confirmServiceContractantDefinitiveAttribution(
   const prov = overview.provisionalAttribution;
   if(!prov) throw new Error("Attribution provisoire manquante");
 
-  const defAttrRaw = await apiClient<any>("/api/v1/attributions", {
+  // FIX: URL corrected
+  const defAttrRaw = await apiClient<any>("/api/v1/appels-offres/attributions", {
     method: "POST",
     body: JSON.stringify({ 
         aoId, 
@@ -248,7 +249,8 @@ export async function confirmServiceContractantDefinitiveAttribution(
   });
   const defAttr = defAttrRaw.data || defAttrRaw;
 
-  await apiClient<unknown>("/api/v1/marches", {
+  // FIX: URL corrected
+  await apiClient<unknown>("/api/v1/appels-offres/marches", {
     method: "POST",
     body: JSON.stringify({ 
         aoId, 

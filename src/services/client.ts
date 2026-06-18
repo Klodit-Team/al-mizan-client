@@ -50,9 +50,26 @@ export async function apiClient<TResponse>(
   path: string,
   init?: RequestInit,
 ): Promise<TResponse> {
+  const isServer = typeof window === 'undefined';
+  
+  let cookieHeader = '';
+  if (isServer) {
+    try {
+      const { cookies } = await import('next/headers');
+      const cookieStore = await cookies();
+      const token = cookieStore.get('access_token')?.value;
+      if (token) {
+        cookieHeader = `access_token=${token}`;
+      }
+    } catch (e) {
+      // Ignorer si exécuté hors du contexte Next.js
+    }
+  }
+
   const isFormDataBody = typeof FormData !== 'undefined' && init?.body instanceof FormData;
   const mergedHeaders: HeadersInit = {
     ...(isFormDataBody ? {} : { 'Content-Type': 'application/json' }),
+    ...(cookieHeader ? { 'Cookie': cookieHeader } : {}),
     ...(init?.headers || {}),
   };
 
