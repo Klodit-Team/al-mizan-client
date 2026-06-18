@@ -5,7 +5,9 @@ import { useRouter, usePathname } from "next/navigation";
 import { locales, type Locale } from "@/i18n/config";
 import type { getDictionary } from "@/i18n/get-dictionaries";
 import { logout } from "@/services/auth/api";
+import { apiClient } from "@/services/client";
 import { useAdminId } from "@/hooks/useAdminId";
+import { useState, useEffect } from "react";
 
 type CommonDict = Awaited<ReturnType<typeof getDictionary>>;
 const localeLabels: Record<Locale, string> = {
@@ -39,6 +41,21 @@ export default function Navbar({
   const pathname = usePathname();
   const { adminId: storedAdminId } = useAdminId();
   const currentAdminId = adminId || storedAdminId || "id";
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      apiClient<{ count: number }>("/api/v1/notifications/non-lues/count")
+        .then((res) => {
+          if (res && typeof res.count === 'number') {
+            setUnreadCount(res.count);
+          }
+        })
+        .catch(() => {
+          // Silent catch for notification count
+        });
+    }
+  }, [isLoggedIn]);
 
   const switchLocale = (nextLocale: Locale) => {
     if (nextLocale === locale) {
@@ -151,12 +168,14 @@ export default function Navbar({
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
-            <span
-              className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
-              style={{ backgroundColor: "#4CAF50" }}
-            >
-              !
-            </span>
+            {unreadCount > 0 && (
+              <span
+                className="absolute -top-1 -right-2 px-1 min-w-[16px] h-4 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
+                style={{ backgroundColor: "#4CAF50" }}
+              >
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
           </button>
 
           {/* Logout */}
