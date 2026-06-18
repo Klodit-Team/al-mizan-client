@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  type AdminGreAGreDemand,
   type AdminGreAGreRecommendation,
   useAdminGreAGreDemandQuery,
   useValidateAdminGreAGreMutation,
@@ -31,6 +32,10 @@ function formatAmount(value: unknown) {
   }).format(amount);
 }
 
+function getDemandAo(demand?: AdminGreAGreDemand) {
+  return demand?.appelOffres ?? demand?.appelOffre ?? demand?.appel_offres ?? demand?.ao;
+}
+
 export default function AdminGreAGreDetailPage({
   id,
   locale,
@@ -48,7 +53,7 @@ export default function AdminGreAGreDetailPage({
 
   const ia = demand?.evaluationsIa?.[0];
   const humanDecision = demand?.decisions?.[0];
-  const ao = demand?.appelOffres;
+  const ao = getDemandAo(demand);
   const isClosed = demand?.statut === "ACCEPTEE" || demand?.statut === "REJETEE";
 
   const willRaiseIncident = useMemo(

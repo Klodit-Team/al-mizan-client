@@ -61,6 +61,9 @@ export interface AdminGreAGreDemand {
   createdAt: string;
   updatedAt: string;
   appelOffres?: AdminGreAGreAo;
+  appelOffre?: AdminGreAGreAo;
+  appel_offres?: AdminGreAGreAo;
+  ao?: AdminGreAGreAo;
   justifications: AdminGreAGreJustification[];
   evaluationsIa: AdminGreAGreIaEvaluation[];
   decisions: AdminGreAGreDecision[];
@@ -98,10 +101,46 @@ interface ApiEnvelope<T> {
 }
 
 function unwrapData<T>(payload: T | ApiEnvelope<T>): T {
-  if (payload && typeof payload === "object" && "data" in payload) {
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "data" in payload &&
+    ("success" in payload || "message" in payload)
+  ) {
     return (payload as ApiEnvelope<T>).data as T;
   }
   return payload as T;
+}
+
+function normalizeListResponse(payload: unknown): AdminGreAGreListResponse {
+  const unwrapped = unwrapData(payload as AdminGreAGreListResponse | ApiEnvelope<AdminGreAGreListResponse>);
+
+  if (Array.isArray(unwrapped)) {
+    return {
+      data: unwrapped as AdminGreAGreDemand[],
+      meta: {
+        total: unwrapped.length,
+        page: 1,
+        limit: unwrapped.length,
+        totalPages: 1,
+      },
+    };
+  }
+
+  if (unwrapped && typeof unwrapped === "object") {
+    const record = unwrapped as Partial<AdminGreAGreListResponse>;
+    return {
+      data: Array.isArray(record.data) ? record.data : [],
+      meta: {
+        total: Number(record.meta?.total ?? record.data?.length ?? 0),
+        page: Number(record.meta?.page ?? 1),
+        limit: Number(record.meta?.limit ?? record.data?.length ?? 0),
+        totalPages: Number(record.meta?.totalPages ?? 1),
+      },
+    };
+  }
+
+  return { data: [], meta: { total: 0, page: 1, limit: 0, totalPages: 1 } };
 }
 
 export async function listAdminGreAGreDemands(
@@ -115,11 +154,11 @@ export async function listAdminGreAGreDemands(
   if (params.serviceContractantId) qs.set("serviceContractantId", params.serviceContractantId);
 
   const query = qs.toString() ? `?${qs.toString()}` : "";
-  const payload = await apiClient<AdminGreAGreListResponse | ApiEnvelope<AdminGreAGreListResponse>>(
+  const payload = await apiClient<AdminGreAGreListResponse | AdminGreAGreDemand[] | ApiEnvelope<AdminGreAGreListResponse>>(
     `${BASE}${query}`,
     { method: "GET" },
   );
-  return unwrapData(payload);
+  return normalizeListResponse(payload);
 }
 
 export async function getAdminGreAGreDemand(id: string): Promise<AdminGreAGreDemand> {

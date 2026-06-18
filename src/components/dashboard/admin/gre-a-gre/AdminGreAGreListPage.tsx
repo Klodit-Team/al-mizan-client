@@ -60,6 +60,10 @@ function formatAmount(value: number | string | undefined) {
   }).format(amount);
 }
 
+function getDemandAo(demand: AdminGreAGreDemand) {
+  return demand.appelOffres ?? demand.appelOffre ?? demand.appel_offres ?? demand.ao;
+}
+
 export default function AdminGreAGreListPage({ locale }: { locale: string }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -76,7 +80,7 @@ export default function AdminGreAGreListPage({ locale }: { locale: string }) {
     const q = search.trim().toLowerCase();
     if (!q) return demands;
     return demands.filter((demand) => {
-      const ao = demand.appelOffres;
+      const ao = getDemandAo(demand);
       return [
         demand.id,
         demand.aoId,
@@ -165,7 +169,7 @@ export default function AdminGreAGreListPage({ locale }: { locale: string }) {
                 </tr>
               ) : (
                 filtered.map((demand) => {
-                  const ao = demand.appelOffres;
+                  const ao = getDemandAo(demand);
                   const ia = demand.evaluationsIa?.[0];
                   return (
                     <tr key={demand.id} className="hover:bg-slate-50">
