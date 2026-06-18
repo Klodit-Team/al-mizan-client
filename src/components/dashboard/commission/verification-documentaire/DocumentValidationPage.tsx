@@ -6,7 +6,9 @@ import {
   useResultatsOuvertureQuery,
   useAddResultatMutation,
   useUpdateResultatMutation,
+  useMesCommissionsQuery,
 } from "@/services/commission-dashboard/queries";
+import { useCommissionAoSubmissionsQuery } from "@/services/commission/queries";
 
 interface Props {
   locale: string;
@@ -106,19 +108,32 @@ function EmptyDocuments({ isAr }: { isAr: boolean }) {
 
 export default function DocumentValidationPage({
   locale,
-  soumissionId = "",
-  seanceId = "",
+  soumissionId: propSoumissionId = "",
+  seanceId: propSeanceId = "",
   documents = [],
 }: Props) {
   const isAr = locale === "ar";
   const t = commissionTranslations[isAr ? "ar" : "fr"];
   const td = t.document;
 
+  // ── Local states for active selection ────────────────────────────────────
+  const [activeSoumissionId, setActiveSoumissionId] = useState<string>(propSoumissionId);
+  const [activeSeanceId, setActiveSeanceId] = useState<string>(propSeanceId);
+
+  // Sync with prop changes
+  useEffect(() => {
+    setActiveSoumissionId(propSoumissionId);
+  }, [propSoumissionId]);
+
+  useEffect(() => {
+    setActiveSeanceId(propSeanceId);
+  }, [propSeanceId]);
+
   // ── Données live : résultats d'ouverture pour synchroniser estConforme ────
-  const { data: resultats } = useResultatsOuvertureQuery(seanceId);
-  const addResultatMutation = useAddResultatMutation(seanceId);
-  const updateResultatMutation = useUpdateResultatMutation(seanceId, "");
-  const existingResultat = resultats?.find((r) => r.soumissionId === soumissionId);
+  const { data: resultats } = useResultatsOuvertureQuery(activeSeanceId);
+  const addResultatMutation = useAddResultatMutation(activeSeanceId);
+  const updateResultatMutation = useUpdateResultatMutation(activeSeanceId, "");
+  const existingResultat = resultats?.find((r) => r.soumissionId === activeSoumissionId);
 
   // ── State local basé sur les documents props ───────────────────────────────
   const [activeDocId, setActiveDocId] = useState<string | null>(
@@ -130,22 +145,46 @@ export default function DocumentValidationPage({
 
   // Fetch real documents from API
   useEffect(() => {
-    if (!soumissionId) return;
+    if (!activeSoumissionId) {
+      setDocs([]);
+      setActiveDocId(null);
+      return;
+    }
     (async () => {
       try {
         const { apiClient } = await import("@/services/client");
-        const realDocs = await apiClient<DocFile[]>(`/api/v1/documents/administrative/${soumissionId}`, { method: "GET" }).catch(() => []);
+        const realDocs = await apiClient<DocFile[]>(`/api/v1/documents/administrative/${activeSoumissionId}`, { method: "GET" }).catch(() => []);
         if (Array.isArray(realDocs) && realDocs.length > 0) {
           setDocs(realDocs);
           setActiveDocId(realDocs[0].id);
+        } else {
+          setDocs([]);
+          setActiveDocId(null);
         }
       } catch {
         // Keep the current state if the backend call fails.
       }
     })();
-  }, [soumissionId]);
+  }, [activeSoumissionId]);
+
   const [saved, setSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // ── Dropdown / Selection logic when soumissionId is not selected ──────────
+  const { data: mesCommissions, isLoading: loadingCommissions } = useMesCommissionsQuery();
+  const [selectedCommissionId, setSelectedCommissionId] = useState<string>("");
+
+  // Auto-select first commission once loaded
+  useEffect(() => {
+    if (mesCommissions?.commissionsEvaluation?.length && !selectedCommissionId) {
+      setSelectedCommissionId(mesCommissions.commissionsEvaluation[0].id);
+    }
+  }, [mesCommissions, selectedCommissionId]);
+
+  const selectedCommission = mesCommissions?.commissionsEvaluation?.find((c) => c.id === selectedCommissionId) ?? null;
+  const selectedAoId = selectedCommission?.appelOffreId ?? selectedCommission?.aoId ?? "";
+
+  const { data: submissions = [], isLoading: loadingSubmissions } = useCommissionAoSubmissionsQuery(selectedAoId, Boolean(selectedAoId));
 
   const activeDoc = docs.find((d) => d.id === activeDocId) ?? null;
 
@@ -157,7 +196,7 @@ export default function DocumentValidationPage({
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      if (seanceId && soumissionId) {
+      if (activeSeanceId && activeSoumissionId) {
         const allValid = docs.every((d) => d.decision !== "invalide");
         const observations = docs
           .filter((d) => d.commentaire)
@@ -166,7 +205,7 @@ export default function DocumentValidationPage({
         if (existingResultat) {
           await updateResultatMutation.mutateAsync({ estConforme: allValid, observations });
         } else {
-          await addResultatMutation.mutateAsync({ soumissionId, estConforme: allValid, observations });
+          await addResultatMutation.mutateAsync({ soumissionId: activeSoumissionId, estConforme: allValid, observations });
         }
       }
       setSaved(true);
@@ -175,11 +214,173 @@ export default function DocumentValidationPage({
     }
   };
 
+  if (!activeSoumissionId) {
+    return (
+      <div style={{ minHeight: "100%", direction: isAr ? "rtl" : "ltr" }}>
+        {/* Page header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: "#1B1C1C", margin: 0 }}>{td.titre}</h1>
+          <span style={{ fontSize: 12, padding: "4px 12px", borderRadius: 999, background: "#F0EDED", color: "#364150", border: "1px solid #E5E7EB" }}>
+            {t.commissionBadge}
+          </span>
+        </div>
+
+        {/* Selection Content */}
+        <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "stretch" }}>
+          {/* Left panel: Commissions list */}
+          <div style={{ flex: "1 1 300px", minWidth: 280, background: "#fff", border: "1px solid #E5E7EB", borderRadius: 16, padding: 20 }}>
+            <h2 style={{ fontSize: 14, fontWeight: 700, color: "#364150", margin: "0 0 12px" }}>
+              {isAr ? "اختر اللجنة ولجنة التقييم" : "Sélectionner une commission"}
+            </h2>
+
+            {loadingCommissions ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="animate-pulse" style={{ height: 60, borderRadius: 12, background: "#F1F5F9" }} />
+                ))}
+              </div>
+            ) : !mesCommissions?.commissionsEvaluation?.length ? (
+              <p style={{ fontSize: 13, color: "#9CA3AF" }}>
+                {isAr ? "لا يوجد أي لجنة تقييم نشطة." : "Aucune commission d'évaluation active trouvée."}
+              </p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {mesCommissions.commissionsEvaluation.map((comm) => {
+                  const isSelected = comm.id === selectedCommissionId;
+                  return (
+                    <button
+                      key={comm.id}
+                      onClick={() => setSelectedCommissionId(comm.id)}
+                      style={{
+                        textAlign: isAr ? "right" : "left",
+                        padding: 12,
+                        borderRadius: 12,
+                        border: isSelected ? "2px solid #364150" : "1px solid #E5E7EB",
+                        background: isSelected ? "#F8FAFC" : "#fff",
+                        cursor: "pointer",
+                        width: "100%",
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      <p style={{ fontSize: 13, fontWeight: 700, color: "#1B1C1C", margin: "0 0 4px" }}>
+                        {comm.objet}
+                      </p>
+                      <p style={{ fontSize: 11, color: "#6F7A6B", margin: 0 }}>
+                        {comm.reference}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Right panel: Submissions list */}
+          <div style={{ flex: "2 1 400px", minWidth: 320, background: "#fff", border: "1px solid #E5E7EB", borderRadius: 16, padding: 20 }}>
+            <h2 style={{ fontSize: 14, fontWeight: 700, color: "#364150", margin: "0 0 12px" }}>
+              {isAr ? "العروض المقدمة للتحقق منها" : "Soumissions à vérifier"}
+            </h2>
+
+            {!selectedCommissionId ? (
+              <p style={{ fontSize: 13, color: "#9CA3AF" }}>
+                {isAr ? "الرجاء اختيار لجنة أولاً." : "Veuillez sélectionner une commission."}
+              </p>
+            ) : loadingSubmissions ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="animate-pulse" style={{ height: 56, borderRadius: 12, background: "#F1F5F9" }} />
+                ))}
+              </div>
+            ) : submissions.length === 0 ? (
+              <p style={{ fontSize: 13, color: "#9CA3AF" }}>
+                {isAr ? "لا توجد عروض مقدمة لهذه اللجنة." : "Aucune soumission trouvée pour cette commission."}
+              </p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {submissions.map((sub) => {
+                  const matchingSeance = mesCommissions?.seancesOuverture?.find(
+                    (s) => s.appelOffreId === selectedAoId
+                  );
+                  return (
+                    <div
+                      key={sub.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: 12,
+                        borderRadius: 12,
+                        border: "1px solid #E5E7EB",
+                        background: "#fff",
+                        gap: 12,
+                      }}
+                    >
+                      <div>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: "#1B1C1C", margin: "0 0 2px" }}>
+                          {sub.operatorName}
+                        </p>
+                        <p style={{ fontSize: 11, color: "#6B7280", margin: 0 }}>
+                          {isAr ? "رقم المرجع:" : "Référence :"} <span style={{ fontWeight: 600 }}>{sub.reference}</span>
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setActiveSoumissionId(sub.id);
+                          setActiveSeanceId(matchingSeance?.id ?? "");
+                        }}
+                        style={{
+                          padding: "8px 16px",
+                          borderRadius: 999,
+                          fontSize: 12,
+                          fontWeight: 700,
+                          background: "#364150",
+                          color: "#fff",
+                          border: "none",
+                          cursor: "pointer",
+                          transition: "all 0.2s",
+                        }}
+                      >
+                        {isAr ? "التحقق من الوثائق" : "Vérifier le dossier"}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ minHeight: "100%", direction: isAr ? "rtl" : "ltr" }}>
 
       {/* Page header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+        <button
+          onClick={() => setActiveSoumissionId("")}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "6px 12px",
+            borderRadius: 999,
+            background: "#F3F4F6",
+            border: "1px solid #E5E7EB",
+            cursor: "pointer",
+            fontSize: 12,
+            fontWeight: 600,
+            color: "#4B5563"
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ transform: isAr ? "rotate(180deg)" : "none" }}>
+            <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          {isAr ? "رجوع" : "Retour"}
+        </button>
+
         <h1 style={{ fontSize: 20, fontWeight: 700, color: "#1B1C1C", margin: 0 }}>{td.titre}</h1>
         <span style={{ fontSize: 12, padding: "4px 12px", borderRadius: 999, background: "#F0EDED", color: "#364150", border: "1px solid #E5E7EB" }}>
           {t.commissionBadge}
@@ -195,11 +396,11 @@ export default function DocumentValidationPage({
       <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 16, padding: "16px 22px", marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
           <h2 style={{ fontSize: 17, fontWeight: 700, color: "#1B1C1C", margin: "0 0 3px" }}>
-            {soumissionId ? td.dossierTitre(soumissionId) : (isAr ? "دوسيه العرض" : "Dossier soumission")}
+            {activeSoumissionId ? td.dossierTitre(activeSoumissionId.slice(-8)) : (isAr ? "دوسيه العرض" : "Dossier soumission")}
           </h2>
           <p style={{ fontSize: 13, color: "#6F7A6B", margin: 0 }}>
             {td.operateur}
-            {seanceId && <span style={{ color: "#9CA3AF", marginInlineStart: 8 }}>· {isAr ? "رقم الجلسة" : "Séance"} #{seanceId.slice(-6)}</span>}
+            {activeSeanceId && <span style={{ color: "#9CA3AF", marginInlineStart: 8 }}>· {isAr ? "رقم الجلسة" : "Séance"} #{activeSeanceId.slice(-6)}</span>}
           </p>
         </div>
 

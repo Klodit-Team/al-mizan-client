@@ -126,7 +126,7 @@ export default function CommissionDetailContent({ locale, commissionId, dict }: 
   const { data: membres, isLoading: loadingMembres } =
     useMembresEvaluationQuery(commissionId);
 
-  const aoId = commission?.id ?? commissionId;
+  const aoId = commission?.appelOffreId ?? commission?.aoId ?? commissionId;
   const { data: seancesLiees = [], isLoading: loadingSeances } = useSeancesOuvertureQuery(commissionId);
 
   const seanceActive =

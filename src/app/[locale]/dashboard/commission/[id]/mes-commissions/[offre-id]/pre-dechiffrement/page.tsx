@@ -1,23 +1,16 @@
 import { type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionaries";
-import { apiClient } from "@/services/client";
-import type {
-  CommissionEvaluation,
-  MembreEvaluation,
-  ResultatOuverture,
-  SeanceOuverture,
+import {
+  getCommissionEvaluation,
+  listMembresEvaluation,
+  listSeancesOuverture,
+  listResultats,
 } from "@/services/commission-dashboard/api";
+import { getCommissionAoSubmissions } from "@/services/commission/api";
 import PreDechiffrementForm from "@/components/dashboard/commission/ouverture/PreDechiffrementForm";
 
 interface PageProps {
   params: Promise<{ locale: Locale; id: string; "offre-id": string }>;
-}
-
-interface SubmissionItem {
-  id: string;
-  reference: string;
-  operatorName: string;
-  status: string;
 }
 
 function EmptyState({ locale, title, subtitle }: { locale: Locale; title: string; subtitle: string }) {
@@ -40,15 +33,15 @@ export default async function PreDechiffrementPage({ params }: PageProps) {
   const isAr = locale === "ar";
 
   const [commission, membres, seances, submissions] = await Promise.all([
-    apiClient<CommissionEvaluation>(`/api/v1/commissions-evaluation/${id}`).catch(() => null),
-    apiClient<MembreEvaluation[]>(`/api/v1/commissions-evaluation/${id}/membres`).catch(() => []),
-    apiClient<SeanceOuverture[]>(`/api/v1/seances-ouverture?commissionId=${id}`).catch(() => []),
-    apiClient<SubmissionItem[]>(`/api/v1/soumissions/appel-offre/${offreId}`).catch(() => []),
+    getCommissionEvaluation(id).catch(() => null),
+    listMembresEvaluation(id).catch(() => []),
+    listSeancesOuverture(id).catch(() => []),
+    getCommissionAoSubmissions(offreId).catch(() => []),
   ]);
 
   const seanceActive = seances.find((seance) => seance.appelOffreId === offreId) ?? seances[0] ?? null;
   const resultats = seanceActive
-    ? await apiClient<ResultatOuverture[]>(`/api/v1/seances-ouverture/${seanceActive.id}/resultats`).catch(() => [])
+    ? await listResultats(seanceActive.id).catch(() => [])
     : [];
 
   const activeMembers = membres.filter((membre) => membre.actif);

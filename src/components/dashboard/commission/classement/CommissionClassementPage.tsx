@@ -178,14 +178,14 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
   const selectedCommission = useMemo(
     () =>
       (mesCommissions?.commissionsEvaluation as CommissionEvaluationWithAo[] | undefined)?.find(
-        (item) => item.id === aoId,
+        (item) => item.aoId === aoId || item.appelOffreId === aoId || item.id === aoId,
       ) ?? null,
     [mesCommissions, aoId]
   );
   const evaluationRecord = useMemo(
     () =>
       evaluationOverview?.find(
-        (item) => item.commissionId === aoId || item.id === aoId,
+        (item) => item.aoId === aoId || item.commissionId === aoId || item.id === aoId,
       ) ?? null,
     [evaluationOverview, aoId]
   );
@@ -205,7 +205,7 @@ export default function CommissionClassementPage({ locale, aoId }: Props) {
     selectedCommission?.appelOffreId ??
     selectedCommission?.aoId ??
     evaluationRecord?.aoId ??
-    "";
+    aoId;
 
   const { data: membres } = useMembresEvaluationQuery(commissionId);
   const { data: backendClassement, isLoading: loadingClassement } =
