@@ -95,8 +95,15 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const json = await response.json();
 
   // Unwrap paginated responses { data: [...] }
-  if (json && typeof json === "object" && "data" in json && Array.isArray(json.data)) {
-    return json.data as T;
+  if (json && typeof json === "object") {
+    if ("success" in json && "data" in json) {
+      const inner = json.data;
+      if (inner && typeof inner === "object" && "data" in inner && Array.isArray(inner.data)) {
+        return inner.data as T;
+      }
+      return inner as T;
+    }
+    if ("data" in json && Array.isArray(json.data)) return json.data as T;
   }
 
   return json as T;

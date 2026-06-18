@@ -21,12 +21,17 @@ export async function listOperateurNotifications(): Promise<OperateurNotificatio
   
   let data = raw;
   if (raw && typeof raw === "object") {
-    if ("data" in raw && Array.isArray(raw.data)) data = raw.data;
-    else if ("items" in raw && Array.isArray(raw.items)) data = raw.items;
-    else if ("content" in raw && Array.isArray(raw.content)) data = raw.content;
+    if ("success" in raw && "data" in raw) {
+      data = raw.data;
+    }
+    if (data && typeof data === "object") {
+      if ("data" in data && Array.isArray(data.data)) data = data.data;
+      else if ("items" in data && Array.isArray(data.items)) data = data.items;
+      else if ("content" in data && Array.isArray(data.content)) data = data.content;
+    }
   }
   
-  return (Array.isArray(data) ? data : []).map(n => ({
+  return (Array.isArray(data) ? data : []).map((n: any) => ({
     id: n.id,
     title: n.titre || n.title || "Notification",
     content: n.contenu || n.content || "",
@@ -37,10 +42,14 @@ export async function listOperateurNotifications(): Promise<OperateurNotificatio
 }
 
 export async function getOperateurUnreadCount(): Promise<OperateurUnreadCount> {
-  return apiClient<OperateurUnreadCount>(
+  const res = await apiClient<any>(
     "/api/v1/notifications/non-lues/count",
     { method: "GET" },
   );
+  if (res && res.data && typeof res.data.count === 'number') {
+    return { count: res.data.count };
+  }
+  return { count: res?.count || 0 };
 }
 
 export async function markOperateurNotificationAsRead(notificationId: string): Promise<void> {

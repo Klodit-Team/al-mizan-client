@@ -46,10 +46,12 @@ export default function Navbar({
   useEffect(() => {
     if (isLoggedIn) {
       apiClient<{ count: number }>("/api/v1/notifications/non-lues/count")
-        .then((res) => {
-          if (res && typeof res.count === 'number') {
-            setUnreadCount(res.count);
-          }
+        .then((res: any) => {
+          let count = 0;
+          if (res && typeof res.count === 'number') count = res.count;
+          else if (res && res.data && typeof res.data.count === 'number') count = res.data.count;
+          
+          setUnreadCount(count);
         })
         .catch(() => {
           // Silent catch for notification count

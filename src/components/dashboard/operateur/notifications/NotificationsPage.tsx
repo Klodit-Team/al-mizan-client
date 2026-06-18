@@ -126,11 +126,17 @@ export default function NotificationsPage() {
       .then((response) => {
         // Handle both flat array and paginated { data: [...] } response
         let items: { id: string; titre?: string; title?: string; contenu?: string; content?: string; categorie?: string; type?: string; dateEnvoi?: string; date_envoi?: string; sentAt?: string; lu?: boolean; is_lue?: boolean; isRead?: boolean }[] = [];
-        if (Array.isArray(response)) {
-          items = response;
-        } else if (response && typeof response === "object" && "data" in (response as Record<string, unknown>)) {
-          const data = (response as { data: unknown }).data;
-          if (Array.isArray(data)) items = data;
+        
+        let dataToParse = response;
+        if (response && typeof response === "object" && "success" in response && "data" in response) {
+          dataToParse = (response as any).data;
+        }
+
+        if (Array.isArray(dataToParse)) {
+          items = dataToParse;
+        } else if (dataToParse && typeof dataToParse === "object" && "data" in dataToParse) {
+          const innerData = (dataToParse as any).data;
+          if (Array.isArray(innerData)) items = innerData;
         }
 
         if (items.length > 0) {
