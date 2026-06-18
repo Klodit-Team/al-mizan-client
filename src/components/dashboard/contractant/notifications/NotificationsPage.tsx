@@ -17,6 +17,7 @@ const CATEGORY_LABELS: Record<ContractantNotificationCategory, string> = {
   recours: "Recours",
   systeme: "Systeme",
   ia: "IA",
+  depot: "Dépôt",
 };
 
 const CATEGORY_STYLES: Record<
@@ -28,6 +29,7 @@ const CATEGORY_STYLES: Record<
   recours: { bg: "bg-rose-100", text: "text-rose-700" },
   systeme: { bg: "bg-slate-100", text: "text-slate-600" },
   ia: { bg: "bg-violet-100", text: "text-violet-700" },
+  depot: { bg: "bg-amber-100", text: "text-amber-700" },
 };
 
 function formatDate(value: string, locale: string) {
@@ -187,6 +189,7 @@ export default function NotificationsPage({ locale }: { locale: string }) {
               "publication",
               "attribution",
               "recours",
+              "depot",
               "systeme",
               "ia",
             ] as const

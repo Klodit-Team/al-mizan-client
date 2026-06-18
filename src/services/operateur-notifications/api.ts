@@ -14,10 +14,26 @@ export interface OperateurUnreadCount {
 }
 
 export async function listOperateurNotifications(): Promise<OperateurNotificationItem[]> {
-  return apiClient<OperateurNotificationItem[]>(
+  const raw = await apiClient<any>(
     "/api/v1/notifications/mes-notifications",
     { method: "GET" },
   );
+  
+  let data = raw;
+  if (raw && typeof raw === "object") {
+    if ("data" in raw && Array.isArray(raw.data)) data = raw.data;
+    else if ("items" in raw && Array.isArray(raw.items)) data = raw.items;
+    else if ("content" in raw && Array.isArray(raw.content)) data = raw.content;
+  }
+  
+  return (Array.isArray(data) ? data : []).map(n => ({
+    id: n.id,
+    title: n.titre || n.title || "Notification",
+    content: n.contenu || n.content || "",
+    type: n.type || "PLATEFORME",
+    sentAt: n.dateEnvoi || n.date_envoi || n.createdAt || n.created_at || new Date().toISOString(),
+    isRead: n.isLue ?? n.is_lue ?? n.isRead ?? false,
+  }));
 }
 
 export async function getOperateurUnreadCount(): Promise<OperateurUnreadCount> {

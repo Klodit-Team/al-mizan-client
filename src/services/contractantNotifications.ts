@@ -3,7 +3,8 @@ export type ContractantNotificationCategory =
   | "attribution"
   | "recours"
   | "systeme"
-  | "ia";
+  | "ia"
+  | "depot";
 
 export interface ServiceContractantNotificationItem {
   id: string;
@@ -86,9 +87,11 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 
   const json = await response.json();
 
-  // Unwrap paginated responses { data: [...] }
-  if (json && typeof json === "object" && "data" in json && Array.isArray(json.data)) {
-    return json.data as T;
+  // Unwrap paginated responses
+  if (json && typeof json === "object") {
+    if ("data" in json && Array.isArray(json.data)) return json.data as T;
+    if ("items" in json && Array.isArray(json.items)) return json.items as T;
+    if ("content" in json && Array.isArray(json.content)) return json.content as T;
   }
 
   return json as T;
@@ -102,17 +105,17 @@ export async function listServiceContractantNotifications(): Promise<
   ServiceContractantNotificationItem[]
 > {
   if (USE_REAL_API) {
-    const raw = await requestJson<{ id: string; titre?: string; contenu?: string; categorie?: string; is_lue?: boolean; date_envoi?: string; created_at?: string }[]>(
+    const raw = await requestJson<any[]>(
       "/api/v1/notifications/mes-notifications",
       { method: "GET" },
     );
     return (Array.isArray(raw) ? raw : []).map((n) => ({
       id: n.id,
-      title: n.titre || "Notification",
-      content: n.contenu || "",
-      category: mapNotifCategory(n.categorie),
-      sentAt: n.date_envoi || n.created_at || new Date().toISOString(),
-      isRead: n.is_lue ?? false,
+      title: n.titre || n.title || "Notification",
+      content: n.contenu || n.content || "",
+      category: mapNotifCategory(n.categorie || n.category),
+      sentAt: n.dateEnvoi || n.date_envoi || n.createdAt || n.created_at || new Date().toISOString(),
+      isRead: n.isLue ?? n.is_lue ?? n.isRead ?? false,
     }));
   }
 
@@ -125,6 +128,7 @@ function mapNotifCategory(cat?: string): ContractantNotificationCategory {
   if (c === "PUBLICATION") return "publication";
   if (c === "ATTRIBUTION") return "attribution";
   if (c === "RECOURS") return "recours";
+  if (c === "DEPOT") return "depot";
   if (c.startsWith("IA")) return "ia";
   return "systeme";
 }
