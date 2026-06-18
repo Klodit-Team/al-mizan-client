@@ -294,7 +294,7 @@ export default function CommissionTableauDeBord({ locale, userId }: Props) {
                         </td>
                         <td className="px-5 py-4">
                           <Link
-                            href={`/${locale}/dashboard/commission/details/${c.id}`}
+                            href={`/${locale}/dashboard/commission/${c.id}`}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#4CAF50] text-white text-xs font-semibold hover:bg-[#43A047] transition-colors"
                           >
                             {isAr ? "عرض" : "Voir"}
