@@ -5,6 +5,7 @@ import { apiClient } from "@/services/client";
 export type IncidentType =
   | "DIVERGENCE_GRE_A_GRE"
   | "DIVERGENCE_EVALUATION"
+  | "ANOMALIE_SOUMISSION"
   | "ERREUR_IA"
   | "CONFIANCE_FAIBLE";
 

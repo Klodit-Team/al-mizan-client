@@ -57,6 +57,7 @@
       "utilisateurs": "Utilisateurs ",
       "operateurs": "Operateurs",
       "commission": "Commissions",
+      "greAGreControl": "Controle GRE",
       "audit": "Journal d'Audit",
       "sessions": "Connexions",
       "incidents": "Incidents IA"

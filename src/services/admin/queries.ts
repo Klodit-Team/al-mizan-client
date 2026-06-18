@@ -1,6 +1,7 @@
 // Re-export all React Query hooks from submodules
 export * from "./audit/queries";
 export * from "./commissions/queries";
+export * from "./gre-a-gre/queries";
 export * from "./incidents/queries";
 export * from "./organisations/queries";
 export * from "./users/queries";
